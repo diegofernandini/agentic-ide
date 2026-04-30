@@ -19,7 +19,11 @@ interface Session {
   id: string
   name: string
   messages: Message[]
+  mode: 'planning' | 'questions' | 'default'
 }
+
+const AGENT_MODES = ['planning', 'questions', 'default'] as const
+type AgentMode = typeof AGENT_MODES[number]
 
 declare global {
   interface Window {
@@ -45,8 +49,8 @@ interface Props {
 }
 
 let sessionCounter = 1
-function newSession(): Session {
-  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [] }
+function newSession(mode: AgentMode = 'default'): Session {
+  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [], mode }
 }
 
 function MessageContent({ content, writes, onAccept, onRevert }: {
@@ -154,7 +158,8 @@ export default function ChatPanel({
   }
 
   // Build system prompt with real project context
-  async function buildSystemPrompt(): Promise<string> {
+  async function buildSystemPrompt(mode?: AgentMode): Promise<string> {
+    const sessionMode = mode ?? activeSession.mode
     let sys = `You are an agentic coding assistant with direct write access to the user's project files.
 
 When you need to create or modify files, you MUST use this exact format:
@@ -189,6 +194,25 @@ if __name__ == '__main__':
 \`\`\`write:requirements.txt
 flask
 \`\`\``
+
+    // Add mode-specific instructions
+    if (sessionMode === 'planning') {
+      sys += `\n\n[MODE: PLANNING]
+IMPORTANT: In this mode, you MUST create a detailed, structured plan BEFORE implementing anything.
+1. First, break down the task into clear steps with dependencies and verification points.
+2. Outline key decisions, potential edge cases, and constraints.
+3. Use markdown sections (##, ###) for clarity.
+4. ONLY after creating the plan, offer to implement it if the user confirms.
+5. Do NOT write code or files until explicitly asked to implement.`
+    } else if (sessionMode === 'questions') {
+      sys += `\n\n[MODE: QUESTIONS]
+IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a solution.
+1. Ask 3-5 focused questions about requirements, constraints, preferences, and edge cases.
+2. Wait for the user's answers before proposing any approach.
+3. Once you have clarity, explain your proposed approach and ask for confirmation.
+4. Only then write code/files if confirmed.
+5. Be conversational and thorough in understanding the user's needs.`
+    }`
 
     if (!rootPath) {
       if (openFile) sys += `\n\nOpen file: ${openFile}\n\`\`\`\n${fileContent.slice(0, 4000)}\n\`\`\``
