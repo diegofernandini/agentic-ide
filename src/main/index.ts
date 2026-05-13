@@ -140,6 +140,34 @@ ipcMain.handle('git-commit', async (_e, dirPath: string, message: string) => {
   }
 })
 
+ipcMain.handle('git-get-staged-diff', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    const diff = execSync(`git diff --staged`, { cwd: dirPath }).toString()
+    return diff
+  } catch {
+    return ''
+  }
+})
+
+ipcMain.handle('git-get-file-diff', async (_e, dirPath: string, filePath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    // Get diff of specific file (unstaged or staged)
+    // We try to get the original content from HEAD
+    let original = ''
+    try {
+      original = execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath }).toString()
+    } catch {
+      // Might be a new file
+    }
+    const current = fs.readFileSync(path.join(dirPath, filePath), 'utf-8')
+    return { original, current }
+  } catch (e: any) {
+    return { original: '', current: '', error: e.message }
+  }
+})
+
 ipcMain.handle('git-push', async (_e, dirPath: string) => {
   const { execSync } = require('child_process')
   try {

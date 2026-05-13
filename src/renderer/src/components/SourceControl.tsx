@@ -19,7 +19,9 @@ interface Commit {
 
 interface Props {
   rootPath: string | null
+  model: string
   onSelectFile: (path: string) => void
+  onSelectDiff: (path: string) => void
 }
 
 const FileIcon = ({ path }: { path: string }) => {
@@ -31,10 +33,11 @@ const FileIcon = ({ path }: { path: string }) => {
   return <span className="sc-file-icon">{}</span>
 }
 
-export default function SourceControl({ rootPath, onSelectFile }: Props) {
+export default function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }: Props) {
   const [gitInfo, setGitInfo] = useState<GitInfo>({ branch: '', ahead: 0, behind: 0, changes: [] })
   const [history, setHistory] = useState<Commit[]>([])
   const [loading, setLoading] = useState(false)
+  const [genLoading, setGenLoading] = useState(false)
   const [commitMsg, setCommitMsg] = useState('')
   const [isChangesExpanded, setIsChangesExpanded] = useState(true)
   const [isStagedExpanded, setIsStagedExpanded] = useState(true)
@@ -77,6 +80,43 @@ export default function SourceControl({ rootPath, onSelectFile }: Props) {
       alert('Commit failed: ' + res.error)
     }
     setLoading(false)
+  }
+
+  const handleGenerateMessage = async () => {
+    if (!rootPath || !model) return
+    const diff = await window.api.gitGetStagedDiff(rootPath)
+    if (!diff.trim()) {
+      alert('Stage some changes first to generate a message.')
+      return
+    }
+
+    setGenLoading(true)
+    try {
+      const prompt = `Generate a concise, professional git commit message for the following staged changes.
+Return ONLY the message, no quotes or prefix.
+Diff:
+${diff.slice(0, 4000)}`
+
+      const res = await fetch('http://localhost:11434/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+          system: "You are an expert developer. You write concise and meaningful commit messages following Conventional Commits format if possible (e.g. feat: ..., fix: ...)."
+        })
+      })
+
+      if (!res.ok) throw new Error('AI service failed')
+      const data = await res.json()
+      setCommitMsg(data.response.trim().replace(/^["']|["']$/g, ''))
+    } catch (e) {
+      console.error('Failed to generate message', e)
+      alert('Failed to generate message. Is Ollama running?')
+    } finally {
+      setGenLoading(false)
+    }
   }
 
   const handleStage = async (path: string) => {
@@ -167,7 +207,12 @@ export default function SourceControl({ rootPath, onSelectFile }: Props) {
               onChange={e => setCommitMsg(e.target.value)}
               onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleCommit() }}
             />
-            <button className="sc-generate-btn" title="Generate Message">
+            <button 
+              className={`sc-generate-btn ${genLoading ? 'spinning' : ''}`} 
+              onClick={handleGenerateMessage}
+              disabled={genLoading}
+              title="Generate Message with AI"
+            >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 0L6.5 4.5L2 6L6.5 7.5L8 12L9.5 7.5L14 6L9.5 4.5L8 0Z"/>
               </svg>
@@ -196,7 +241,7 @@ export default function SourceControl({ rootPath, onSelectFile }: Props) {
                 <span className="sc-section-count">{stagedChanges.length}</span>
               </div>
               {isStagedExpanded && stagedChanges.map((change, i) => (
-                <div key={i} className="sc-change-item" onClick={() => onSelectFile(rootPath + '/' + change.path)}>
+                <div key={i} className="sc-change-item" onClick={() => onSelectDiff(change.path)}>
                   <FileIcon path={change.path} />
                   <div className="sc-path-info">
                     <span className="sc-filename">{change.path.split(/[\\/]/).pop()}</span>
@@ -229,7 +274,7 @@ export default function SourceControl({ rootPath, onSelectFile }: Props) {
                 unstagedChanges.map((change, i) => {
                   const s = change.status === '??' ? 'U' : change.status[1].trim()
                   return (
-                    <div key={i} className="sc-change-item" onClick={() => onSelectFile(rootPath + '/' + change.path)}>
+                    <div key={i} className="sc-change-item" onClick={() => onSelectDiff(change.path)}>
                       <FileIcon path={change.path} />
                       <div className="sc-path-info">
                         <span className="sc-filename">{change.path.split(/[\\/]/).pop()}</span>

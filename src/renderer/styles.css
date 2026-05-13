@@ -1514,3 +1514,95 @@ body {
 
 .msg-writes { color: #4ec9b0; }
 .msg-elapsed { color: #555; }
+
+/* ── Diff View ── */
+.diff-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #1e1e1e;
+}
+
+.diff-header {
+  padding: 8px 16px;
+  background: #252526;
+  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+}
+
+.diff-title {
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diff-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.diff-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #333;
+  overflow: hidden;
+}
+
+.diff-side:last-child { border-right: none; }
+
+.diff-side-header {
+  padding: 4px 12px;
+  background: #2d2d2d;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+}
+
+.diff-content {
+  flex: 1;
+  overflow: auto;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.diff-line {
+  display: flex;
+  min-width: fit-content;
+}
+
+.diff-line:hover { background: #2a2d2e; }
+
+.diff-line-number {
+  width: 45px;
+  text-align: right;
+  padding-right: 12px;
+  color: #5a5a5a;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.diff-line-content {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  color: #d4d4d4;
+}
+
+.diff-side--original .diff-line--changed {
+  background: rgba(255, 0, 0, 0.15);
+}
+
+.diff-side--current .diff-line--changed {
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.diff-line--changed .diff-line-content {
+  color: #fff;
+}

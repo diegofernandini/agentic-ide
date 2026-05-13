@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('api', {
   listFiles: (p: string) => ipcRenderer.invoke('list-files', p),
   getGitStatus: (p: string) => ipcRenderer.invoke('git-status', p),
   gitCommit: (p: string, msg: string) => ipcRenderer.invoke('git-commit', p, msg),
+  gitGetStagedDiff: (p: string) => ipcRenderer.invoke('git-get-staged-diff', p),
+  gitGetFileDiff: (p: string, f: string) => ipcRenderer.invoke('git-get-file-diff', p, f),
   gitStage: (p: string, f: string) => ipcRenderer.invoke('git-stage', p, f),
   gitUnstage: (p: string, f: string) => ipcRenderer.invoke('git-unstage', p, f),
   gitPush: (p: string) => ipcRenderer.invoke('git-push', p),

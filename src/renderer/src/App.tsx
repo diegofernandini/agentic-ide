@@ -4,6 +4,7 @@ import Editor from './components/Editor'
 import ChatPanel from './components/ChatPanel'
 import TerminalPanel from './components/Terminal'
 import SourceControl from './components/SourceControl'
+import DiffView from './components/DiffView'
 
 interface Session {
   id: string
@@ -40,6 +41,8 @@ declare global {
       saveSessions: (data: string) => Promise<void>
       getGitStatus: (p: string) => Promise<{ branch: string; ahead: number; behind: number; changes: { status: string; path: string }[] }>
       gitCommit: (p: string, msg: string) => Promise<{ success: boolean; error?: string }>
+      gitGetStagedDiff: (p: string) => Promise<string>
+      gitGetFileDiff: (p: string, filePath: string) => Promise<{ original: string; current: string; error?: string }>
       gitStage: (p: string, filePath: string) => Promise<{ success: boolean; error?: string }>
       gitUnstage: (p: string, filePath: string) => Promise<{ success: boolean; error?: string }>
       gitPush: (p: string) => Promise<{ success: boolean; error?: string }>
@@ -57,6 +60,7 @@ export default function App() {
   const [openDirs, setOpenDirs] = useState<Set<string>>(new Set())
   const [openFile, setOpenFile] = useState<string | null>(null)
   const [fileContent, setFileContent] = useState('')
+  const [diffInfo, setDiffInfo] = useState<{ filename: string; original: string; current: string } | null>(null)
   const [model, setModel] = useState('')
   const [models, setModels] = useState<string[]>([])
 
@@ -129,6 +133,7 @@ export default function App() {
     const content = await window.api.readFile(path)
     setOpenFile(path)
     setFileContent(content)
+    setDiffInfo(null)
     setQuickOpen(false)
     if (!fromHistory) {
       setHistory(prev => {
@@ -138,6 +143,13 @@ export default function App() {
         return next
       })
     }
+  }
+
+  async function handleSelectDiff(relPath: string) {
+    if (!rootPath) return
+    const res = await window.api.gitGetFileDiff(rootPath, relPath)
+    setDiffInfo({ filename: relPath, original: res.original, current: res.current })
+    setOpenFile(null)
   }
 
   function goBack() {
@@ -343,7 +355,12 @@ export default function App() {
               <FileTree nodes={tree} onSelect={selectFile} openDirs={openDirs} onToggleDir={toggleDir} />
             </>
           ) : activeSidebar === 'git' ? (
-            <SourceControl rootPath={rootPath} onSelectFile={selectFile} />
+            <SourceControl 
+              rootPath={rootPath} 
+              model={model} 
+              onSelectFile={selectFile} 
+              onSelectDiff={handleSelectDiff} 
+            />
           ) : (
             <div className="account-view">
               <h2>Account</h2>
@@ -406,12 +423,20 @@ export default function App() {
         </div>
         <div className="center-column">
           <div className="editor-area">
-            <Editor
-              path={openFile}
-              content={fileContent}
-              onChange={setFileContent}
-              onSave={saveFile}
-            />
+            {diffInfo ? (
+              <DiffView 
+                filename={diffInfo.filename} 
+                original={diffInfo.original} 
+                current={diffInfo.current} 
+              />
+            ) : (
+              <Editor
+                path={openFile}
+                content={fileContent}
+                onChange={setFileContent}
+                onSave={saveFile}
+              />
+            )}
           </div>
           {terminalOpen && (
             <TerminalPanel cwd={rootPath} />
