@@ -212,7 +212,7 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
 3. Once you have clarity, explain your proposed approach and ask for confirmation.
 4. Only then write code/files if confirmed.
 5. Be conversational and thorough in understanding the user's needs.`
-    }`
+    }
 
     if (!rootPath) {
       if (openFile) sys += `\n\nOpen file: ${openFile}\n\`\`\`\n${fileContent.slice(0, 4000)}\n\`\`\``

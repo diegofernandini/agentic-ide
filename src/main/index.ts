@@ -79,6 +79,119 @@ ipcMain.handle('list-files', (_e, dirPath: string) => {
   return results
 })
 
+ipcMain.handle('git-status', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    const stdout = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf-8' })
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: dirPath, encoding: 'utf-8' }).trim()
+    
+    let ahead = 0
+    let behind = 0
+    try {
+      const syncStatus = execSync('git rev-list --count --left-right HEAD...@{u}', { cwd: dirPath, encoding: 'utf-8' }).trim()
+      const parts = syncStatus.split('\t')
+      if (parts.length === 2) {
+        ahead = parseInt(parts[0])
+        behind = parseInt(parts[1])
+      }
+    } catch {}
+
+    const changes = stdout.split('\n').filter(Boolean).map(line => {
+      const status = line.slice(0, 2) // Keep both characters for staging info
+      const path = line.slice(3)
+      return { status, path }
+    })
+    
+    return { branch, ahead, behind, changes }
+  } catch (e) {
+    return { branch: '', ahead: 0, behind: 0, changes: [] }
+  }
+})
+
+ipcMain.handle('git-stage', async (_e, dirPath: string, filePath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    execSync(`git add "${filePath}"`, { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-unstage', async (_e, dirPath: string, filePath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    // If it's a new file (status A), we might need to use reset
+    execSync(`git reset HEAD "${filePath}"`, { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-commit', async (_e, dirPath: string, message: string) => {
+  const { execSync } = require('child_process')
+  try {
+    // Only commit staged changes
+    execSync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-push', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    execSync('git push', { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-pull', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    execSync('git pull', { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-fetch', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    execSync('git fetch', { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-log', async (_e, dirPath: string) => {
+  const { execSync } = require('child_process')
+  try {
+    const stdout = execSync('git log --oneline -n 20', { cwd: dirPath, encoding: 'utf-8' })
+    return stdout.split('\n').filter(Boolean).map(line => {
+      const hash = line.slice(0, 7)
+      const message = line.slice(8)
+      return { hash, message }
+    })
+  } catch (e) {
+    return []
+  }
+})
+
+ipcMain.handle('github-login', async () => {
+  const { shell } = require('electron')
+  const CLIENT_ID = 'your_client_id_here' // Placeholder
+  const GITHUB_AUTH_URL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=repo,user`
+  shell.openExternal(GITHUB_AUTH_URL)
+  return true
+})
+
 // Sessions persistence
 const sessionsPath = path.join(app.getPath('userData'), 'sessions.json')
 
