@@ -59,6 +59,7 @@ export default function App() {
   const [tree, setTree] = useState<FileNode[]>([])
   const [openDirs, setOpenDirs] = useState<Set<string>>(new Set())
   const [openFile, setOpenFile] = useState<string | null>(null)
+  const [tabs, setTabs] = useState<string[]>([])
   const [fileContent, setFileContent] = useState('')
   const [diffInfo, setDiffInfo] = useState<{ filename: string; original: string; current: string } | null>(null)
   const [model, setModel] = useState('')
@@ -130,6 +131,10 @@ export default function App() {
   }
 
   async function selectFile(path: string, fromHistory = false) {
+    if (!tabs.includes(path)) {
+      setTabs(prev => [...prev, path])
+    }
+    
     const content = await window.api.readFile(path)
     setOpenFile(path)
     setFileContent(content)
@@ -142,6 +147,21 @@ export default function App() {
         setHistoryIdx(next.length - 1)
         return next
       })
+    }
+  }
+
+  function closeTab(path: string, e?: React.MouseEvent) {
+    if (e) e.stopPropagation()
+    const newTabs = tabs.filter(t => t !== path)
+    setTabs(newTabs)
+    
+    if (openFile === path) {
+      if (newTabs.length > 0) {
+        selectFile(newTabs[newTabs.length - 1], true)
+      } else {
+        setOpenFile(null)
+        setFileContent('')
+      }
     }
   }
 
@@ -422,6 +442,36 @@ export default function App() {
           )}
         </div>
         <div className="center-column">
+          <div className="tab-container">
+            {tabs.map(t => (
+              <div 
+                key={t} 
+                className={`tab ${openFile === t ? 'tab--active' : ''}`}
+                onClick={() => selectFile(t, true)}
+              >
+                <span className="tab-icon">
+                  {t.endsWith('.js') || t.endsWith('.ts') ? '📄' : '📝'}
+                </span>
+                <span className="tab-label">{t.split(/[\\/]/).pop()}</span>
+                <button className="tab-close" onClick={(e) => closeTab(t, e)}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+            {diffInfo && (
+              <div className="tab tab--active tab--diff">
+                <span className="tab-icon">↔</span>
+                <span className="tab-label">{diffInfo.filename} (Diff)</span>
+                <button className="tab-close" onClick={() => setDiffInfo(null)}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
           <div className="editor-area">
             {diffInfo ? (
               <DiffView 

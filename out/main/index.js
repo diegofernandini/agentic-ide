@@ -141,6 +141,29 @@ electron.ipcMain.handle("git-commit", async (_e, dirPath, message) => {
     return { success: false, error: e.message };
   }
 });
+electron.ipcMain.handle("git-get-staged-diff", async (_e, dirPath) => {
+  const { execSync } = require("child_process");
+  try {
+    const diff = execSync(`git diff --staged`, { cwd: dirPath }).toString();
+    return diff;
+  } catch {
+    return "";
+  }
+});
+electron.ipcMain.handle("git-get-file-diff", async (_e, dirPath, filePath) => {
+  const { execSync } = require("child_process");
+  try {
+    let original = "";
+    try {
+      original = execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath }).toString();
+    } catch {
+    }
+    const current = fs__namespace.readFileSync(path__namespace.join(dirPath, filePath), "utf-8");
+    return { original, current };
+  } catch (e) {
+    return { original: "", current: "", error: e.message };
+  }
+});
 electron.ipcMain.handle("git-push", async (_e, dirPath) => {
   const { execSync } = require("child_process");
   try {

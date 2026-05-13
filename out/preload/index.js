@@ -8,6 +8,8 @@ electron.contextBridge.exposeInMainWorld("api", {
   listFiles: (p) => electron.ipcRenderer.invoke("list-files", p),
   getGitStatus: (p) => electron.ipcRenderer.invoke("git-status", p),
   gitCommit: (p, msg) => electron.ipcRenderer.invoke("git-commit", p, msg),
+  gitGetStagedDiff: (p) => electron.ipcRenderer.invoke("git-get-staged-diff", p),
+  gitGetFileDiff: (p, f) => electron.ipcRenderer.invoke("git-get-file-diff", p, f),
   gitStage: (p, f) => electron.ipcRenderer.invoke("git-stage", p, f),
   gitUnstage: (p, f) => electron.ipcRenderer.invoke("git-unstage", p, f),
   gitPush: (p) => electron.ipcRenderer.invoke("git-push", p),

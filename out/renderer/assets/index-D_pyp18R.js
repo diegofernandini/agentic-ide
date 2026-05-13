@@ -7695,8 +7695,8 @@ function Editor({ path, content, onChange, onSave }) {
   ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-empty", children: "Open a folder and select a file" }) });
 }
 let sessionCounter = 1;
-function newSession() {
-  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [] };
+function newSession(mode = "default") {
+  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [], mode };
 }
 function MessageContent({ content, writes, onAccept, onRevert }) {
   const writeRe = /```write:([^\n]+)\n([\s\S]*?)```/g;
@@ -7795,7 +7795,8 @@ function ChatPanel({
   function clearSession() {
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: [] } : s15));
   }
-  async function buildSystemPrompt() {
+  async function buildSystemPrompt(mode) {
+    const sessionMode = activeSession.mode;
     let sys = `You are an agentic coding assistant with direct write access to the user's project files.
 
 When you need to create or modify files, you MUST use this exact format:
@@ -7830,6 +7831,27 @@ if __name__ == '__main__':
 \`\`\`write:requirements.txt
 flask
 \`\`\``;
+    if (sessionMode === "planning") {
+      sys += `
+
+[MODE: PLANNING]
+IMPORTANT: In this mode, you MUST create a detailed, structured plan BEFORE implementing anything.
+1. First, break down the task into clear steps with dependencies and verification points.
+2. Outline key decisions, potential edge cases, and constraints.
+3. Use markdown sections (##, ###) for clarity.
+4. ONLY after creating the plan, offer to implement it if the user confirms.
+5. Do NOT write code or files until explicitly asked to implement.`;
+    } else if (sessionMode === "questions") {
+      sys += `
+
+[MODE: QUESTIONS]
+IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a solution.
+1. Ask 3-5 focused questions about requirements, constraints, preferences, and edge cases.
+2. Wait for the user's answers before proposing any approach.
+3. Once you have clarity, explain your proposed approach and ask for confirmation.
+4. Only then write code/files if confirmed.
+5. Be conversational and thorough in understanding the user's needs.`;
+    }
     if (!rootPath) {
       if (openFile) sys += `
 
@@ -16845,6 +16867,294 @@ function TerminalPanel({ cwd }) {
     )) })
   ] });
 }
+const FileIcon = ({ path }) => {
+  const ext = path.split(".").pop()?.toLowerCase();
+  if (ext === "js") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--js", children: "JS" });
+  if (ext === "ts") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--ts", children: "TS" });
+  if (ext === "tsx" || ext === "jsx") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--react", children: "⚛" });
+  if (ext === "css") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--css", children: "CSS" });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon" });
+};
+function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }) {
+  const [gitInfo, setGitInfo] = reactExports.useState({ branch: "", ahead: 0, behind: 0, changes: [] });
+  const [history, setHistory] = reactExports.useState([]);
+  const [loading, setLoading] = reactExports.useState(false);
+  const [genLoading, setGenLoading] = reactExports.useState(false);
+  const [commitMsg, setCommitMsg] = reactExports.useState("");
+  const [isChangesExpanded, setIsChangesExpanded] = reactExports.useState(true);
+  const [isStagedExpanded, setIsStagedExpanded] = reactExports.useState(true);
+  const [isGraphExpanded, setIsGraphExpanded] = reactExports.useState(true);
+  const refreshGit = reactExports.useCallback(async () => {
+    if (!rootPath) return;
+    setLoading(true);
+    try {
+      const info = await window.api.getGitStatus(rootPath);
+      setGitInfo(info);
+      const log = await window.api.gitLog(rootPath);
+      setHistory(log);
+    } catch (e) {
+      console.error("Failed to get git info", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [rootPath]);
+  reactExports.useEffect(() => {
+    refreshGit();
+    const interval = setInterval(refreshGit, 3e4);
+    return () => clearInterval(interval);
+  }, [refreshGit]);
+  const handleCommit = async () => {
+    if (!rootPath || !commitMsg.trim()) return;
+    const stagedCount = gitInfo.changes.filter((c) => c.status[0] !== " " && c.status[0] !== "?").length;
+    if (stagedCount === 0) {
+      alert("There are no staged changes to commit.");
+      return;
+    }
+    setLoading(true);
+    const res = await window.api.gitCommit(rootPath, commitMsg);
+    if (res.success) {
+      setCommitMsg("");
+      refreshGit();
+    } else {
+      alert("Commit failed: " + res.error);
+    }
+    setLoading(false);
+  };
+  const handleGenerateMessage = async () => {
+    if (!rootPath || !model) return;
+    const diff = await window.api.gitGetStagedDiff(rootPath);
+    if (!diff.trim()) {
+      alert("Stage some changes first to generate a message.");
+      return;
+    }
+    setGenLoading(true);
+    try {
+      const prompt = `Generate a concise, professional git commit message for the following staged changes.
+Return ONLY the message, no quotes or prefix.
+Diff:
+${diff.slice(0, 4e3)}`;
+      const res = await fetch("http://localhost:11434/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+          system: "You are an expert developer. You write concise and meaningful commit messages following Conventional Commits format if possible (e.g. feat: ..., fix: ...)."
+        })
+      });
+      if (!res.ok) throw new Error("AI service failed");
+      const data = await res.json();
+      setCommitMsg(data.response.trim().replace(/^["']|["']$/g, ""));
+    } catch (e) {
+      console.error("Failed to generate message", e);
+      alert("Failed to generate message. Is Ollama running?");
+    } finally {
+      setGenLoading(false);
+    }
+  };
+  const handleStage = async (path) => {
+    if (!rootPath) return;
+    await window.api.gitStage(rootPath, path);
+    refreshGit();
+  };
+  const handleUnstage = async (path) => {
+    if (!rootPath) return;
+    await window.api.gitUnstage(rootPath, path);
+    refreshGit();
+  };
+  const handlePush = async () => {
+    if (!rootPath) return;
+    setLoading(true);
+    const res = await window.api.gitPush(rootPath);
+    if (res.success) refreshGit();
+    else alert("Push failed: " + res.error);
+    setLoading(false);
+  };
+  const handlePull = async () => {
+    if (!rootPath) return;
+    setLoading(true);
+    const res = await window.api.gitPull(rootPath);
+    if (res.success) refreshGit();
+    else alert("Pull failed: " + res.error);
+    setLoading(false);
+  };
+  const stagedChanges = gitInfo.changes.filter((c) => c.status[0] !== " " && c.status[0] !== "?");
+  const unstagedChanges = gitInfo.changes.filter((c) => c.status[1] !== " " || c.status === "??");
+  if (!rootPath) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-empty", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open a git repository to see source control" })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-view", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Source Control" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header-actions", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: refreshGit, title: "Refresh", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", className: loading ? "spinning" : "", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", title: "More Actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" }) }) })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-section", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-item", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", style: { opacity: 0.6 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v2H1V3a1 1 0 0 1 1-1zm13 4v7a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6h14z" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-info", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-repo-name", children: rootPath.split(/[\\/]/).pop() }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "sc-repo-branch", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-2-1V4.5a1.5 1.5 0 1 1 1 0v7a1.5 1.5 0 0 1-1 0zm2-8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" }) }),
+          gitInfo.branch,
+          gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+            "↑",
+            gitInfo.ahead
+          ] }),
+          gitInfo.behind > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+            "↓",
+            gitInfo.behind
+          ] })
+        ] })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section sc-section--changes", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-box", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-input-wrapper", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "textarea",
+            {
+              placeholder: "Message (Ctrl+Enter to commit)",
+              rows: 2,
+              value: commitMsg,
+              onChange: (e) => setCommitMsg(e.target.value),
+              onKeyDown: (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleCommit();
+              }
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: `sc-generate-btn ${genLoading ? "spinning" : ""}`,
+              onClick: handleGenerateMessage,
+              disabled: genLoading,
+              title: "Generate Message with AI",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0L6.5 4.5L2 6L6.5 7.5L8 12L9.5 7.5L14 6L9.5 4.5L8 0Z" }) })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-group", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "sc-commit-btn", onClick: handleCommit, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13.854 3.646l-8 8-3.5-3.5a.5.5 0 1 0-.708.708l4 4a.5.5 0 0 0 .708 0l8.5-8.5a.5.5 0 1 0-.708-.708z" }) }),
+            "Commit"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-commit-dropdown", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 6l4 4 4-4H4z" }) }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-changes-list", children: [
+        stagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsStagedExpanded(!isStagedExpanded), children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isStagedExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Staged Changes" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: stagedChanges.length })
+          ] }),
+          isStagedExpanded && stagedChanges.map((change, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FileIcon, { path: change.path }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-path-info", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filename", children: change.path.split(/[\\/]/).pop() }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filepath", children: change.path.split(/[\\/]/).slice(0, -1).join("/") })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-item-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-item-btn", onClick: (e) => {
+              e.stopPropagation();
+              handleUnstage(change.path);
+            }, title: "Unstage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" }) }) }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-status-badge sc-status-badge--A", children: change.status[0].trim() })
+          ] }, i))
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsChangesExpanded(!isChangesExpanded), children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isChangesExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Changes" }),
+            unstagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: unstagedChanges.length })
+          ] }),
+          isChangesExpanded && (unstagedChanges.length === 0 && stagedChanges.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-no-changes", children: "No changes detected" }) : unstagedChanges.map((change, i) => {
+            const s15 = change.status === "??" ? "U" : change.status[1].trim();
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(FileIcon, { path: change.path }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-path-info", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filename", children: change.path.split(/[\\/]/).pop() }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filepath", children: change.path.split(/[\\/]/).slice(0, -1).join("/") })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-item-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-item-btn", onClick: (e) => {
+                e.stopPropagation();
+                handleStage(change.path);
+              }, title: "Stage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4a.5.5 0 0 1 .5.5v3H11a.5.5 0 0 1 0 1H8.5v3a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1 0-1h2.5v-3A.5.5 0 0 1 8 4z" }) }) }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `sc-status-badge sc-status-badge--${s15}`, children: s15 })
+            ] }, i);
+          }))
+        ] })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-view", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-left", onClick: () => setIsGraphExpanded(!isGraphExpanded), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isGraphExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "History" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-actions", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePull, title: "Pull", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 5h-3V1h-4v4h-3l5 5 5-5zM0 14h16v1H0v-1z" }) }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePush, title: "Push", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 11h3v4h4v-4h3l-5-5-5 5zM16 2H0V1h16v1z" }) }) })
+        ] })
+      ] }),
+      isGraphExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-content", children: [
+        gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-item sc-commit-item--outgoing", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-commit-dot sc-commit-dot--outgoing" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: "Outgoing Changes" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-label", children: gitInfo.branch })
+        ] }),
+        history.map((commit, i) => {
+          const isActual = i === 0;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `sc-commit-item ${isActual ? "sc-commit-item--actual" : ""}`, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `sc-commit-dot ${isActual ? "sc-commit-dot--actual" : "sc-commit-dot--past"}` }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: commit.message }),
+            isActual && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-tag", children: gitInfo.branch }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-hash", children: commit.hash })
+          ] }, i);
+        })
+      ] })
+    ] })
+  ] });
+}
+function DiffView({ filename, original, current }) {
+  const originalLines = original.split("\n");
+  const currentLines = current.split("\n");
+  Math.max(originalLines.length, currentLines.length);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "diff-view", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "diff-header", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "diff-title", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z" }) }),
+      filename,
+      " (Diff)"
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "diff-container", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "diff-side diff-side--original", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "diff-side-header", children: "Original (HEAD)" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "diff-content", children: originalLines.map((line, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "diff-line", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "diff-line-number", children: i + 1 }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "diff-line-content", children: line || " " })
+        ] }, i)) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "diff-side diff-side--current", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "diff-side-header", children: "Modified (Working Tree)" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "diff-content", children: currentLines.map((line, i) => {
+          const isDifferent = originalLines[i] !== currentLines[i];
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `diff-line ${isDifferent ? "diff-line--changed" : ""}`, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "diff-line-number", children: i + 1 }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "diff-line-content", children: line || " " })
+          ] }, i);
+        }) })
+      ] })
+    ] })
+  ] });
+}
 function getBreadcrumbs(path) {
   return path.split("/").slice(-3);
 }
@@ -16854,9 +17164,14 @@ function App() {
   const [openDirs, setOpenDirs] = reactExports.useState(/* @__PURE__ */ new Set());
   const [openFile, setOpenFile] = reactExports.useState(null);
   const [fileContent, setFileContent] = reactExports.useState("");
+  const [diffInfo, setDiffInfo] = reactExports.useState(null);
   const [model, setModel] = reactExports.useState("");
   const [models, setModels] = reactExports.useState([]);
   const [terminalOpen, setTerminalOpen] = reactExports.useState(true);
+  const [user, setUser] = reactExports.useState(null);
+  const [loginLoading, setLoginLoading] = reactExports.useState(false);
+  const [sidebarOpen, setSidebarOpen] = reactExports.useState(true);
+  const [activeSidebar, setActiveSidebar] = reactExports.useState("explorer");
   const [history, setHistory] = reactExports.useState([]);
   const [historyIdx, setHistoryIdx] = reactExports.useState(-1);
   const [quickOpen, setQuickOpen] = reactExports.useState(false);
@@ -16869,6 +17184,11 @@ function App() {
       setModels(names);
       if (names.length > 0) setModel(names[0]);
     }).catch(() => {
+    });
+    window.api.loadSessions().then((sessions) => {
+      if (sessions && sessions.user) {
+        setUser(sessions.user);
+      }
     });
   }, []);
   reactExports.useEffect(() => {
@@ -16900,6 +17220,7 @@ function App() {
     const content = await window.api.readFile(path);
     setOpenFile(path);
     setFileContent(content);
+    setDiffInfo(null);
     setQuickOpen(false);
     if (!fromHistory) {
       setHistory((prev) => {
@@ -16909,6 +17230,12 @@ function App() {
         return next;
       });
     }
+  }
+  async function handleSelectDiff(relPath) {
+    if (!rootPath) return;
+    const res = await window.api.gitGetFileDiff(rootPath, relPath);
+    setDiffInfo({ filename: relPath, original: res.original, current: res.current });
+    setOpenFile(null);
   }
   function goBack() {
     if (historyIdx > 0) {
@@ -16931,6 +17258,28 @@ function App() {
   }
   async function refreshTree() {
     if (rootPath) setTree(await window.api.readDir(rootPath));
+  }
+  async function handleLogin() {
+    setLoginLoading(true);
+    try {
+      const mockUser = {
+        name: "Diego Fernandini",
+        login: "fernandini2007",
+        avatar: "https://github.com/fernandini2007.png"
+      };
+      await new Promise((r2) => setTimeout(r2, 1500));
+      setUser(mockUser);
+      const existing = await window.api.loadSessions() || {};
+      await window.api.saveSessions(JSON.stringify({ ...existing, user: mockUser }));
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+  async function handleLogout() {
+    setUser(null);
+    const existing = await window.api.loadSessions() || {};
+    delete existing.user;
+    await window.api.saveSessions(JSON.stringify(existing));
   }
   function toggleDir(path) {
     setOpenDirs((prev) => {
@@ -16997,16 +17346,126 @@ function App() {
         ] }, f2);
       }) })
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "main-layout", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sidebar", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "main-layout", style: { "--sidebar-width": sidebarOpen ? "220px" : "0px" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `activity-btn ${activeSidebar === "explorer" && sidebarOpen ? "activity-btn--active" : ""}`,
+            onClick: () => {
+              if (activeSidebar === "explorer") setSidebarOpen(!sidebarOpen);
+              else {
+                setActiveSidebar("explorer");
+                setSidebarOpen(true);
+              }
+            },
+            title: "Explorer",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8.187 1.01l.445.511L13.19 6.2a.5.5 0 0 1 .127.324V14.5a.5.5 0 0 1-.5.5H3.18a.5.5 0 0 1-.5-.5V6.524a.5.5 0 0 1 .127-.323l4.558-4.678.446-.512a.25.25 0 0 1 .376 0zM3.68 7.037V14h9.133V7.037L8.187 2.25 3.68 7.037z" }) })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            className: `activity-btn ${activeSidebar === "git" && sidebarOpen ? "activity-btn--active" : ""}`,
+            onClick: () => {
+              if (activeSidebar === "git") setSidebarOpen(!sidebarOpen);
+              else {
+                setActiveSidebar("git");
+                setSidebarOpen(true);
+              }
+            },
+            title: "Source Control",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15.55 8.12l-6.8-6.8a1 1 0 0 0-1.41 0l-.88.88 1.6 1.6a1.5 1.5 0 1 1-1 1l-1.6-1.6-3.8 3.8a1 1 0 0 0 0 1.41l6.8 6.8a1 1 0 0 0 1.41 0l6.8-6.8a1 1 0 0 0 0-1.41zM8.5 11.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1.5-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" }) })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar-bottom", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: `activity-btn ${activeSidebar === "account" && sidebarOpen ? "activity-btn--active" : ""}`,
+              onClick: () => {
+                if (activeSidebar === "account") setSidebarOpen(!sidebarOpen);
+                else {
+                  setActiveSidebar("account");
+                  setSidebarOpen(true);
+                }
+              },
+              title: "Accounts",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" }) })
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "activity-btn", title: "Settings", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9.1 1.9L9 0H7l-.1 1.9c-.3.1-.6.2-.9.4L3.3.9l-1.4 1.4 1.4 1.7c-.2.3-.3.6-.4.9L1 5v2l1.9.1c.1.3.2.6.4.9l-1.4 1.7 1.4 1.4 1.7-1.4c.3.2.6.3.9.4L7 12h2l.1-1.9c.3-.1.6-.2.9-.4l1.7 1.4 1.4-1.4-1.4-1.7c.2-.3.3-.6.4-.9l1.9-.1V5l-1.9-.1c-.1-.3-.2-.6-.4-.9l1.4-1.7-1.4-1.4-1.7 1.4c-.3-.2-.6-.3-.9-.4zM8 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" }) }) })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar", style: { display: sidebarOpen ? "flex" : "none" }, children: activeSidebar === "explorer" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sidebar-header", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sidebar-btn", onClick: openFolder, children: "Open Folder" }),
           rootPath && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sidebar-root", children: rootPath.split("/").pop() })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: tree, onSelect: selectFile, openDirs, onToggleDir: toggleDir })
-      ] }),
+      ] }) : activeSidebar === "git" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SourceControl,
+        {
+          rootPath,
+          model,
+          onSelectFile: selectFile,
+          onSelectDiff: handleSelectDiff
+        }
+      ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "account-view", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Account" }),
+        !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "account-info", children: "Sign in to your GitHub account to access your repositories and sync your settings." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              className: "github-login-btn",
+              onClick: handleLogin,
+              disabled: loginLoading,
+              children: [
+                loginLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" }) }),
+                loginLoading ? "Signing in..." : "Sign in with GitHub"
+              ]
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "user-profile", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.avatar, alt: "Avatar", className: "profile-avatar" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-details", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-name", children: user.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "profile-login", children: [
+                "@",
+                user.login
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-stats", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "12" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Repos" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "158" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Stars" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-actions", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "profile-btn profile-btn--primary", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 3.5a.5.5 0 0 0-1 0V7H3.5a.5.5 0 0 0 0 1H7v3.5a.5.5 0 0 0 1 0V8h3.5a.5.5 0 0 0 0-1H8V3.5z" }) }),
+              "Sync Settings"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "profile-btn", onClick: handleLogout, children: "Sign Out" })
+          ] })
+        ] })
+      ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "center-column", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-area", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-area", children: diffInfo ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          DiffView,
+          {
+            filename: diffInfo.filename,
+            original: diffInfo.original,
+            current: diffInfo.current
+          }
+        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
           Editor,
           {
             path: openFile,
