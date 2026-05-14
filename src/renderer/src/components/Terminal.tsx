@@ -22,7 +22,7 @@ export default function TerminalPanel({ cwd }: Props) {
   const instances = useRef<Map<string, { xterm: XTerm; fit: FitAddon }>>(new Map())
 
   function createTab() {
-    const id = crypto.randomUUID()
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)
     const name = `bash ${tabCounter++}`
     setTabs(prev => [...prev, { id, name }])
     setActiveId(id)

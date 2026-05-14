@@ -6966,25 +6966,47 @@ var m = reactDomExports;
   client.createRoot = m.createRoot;
   client.hydrateRoot = m.hydrateRoot;
 }
-function FileTree({ nodes, onSelect, openDirs, onToggleDir, depth = 0 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "file-tree", style: { paddingLeft: depth * 12 }, children: nodes.map((node) => /* @__PURE__ */ jsxRuntimeExports.jsx(TreeNode, { node, onSelect, openDirs, onToggleDir, depth }, node.path)) });
+function FileTree({ nodes, onSelect, openDirs, onToggleDir, onContextMenu, depth = 0 }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "file-tree", style: { paddingLeft: depth * 12 }, children: nodes.map((node) => /* @__PURE__ */ jsxRuntimeExports.jsx(TreeNode, { node, onSelect, openDirs, onToggleDir, onContextMenu, depth }, node.path)) });
 }
-function TreeNode({ node, onSelect, openDirs, onToggleDir, depth }) {
+function TreeNode({ node, onSelect, openDirs, onToggleDir, onContextMenu, depth }) {
   const open = openDirs.has(node.path);
   if (node.isDir) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "tree-dir", onClick: () => onToggleDir(node.path), children: [
-        open ? "▾" : "▸",
-        " ",
-        node.name
-      ] }),
-      open && /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: node.children, onSelect, openDirs, onToggleDir, depth: depth + 1 })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "span",
+        {
+          className: "tree-dir",
+          onClick: () => onToggleDir(node.path),
+          onContextMenu: (e) => {
+            e.preventDefault();
+            onContextMenu?.(node.path, true);
+          },
+          children: [
+            open ? "▾" : "▸",
+            " ",
+            node.name
+          ]
+        }
+      ),
+      open && /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: node.children, onSelect, openDirs, onToggleDir, onContextMenu, depth: depth + 1 })
     ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "tree-file", onClick: () => onSelect(node.path), children: [
-    "  ",
-    node.name
-  ] }) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "span",
+    {
+      className: "tree-file",
+      onClick: () => onSelect(node.path),
+      onContextMenu: (e) => {
+        e.preventDefault();
+        onContextMenu?.(node.path, false);
+      },
+      children: [
+        "  ",
+        node.name
+      ]
+    }
+  ) });
 }
 function _arrayLikeToArray(r2, a) {
   (null == a || a > r2.length) && (a = r2.length);
@@ -7694,46 +7716,196 @@ function Editor({ path, content, onChange, onSave }) {
     )
   ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-empty", children: "Open a folder and select a file" }) });
 }
-let sessionCounter = 1;
-function newSession(mode = "default") {
-  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [], mode };
+const AGENT_MODES = ["agent", "plan", "debug", "multitask", "ask"];
+function newSession(count, mode = "agent") {
+  const now = Date.now();
+  const id2 = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+  return {
+    id: id2,
+    name: `Session ${count}`,
+    messages: [],
+    mode,
+    createdAt: now,
+    lastActive: now
+  };
+}
+function Markdown({ text }) {
+  const parts = [];
+  const lines = text.split("\n");
+  let currentBlock = [];
+  let mode = "p";
+  let codeLang = "";
+  const flush = (key) => {
+    if (currentBlock.length === 0 && mode !== "code") return;
+    const content = currentBlock.join("\n");
+    if (mode === "code") {
+      parts.push(
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md-code-block", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "md-code-header", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "md-code-lang", children: codeLang || "text" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "md-code-copy", onClick: () => navigator.clipboard.writeText(content), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" }) }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "md-code-content", children: /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: content }) })
+        ] }, key)
+      );
+    } else if (mode === "tree") {
+      parts.push(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "md-tree-block", children: currentBlock.map((line, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "md-tree-line", children: line.split("").map((char, ci2) => {
+          const isTreeChar = ["├", "─", "└", "│", " ", "."].includes(char);
+          return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: isTreeChar ? "md-tree-glyph" : "md-tree-text", children: char }, ci2);
+        }) }, idx)) }, key)
+      );
+    } else if (mode === "list") {
+      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2) }, idx)) }, key));
+    } else {
+      currentBlock.forEach((line, idx) => {
+        if (line.startsWith("### ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "md-h3", children: parseInline(line.slice(4)) }, `${key}-${idx}`));
+        else if (line.startsWith("## ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "md-h2", children: parseInline(line.slice(3)) }, `${key}-${idx}`));
+        else if (line.startsWith("# ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "md-h1", children: parseInline(line.slice(2)) }, `${key}-${idx}`));
+        else if (line.trim() === "") parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "md-spacer" }, `${key}-${idx}`));
+        else parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "md-p", children: parseInline(line) }, `${key}-${idx}`));
+      });
+    }
+    currentBlock = [];
+  };
+  lines.forEach((line, i) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("```")) {
+      if (mode === "code") {
+        flush(i);
+        mode = "p";
+      } else {
+        flush(i);
+        mode = "code";
+        codeLang = trimmed.slice(3).toLowerCase();
+      }
+      return;
+    }
+    if (mode === "code") {
+      currentBlock.push(line);
+      return;
+    }
+    const isTreeLine = trimmed.match(/^[├└│].*[├──└──│]/) || mode === "tree" && (trimmed.startsWith(".") || line.includes("├──") || line.includes("└──"));
+    if (isTreeLine) {
+      if (mode !== "tree") {
+        flush(i);
+        mode = "tree";
+      }
+      currentBlock.push(line);
+      return;
+    } else if (mode === "tree") {
+      flush(i);
+      mode = "p";
+    }
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      if (mode !== "list") {
+        flush(i);
+        mode = "list";
+      }
+      currentBlock.push(trimmed.slice(2));
+      return;
+    } else if (mode === "list") {
+      flush(i);
+      mode = "p";
+    }
+    currentBlock.push(line);
+  });
+  flush(9999);
+  function parseInline(t2) {
+    const tokens = [];
+    let i = 0;
+    while (i < t2.length) {
+      if (t2.startsWith("**", i)) {
+        const end = t2.indexOf("**", i + 2);
+        if (end !== -1) {
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, i));
+          i = end + 2;
+          continue;
+        }
+      }
+      if (t2[i] === "`") {
+        const end = t2.indexOf("`", i + 1);
+        if (end !== -1) {
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, i));
+          i = end + 1;
+          continue;
+        }
+      }
+      let nextSpecial = -1;
+      const nextBold = t2.indexOf("**", i);
+      const nextCode = t2.indexOf("`", i);
+      if (nextBold !== -1 && (nextCode === -1 || nextBold < nextCode)) nextSpecial = nextBold;
+      else if (nextCode !== -1) nextSpecial = nextCode;
+      if (nextSpecial === -1) {
+        tokens.push(t2.slice(i));
+        break;
+      } else {
+        tokens.push(t2.slice(i, nextSpecial));
+        i = nextSpecial;
+      }
+    }
+    return tokens;
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "markdown-body", children: parts });
 }
 function MessageContent({ content, writes, onAccept, onRevert }) {
-  const writeRe = /```write:([^\n]+)\n([\s\S]*?)```/g;
+  const blockRe = /```(write|replace):([^\n]+)\n([\s\S]*?)```/g;
   const parts = [];
   let last = 0;
   let match;
-  while ((match = writeRe.exec(content)) !== null) {
-    if (match.index > last) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: content.slice(last, match.index) }, last));
-    const filePath = match[1].trim();
-    const fileContent = match[2];
+  while ((match = blockRe.exec(content)) !== null) {
+    if (match.index > last) {
+      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { text: content.slice(last, match.index) }, `text-${last}`));
+    }
+    const type = match[1];
+    const filePath = match[2].trim();
+    const blockContent = match[3];
     const write = writes?.find((w2) => w2.path.endsWith(filePath) || w2.path === filePath);
     const fileName = filePath.split("/").pop();
     parts.push(
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-header", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-chevron", children: "›" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "write-block-count", children: [
-            fileContent.split("\n").length,
-            " edits to file"
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "write-block-file", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-dot" }),
-            fileName
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-action-btn", title: "Copy", onClick: () => navigator.clipboard.writeText(fileContent), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" }) }) }) }),
-          write && write.accepted !== null && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `write-status ${write.accepted ? "write-status--accepted" : "write-status--reverted"}`, children: write.accepted ? "✓ Accepted" : write.error ? `⚠ ${write.error}` : "↩ Reverted" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-header", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-info", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-icon", children: type === "replace" ? "Δ" : "+" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-file", children: fileName }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-type", children: type === "replace" ? "patch" : "write" })
         ] }),
-        (!write || write.accepted === null) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-footer", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-revert-btn", onClick: () => onRevert(filePath), children: "Revert" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-close-btn", onClick: () => onAccept(filePath), children: "×" })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-actions", children: [
+          write && write.accepted !== null ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `write-status-pill ${write.accepted ? "pill--accepted" : "pill--reverted"}`, children: write.accepted ? "Accepted" : "Reverted" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--revert", onClick: () => onRevert(filePath), children: "Discard" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onAccept(filePath), children: "Apply" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-icon-btn", onClick: () => navigator.clipboard.writeText(blockContent), title: "Copy", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" }) }) })
         ] })
-      ] }, match.index)
+      ] }) }, match.index)
     );
-    last = match.index + match[0].length;
+    last = blockRe.lastIndex;
   }
-  if (last < content.length) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: content.slice(last) }, last));
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-content", children: parts });
+  if (last < content.length) {
+    parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { text: content.slice(last) }, `text-${last}`));
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "msg-content-inner", children: parts });
+}
+function ModeIcon({ mode }) {
+  if (mode === "agent") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" })
+  ] });
+  if (mode === "plan") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 4.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1z" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "5", r: ".5" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "8", r: ".5" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "11", r: ".5" })
+  ] });
+  if (mode === "debug") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4.352 11.162c.03.03.064.057.1.082l.643.43c.123.083.272.128.425.128h4.96c.153 0 .302-.045.425-.128l.643-.43c.036-.025.07-.052.1-.082l.405-.405c.08-.08.128-.19.128-.304V5.47c0-.115-.048-.224-.128-.304l-.405-.405a.434.434 0 0 0-.1-.082L11.4 4.25a.515.515 0 0 0-.425-.128H5.625c-.153 0-.302.045-.425.128l-.643.43a.434.434 0 0 0-.1.082l-.405.405c-.08.08-.128.19-.128.304v5.076c0 .114.048.224.128.304l.405.405zM3.25 5.47c0-.4.162-.782.45-1.07l.405-.405a1.434 1.434 0 0 1 .33-.27L5.078 3.3a1.514 1.514 0 0 1 1.246-.375h3.35c.465 0 .91.135 1.246.375l.643.43a1.434 1.434 0 0 1 .33.27l.405.405c.288.288.45.67.45 1.07v5.076c0 .4-.162.782-.45 1.07l-.405.405a1.434 1.434 0 0 1-.33.27l-.643.43a1.514 1.514 0 0 1-1.246.375H6.325c-.465 0-.91-.135-1.246-.375l-.643-.43a1.434 1.434 0 0 1-.33-.27l-.405-.405a1.516 1.516 0 0 1-.45-1.07V5.47z" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0v-5A.5.5 0 0 1 8 5zM5.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 5.5 8z" })
+  ] });
+  if (mode === "multitask") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1 1a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V1zm1 0v6h6V1H2z" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M7 7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7zm1 0v6h6V7H8z" })
+  ] });
+  if (mode === "ask") return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14.5 3a.5.5 0 0 0-.5-.5H2a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h4.646l3.354 3.354V11H14a.5.5 0 0 0 .5-.5V3zm-1 7H9.5a.5.5 0 0 0-.5.5v2.293L6.354 10a.5.5 0 0 0-.354-.146H2.5V3.5h11V10z" }) });
+  return null;
 }
 function ChatPanel({
   model,
@@ -7745,7 +7917,7 @@ function ChatPanel({
   onWriteFile,
   onRefreshTree
 }) {
-  const [sessions, setSessions] = reactExports.useState([newSession()]);
+  const [sessions, setSessions] = reactExports.useState([newSession(1)]);
   const [activeId, setActiveId] = reactExports.useState(sessions[0].id);
   const [input, setInput] = reactExports.useState("");
   const [loading, setLoading] = reactExports.useState(false);
@@ -7754,103 +7926,123 @@ function ChatPanel({
   const autopilotRef = reactExports.useRef(true);
   const bottomRef = reactExports.useRef(null);
   const fileInputRef = reactExports.useRef(null);
+  const [editingId, setEditingId] = reactExports.useState(null);
+  const [editingName, setEditingName] = reactExports.useState("");
+  const [historySearch, setHistorySearch] = reactExports.useState("");
+  const [showDeleted, setShowDeleted] = reactExports.useState(false);
+  const [showForensics, setShowForensics] = reactExports.useState(false);
+  const [showModeMenu, setShowModeMenu] = reactExports.useState(false);
+  const [backups, setBackups] = reactExports.useState([]);
+  const hasLoadedRef = reactExports.useRef(false);
   const startTimeRef = reactExports.useRef(0);
   reactExports.useEffect(() => {
     window.api.loadSessions().then((saved) => {
       if (saved && saved.length > 0) {
-        setSessions(saved);
-        setActiveId(saved[0].id);
+        const migrated = saved.map((s15) => ({
+          ...s15,
+          createdAt: s15.createdAt || Date.now(),
+          lastActive: s15.lastActive || Date.now()
+        }));
+        setSessions(migrated);
+        setActiveId(migrated[0].id);
       }
+      hasLoadedRef.current = true;
     });
   }, []);
   reactExports.useEffect(() => {
-    window.api.saveSessions(JSON.stringify(sessions));
+    if (hasLoadedRef.current) {
+      window.api.saveSessions(JSON.stringify(sessions));
+    }
   }, [sessions]);
   const activeSession = sessions.find((s15) => s15.id === activeId) ?? sessions[0];
   const messages = activeSession.messages;
   reactExports.useEffect(() => {
+    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, lastActive: Date.now() } : s15));
+  }, [activeId]);
+  reactExports.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   function setMessages(updater) {
-    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: updater(s15.messages) } : s15));
+    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: updater(s15.messages), lastActive: Date.now() } : s15));
+  }
+  function setMode(mode) {
+    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, mode, lastActive: Date.now() } : s15));
+    setShowModeMenu(false);
   }
   function addSession() {
-    const s15 = newSession();
+    const nextNum = sessions.length + 1;
+    const s15 = newSession(nextNum);
     setSessions((prev) => [...prev, s15]);
     setActiveId(s15.id);
     setInput("");
   }
   function closeSession(id2) {
     setSessions((prev) => {
-      const next = prev.filter((s15) => s15.id !== id2);
-      if (next.length === 0) {
-        const s15 = newSession();
+      const next = prev.map((s15) => s15.id === id2 ? { ...s15, isDeleted: true } : s15);
+      const visible = next.filter((s15) => !s15.isDeleted);
+      if (visible.length === 0) {
+        const s15 = newSession(prev.length + 1);
         setActiveId(s15.id);
-        return [s15];
+        return [...next, s15];
       }
-      if (id2 === activeId) setActiveId(next[next.length - 1].id);
+      if (id2 === activeId) {
+        setActiveId(visible[visible.length - 1].id);
+      }
       return next;
     });
   }
   function clearSession() {
-    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: [] } : s15));
+    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: [], lastActive: Date.now() } : s15));
   }
+  function startRename(id2, name) {
+    setEditingId(id2);
+    setEditingName(name);
+  }
+  function saveRename() {
+    if (!editingId) return;
+    setSessions((prev) => prev.map((s15) => s15.id === editingId ? { ...s15, name: editingName.trim() || s15.name } : s15));
+    setEditingId(null);
+  }
+  const filteredHistory = sessions.filter((s15) => (showDeleted || !s15.isDeleted) && s15.name.toLowerCase().includes(historySearch.toLowerCase())).sort((a, b2) => b2.lastActive - a.lastActive);
   async function buildSystemPrompt(mode) {
     const sessionMode = activeSession.mode;
     let sys = `You are an agentic coding assistant with direct write access to the user's project files.
 
-When you need to create or modify files, you MUST use this exact format:
+When you need to modify existing files, you MUST use this exact format:
+\`\`\`replace:relative/path/to/file.ext
+<<<<
+existing code to replace
+====
+new code to insert
+>>>>
+\`\`\`
+
+When you need to create NEW files, use:
 \`\`\`write:relative/path/to/file.ext
-file content here
+full content
 \`\`\`
 
 Rules:
-- ALWAYS use write blocks to create or edit files. Never give manual instructions like "run this command" or "create this file yourself".
-- ALWAYS use relative paths (e.g. src/main.py, index.html). Never absolute paths.
-- Write ALL necessary files immediately without asking for confirmation.
-- If asked to create a project, write ALL files in one response.
-
-Example — if the user says "create a hello world python script", you respond:
-I'll create that for you.
-\`\`\`write:hello.py
-print("Hello, world!")
-\`\`\`
-
-Example — if the user says "create a flask app", you respond:
-\`\`\`write:app.py
-from flask import Flask
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return 'Hello!'
-
-if __name__ == '__main__':
-    app.run(debug=True)
-\`\`\`
-\`\`\`write:requirements.txt
-flask
-\`\`\``;
-    if (sessionMode === "planning") {
+- ALWAYS use replace blocks for edits.
+- The <<<< section must match exactly.
+- ALWAYS use relative paths.
+- Write ALL necessary files immediately.`;
+    if (sessionMode === "plan") {
       sys += `
 
-[MODE: PLANNING]
-IMPORTANT: In this mode, you MUST create a detailed, structured plan BEFORE implementing anything.
-1. First, break down the task into clear steps with dependencies and verification points.
-2. Outline key decisions, potential edge cases, and constraints.
-3. Use markdown sections (##, ###) for clarity.
-4. ONLY after creating the plan, offer to implement it if the user confirms.
-5. Do NOT write code or files until explicitly asked to implement.`;
-    } else if (sessionMode === "questions") {
+[MODE: PLANNING] Create a detailed plan BEFORE implementation.`;
+    } else if (sessionMode === "ask") {
       sys += `
 
-[MODE: QUESTIONS]
-IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a solution.
-1. Ask 3-5 focused questions about requirements, constraints, preferences, and edge cases.
-2. Wait for the user's answers before proposing any approach.
-3. Once you have clarity, explain your proposed approach and ask for confirmation.
-4. Only then write code/files if confirmed.
-5. Be conversational and thorough in understanding the user's needs.`;
+[MODE: QUESTIONS] Ask 3-5 focused questions before proposing anything.`;
+    } else if (sessionMode === "debug") {
+      sys += `
+
+[MODE: DEBUG] Analyze logs and hypothesize root causes.`;
+    } else if (sessionMode === "multitask") {
+      sys += `
+
+[MODE: MULTITASK] Optimized for many file changes at once.`;
     }
     if (!rootPath) {
       if (openFile) sys += `
@@ -7865,40 +8057,23 @@ ${fileContent.slice(0, 4e3)}
 
 Project root: ${rootPath}`;
     try {
-      const IGNORE = ["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv", "build", "coverage"];
+      const IGNORE = ["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv"];
       const files = await window.api.listFiles(rootPath);
       const filtered = files.filter((f2) => !IGNORE.some((ig2) => f2.includes(`/${ig2}/`) || f2.includes(`/${ig2}`)));
-      const relative = filtered.map((f2) => f2.replace(rootPath + "/", ""));
       sys += `
 
 Project files:
-${relative.slice(0, 150).join("\n")}`;
-      const priority = ["README.md", "readme.md", "package.json", "pyproject.toml", "requirements.txt"];
-      const toRead = filtered.filter((f2) => priority.some((p2) => f2.endsWith("/" + p2) || f2 === rootPath + "/" + p2)).slice(0, 3);
-      for (const fp of toRead) {
-        try {
-          const c = await window.api.readFile(fp);
-          if (c.length < 2e3) sys += `
-
---- ${fp.replace(rootPath + "/", "")} ---
-${c}`;
-        } catch {
-        }
-      }
-    } catch (e) {
-      console.warn("listFiles failed:", e);
+${filtered.map((f2) => f2.replace(rootPath + "/", "")).slice(0, 150).join("\n")}`;
+    } catch {
     }
     if (openFile) {
       const rel = openFile.replace(rootPath + "/", "");
-      if (!sys.includes(`--- ${rel} ---`)) {
-        const snippet = fileContent.length > 3e3 ? fileContent.slice(0, 3e3) + "\n...(truncated)" : fileContent;
-        sys += `
+      sys += `
 
 Currently open file (${rel}):
 \`\`\`
-${snippet}
+${fileContent.slice(0, 3e3)}
 \`\`\``;
-      }
     }
     return sys;
   }
@@ -7911,17 +8086,7 @@ ${snippet}
     setLoading(true);
     startTimeRef.current = Date.now();
     try {
-      let systemPrompt = "";
-      try {
-        systemPrompt = await buildSystemPrompt();
-      } catch (e) {
-        console.warn("buildSystemPrompt error, using fallback:", e);
-        systemPrompt = `You are a coding assistant. Project root: ${rootPath ?? "unknown"}`;
-        if (openFile) systemPrompt += `
-
-Open file: ${openFile}
-${fileContent}`;
-      }
+      const systemPrompt = await buildSystemPrompt();
       const res = await fetch("http://localhost:11434/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -7954,29 +8119,36 @@ ${fileContent}`;
                 msgs[msgs.length - 1] = { role: "assistant", content: assistantText };
                 return { ...s15, messages: msgs };
               }));
-              const blockRe = /```write:\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
+              const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
               blockRe.lastIndex = processedUpTo;
               let m2;
               while ((m2 = blockRe.exec(assistantText)) !== null) {
                 processedUpTo = m2.index + m2[0].length;
-                const filePath = decodeURIComponent(m2[1].trim());
-                const content = m2[2];
-                if (!rootPath && !filePath.startsWith("/")) {
-                  streamWrites.push({ path: filePath, content, accepted: false, error: "No workspace folder open" });
-                  continue;
-                }
+                const type = m2[1];
+                const filePath = decodeURIComponent(m2[2].trim());
+                const blockContent = m2[3];
+                if (!rootPath) continue;
                 const abs = filePath.startsWith("/") ? filePath : joinPath(rootPath, filePath);
                 let prevContent;
                 try {
                   prevContent = await window.api.readFile(abs);
                 } catch {
                 }
+                let finalContent = blockContent;
+                if (type === "replace" && prevContent) {
+                  const parts = blockContent.split("====");
+                  if (parts.length === 2) {
+                    const target = parts[0].replace("<<<<\n", "").trimEnd();
+                    const replacement = parts[1].replace("\n>>>>", "").replace(">>>>", "").trimStart();
+                    finalContent = prevContent.replace(target, replacement);
+                  }
+                }
                 if (autopilotRef.current) {
-                  await window.api.writeFile(abs, content);
-                  if (openFile && abs === openFile) onWriteFile(content);
+                  await window.api.writeFile(abs, finalContent);
+                  if (openFile && abs === openFile) onWriteFile(finalContent);
                   onRefreshTree();
                 }
-                streamWrites.push({ path: abs, content, accepted: autopilotRef.current ? null : null, prevContent });
+                streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent });
               }
             }
           } catch {
@@ -7984,50 +8156,74 @@ ${fileContent}`;
         }
       }
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1e3);
-      console.log("[send] stream done, assistantText length:", assistantText.length);
       const writes = streamWrites.length > 0 ? streamWrites : await processWrites(assistantText);
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = { ...updated[updated.length - 1], writes, elapsed };
         return updated;
       });
+      if (activeSession.name.startsWith("Session ") && history.length >= 1) {
+        generateSessionTitle(activeIdAtSend, [...history, { role: "assistant", content: assistantText }]);
+      }
     } catch (err) {
-      console.error("[send] error:", err);
       setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${String(err)}` }]);
     } finally {
       setLoading(false);
+    }
+  }
+  async function generateSessionTitle(sessionId, msgs) {
+    try {
+      const res = await fetch("http://localhost:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model,
+          stream: false,
+          messages: [
+            { role: "system", content: "Summarize the conversation into 3-5 word title. ONLY the title." },
+            ...msgs.slice(-2)
+          ]
+        })
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      const title = json.message?.content?.trim();
+      if (title) setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: title } : s15));
+    } catch {
     }
   }
   function joinPath(base, rel) {
     return base.replace(/\/$/, "") + "/" + rel.replace(/^\//, "");
   }
   async function processWrites(text) {
-    const re2 = /```write:\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
+    const re2 = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
     let match;
     const actions = [];
-    console.log("[processWrites] text length:", text.length);
-    console.log("[processWrites] has write block:", text.includes("```write:"));
     while ((match = re2.exec(text)) !== null) {
-      const filePath = decodeURIComponent(match[1].trim());
-      const content = match[2];
-      console.log("[processWrites] found write:", filePath, "rootPath:", rootPath);
-      if (!rootPath && !filePath.startsWith("/")) {
-        actions.push({ path: filePath, content, accepted: false, error: "No workspace folder open" });
-        continue;
-      }
+      const type = match[1];
+      const filePath = decodeURIComponent(match[2].trim());
+      const blockContent = match[3];
+      if (!rootPath) continue;
       const abs = filePath.startsWith("/") ? filePath : joinPath(rootPath, filePath);
-      console.log("[processWrites] writing to:", abs);
       let prevContent;
       try {
         prevContent = await window.api.readFile(abs);
       } catch {
       }
-      if (autopilotRef.current) {
-        const ok2 = await window.api.writeFile(abs, content);
-        console.log("[processWrites] writeFile result:", ok2);
-        if (openFile && abs === openFile) onWriteFile(content);
+      let finalContent = blockContent;
+      if (type === "replace" && prevContent) {
+        const parts = blockContent.split("====");
+        if (parts.length === 2) {
+          const target = parts[0].replace("<<<<\n", "").trimEnd();
+          const replacement = parts[1].replace("\n>>>>", "").replace(">>>>", "").trimStart();
+          finalContent = prevContent.replace(target, replacement);
+        }
       }
-      actions.push({ path: abs, content, accepted: null, prevContent });
+      if (autopilotRef.current) {
+        await window.api.writeFile(abs, finalContent);
+        if (openFile && abs === openFile) onWriteFile(finalContent);
+      }
+      actions.push({ path: abs, content: finalContent, accepted: null, prevContent });
     }
     if (actions.length > 0) onRefreshTree();
     return actions;
@@ -8077,99 +8273,122 @@ ${ev.target?.result}
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-panel", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-bar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-tabs", children: sessions.map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `session-tab ${s15.id === activeId ? "session-tab--active" : ""}`, onClick: () => setActiveId(s15.id), children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "session-tab-name", children: s15.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-tab-close", onClick: (e) => {
-          e.stopPropagation();
-          closeSession(s15.id);
-        }, children: "×" })
-      ] }, s15.id)) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-tabs", children: sessions.filter((s15) => !s15.isDeleted).map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          className: `session-tab ${s15.id === activeId ? "session-tab--active" : ""}`,
+          onClick: () => setActiveId(s15.id),
+          onDoubleClick: () => startRename(s15.id, s15.name),
+          children: [
+            editingId === s15.id ? /* @__PURE__ */ jsxRuntimeExports.jsx("input", { autoFocus: true, className: "session-tab-input", value: editingName, onChange: (e) => setEditingName(e.target.value), onBlur: saveRename, onKeyDown: (e) => e.key === "Enter" && saveRename() }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "session-tab-name", title: s15.name, children: s15.name }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-tab-close", onClick: (e) => {
+              e.stopPropagation();
+              closeSession(s15.id);
+            }, children: "×" })
+          ]
+        },
+        s15.id
+      )) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-actions", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-action-btn", onClick: addSession, title: "New Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-action-btn", onClick: () => setShowHistory((h2) => !h2), title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-3.5a.5.5 0 0 1 .5.5v3.25l2.5 1.5a.5.5 0 0 1-.5.866L7.75 9.25A.5.5 0 0 1 7.5 8.8V5a.5.5 0 0 1 .5-.5z" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-action-btn", onClick: clearSession, title: "Clear", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3h11V2h-11v1z" })
-        ] }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: addSession, title: "New Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z" }) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory((h2) => !h2), title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 16A8 8 0 1 1 8 0a8 8 0 0 1 0 16zm0-1.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM9 4v4.5l3.5 2-.75 1.25L8 9V4h1z" }) }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: clearSession, title: "Clear", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5zM4.5 3.5l.844 10.55a1 1 0 0 0 .997.95h6.23a1 1 0 0 0 .997-.95L14.414 3.5H4.5z" }) }) })
       ] })
     ] }),
-    showHistory && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-history-title", children: "Sessions" }),
-      sessions.map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `session-history-item ${s15.id === activeId ? "session-history-item--active" : ""}`, onClick: () => {
-        setActiveId(s15.id);
-        setShowHistory(false);
-      }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: s15.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "session-history-count", children: [
-          s15.messages.length,
-          " msgs"
-        ] })
-      ] }, s15.id))
-    ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Agent" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("select", { value: model, onChange: (e) => onModelChange(e.target.value), className: "model-select", children: models.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "", children: "No models found" }) : models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2)) })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mode-selector", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "mode-btn", onClick: () => setShowModeMenu(!showModeMenu), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ModeIcon, { mode: activeSession.mode }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "capitalize" }, children: activeSession.mode })
+        ] }),
+        showModeMenu && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mode-menu", children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `mode-menu-item ${activeSession.mode === m2 ? "active" : ""}`, onClick: () => {
+          setMode(m2);
+          setShowModeMenu(false);
+        }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ModeIcon, { mode: m2 }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "capitalize" }, children: m2 })
+        ] }, m2)) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "select",
+        {
+          className: "model-select",
+          value: model,
+          onChange: (e) => onModelChange(e.target.value),
+          children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `chat-action-btn ${autopilot ? "active" : ""}`, onClick: (e) => {
+        const next = !autopilot;
+        setAutopilot(next);
+        autopilotRef.current = next;
+      }, title: "Autopilot", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", style: { color: autopilot ? "#4ec9b0" : "inherit" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 11.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5h-7z" }) }) })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
       messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: m2.role === "user" ? "You" : "Agent" }),
-        m2.role === "assistant" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(MessageContent, { content: m2.content, writes: m2.writes, onAccept: (p2) => handleAccept(i, p2), onRevert: (p2) => handleRevert(i, p2) }),
-          m2.elapsed !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
-            m2.writes && m2.writes.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: m2.role.toUpperCase() }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            MessageContent,
+            {
+              content: m2.content,
+              writes: m2.writes,
+              onAccept: (p2) => handleAccept(i, p2),
+              onRevert: (p2) => handleRevert(i, p2)
+            }
+          ),
+          (m2.writes || m2.elapsed) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
+            m2.writes && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
               m2.writes.length,
-              " file",
-              m2.writes.length > 1 ? "s" : "",
-              " changed"
+              " patches"
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
-              "Elapsed: ",
-              m2.elapsed,
+            m2.elapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
+              m2.elapsed.toFixed(1),
               "s"
             ] })
           ] })
-        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "chat-content", children: m2.content })
+        ] })
       ] }, i)),
-      loading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg chat-msg--assistant", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: "Agent" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "typing", children: "▌" })
-      ] }),
+      loading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg chat-msg--assistant", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "typing", children: "▌" }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-toolbar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-wrap", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
         "textarea",
         {
+          className: "chat-input",
+          placeholder: "Ask anything, @ to mention...",
           value: input,
           onChange: (e) => setInput(e.target.value),
           onKeyDown: handleKey,
-          placeholder: model ? "Ask a question or describe a task..." : "Start Ollama first: ollama serve",
-          rows: 2,
-          disabled: loading,
-          className: "chat-textarea"
+          rows: Math.min(10, input.split("\n").length || 1),
+          style: { height: "auto" }
         }
-      ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-toolbar-bar", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-toolbar-left", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "toolbar-icon-btn", title: "Add context (#)", onClick: () => setInput((i) => i + "#"), children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: 14, fontWeight: 600 }, children: "#" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "toolbar-icon-btn", title: "Attach file", onClick: () => fileInputRef.current?.click(), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4.5 3a2.5 2.5 0 0 1 5 0v9a1.5 1.5 0 0 1-3 0V5a.5.5 0 0 1 1 0v7a.5.5 0 0 0 1 0V3a1.5 1.5 0 1 0-3 0v9a2.5 2.5 0 0 0 5 0V5a.5.5 0 0 1 1 0v7a3.5 3.5 0 1 1-7 0V3z" }) }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { ref: fileInputRef, type: "file", style: { display: "none" }, onChange: handleFileAttach }),
-          loading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "toolbar-spinner" })
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-actions", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4.406 3.342l.707-.707L9.13 6.652a2.5 2.5 0 0 1 0 3.536l-4.243 4.242a4 4 0 0 1-5.657-5.657l4.597-4.596a5.5 5.5 0 0 1 7.778 7.778l-3.536 3.536-.707-.707 3.536-3.536a4.5 4.5 0 0 0-6.364-6.364l-4.596 4.596a3 3 0 0 0 4.243 4.243l4.242-4.243a1.5 1.5 0 0 0 0-2.121l-4.018-4.018z" }) }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-toolbar-right", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "toolbar-model-label", children: model.split(":")[0] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "autopilot-toggle", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "autopilot-label", children: "Autopilot" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `toggle-btn ${autopilot ? "toggle-btn--on" : ""}`, onClick: () => {
-              setAutopilot((a) => {
-                autopilotRef.current = !a;
-                return !a;
-              });
-            }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "toggle-thumb" }) })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim() || !model, children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855H.766l-.452.18a.5.5 0 0 0-.082.887l.41.26.001.002 4.995 3.178 3.178 4.995.002.002.26.41a.5.5 0 0 0 .886-.083l6-15Zm-1.833 1.89L6.637 10.07l-.215-.338a.5.5 0 0 0-.154-.154l-.338-.215 7.494-7.494 1.178-.471-.47 1.178Z" }) }) })
-        ] })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim(), children: "Send" })
       ] })
+    ] }) }),
+    showHistory && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-panel", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-header", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "History" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { placeholder: "Search sessions...", value: historySearch, onChange: (e) => setHistorySearch(e.target.value), className: "history-search" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "history-close", onClick: () => setShowHistory(false), children: "×" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", children: filteredHistory.map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item", onClick: () => {
+        setActiveId(s15.id);
+        setShowHistory(false);
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-name", children: s15.name }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-time", children: new Date(s15.lastActive).toLocaleDateString() })
+      ] }, s15.id)) })
     ] })
   ] });
 }
@@ -16747,7 +16966,7 @@ function TerminalPanel({ cwd }) {
   const containerRef = reactExports.useRef(null);
   const instances = reactExports.useRef(/* @__PURE__ */ new Map());
   function createTab() {
-    const id2 = crypto.randomUUID();
+    const id2 = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     const name = `bash ${tabCounter++}`;
     setTabs((prev) => [...prev, { id: id2, name }]);
     setActiveId(id2);
@@ -17163,6 +17382,8 @@ function App() {
   const [tree, setTree] = reactExports.useState([]);
   const [openDirs, setOpenDirs] = reactExports.useState(/* @__PURE__ */ new Set());
   const [openFile, setOpenFile] = reactExports.useState(null);
+  const [tabs, setTabs] = reactExports.useState([]);
+  const [dirtyTabs, setDirtyTabs] = reactExports.useState(/* @__PURE__ */ new Set());
   const [fileContent, setFileContent] = reactExports.useState("");
   const [diffInfo, setDiffInfo] = reactExports.useState(null);
   const [model, setModel] = reactExports.useState("");
@@ -17192,6 +17413,16 @@ function App() {
     });
   }, []);
   reactExports.useEffect(() => {
+    if (rootPath) {
+      window.api.onFileChanged(() => {
+        refreshTree();
+      });
+    }
+    return () => {
+      window.api.offFileChanged();
+    };
+  }, [rootPath]);
+  reactExports.useEffect(() => {
     function onKey(e) {
       if ((e.metaKey || e.ctrlKey) && e.key === "p") {
         e.preventDefault();
@@ -17217,6 +17448,9 @@ function App() {
     setAllFiles(files);
   }
   async function selectFile(path, fromHistory = false) {
+    if (!tabs.includes(path)) {
+      setTabs((prev) => [...prev, path]);
+    }
     const content = await window.api.readFile(path);
     setOpenFile(path);
     setFileContent(content);
@@ -17229,6 +17463,29 @@ function App() {
         setHistoryIdx(next.length - 1);
         return next;
       });
+    }
+  }
+  function closeTab(path, e) {
+    if (e) e.stopPropagation();
+    if (dirtyTabs.has(path)) {
+      if (!window.confirm("You have unsaved changes. Are you sure you want to close this tab?")) {
+        return;
+      }
+    }
+    const newTabs = tabs.filter((t2) => t2 !== path);
+    setTabs(newTabs);
+    setDirtyTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(path);
+      return next;
+    });
+    if (openFile === path) {
+      if (newTabs.length > 0) {
+        selectFile(newTabs[newTabs.length - 1], true);
+      } else {
+        setOpenFile(null);
+        setFileContent("");
+      }
     }
   }
   async function handleSelectDiff(relPath) {
@@ -17255,9 +17512,43 @@ function App() {
     if (!openFile) return;
     await window.api.writeFile(openFile, content);
     setFileContent(content);
+    setDirtyTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(openFile);
+      return next;
+    });
   }
   async function refreshTree() {
     if (rootPath) setTree(await window.api.readDir(rootPath));
+  }
+  async function handleContextMenu(path, isDir) {
+    const action = await window.api.showContextMenu(path, isDir);
+    if (!action) return;
+    if (action === "delete") {
+      if (window.confirm(`Are you sure you want to delete ${path.split("/").pop()}?`)) {
+        await window.api.deleteFile(path);
+        refreshTree();
+      }
+    } else if (action === "rename") {
+      const newName = window.prompt("Enter new name:", path.split("/").pop());
+      if (newName) {
+        const newPath = path.substring(0, path.lastIndexOf("/")) + "/" + newName;
+        await window.api.renameFile(path, newPath);
+        refreshTree();
+      }
+    } else if (action === "new-file") {
+      const newName = window.prompt("Enter file name:");
+      if (newName) {
+        await window.api.writeFile(path + "/" + newName, "");
+        refreshTree();
+      }
+    } else if (action === "new-folder") {
+      const newName = window.prompt("Enter folder name:");
+      if (newName) {
+        await window.api.writeFile(path + "/" + newName + "/.gitkeep", "");
+        refreshTree();
+      }
+    }
   }
   async function handleLogin() {
     setLoginLoading(true);
@@ -17402,7 +17693,7 @@ function App() {
           /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sidebar-btn", onClick: openFolder, children: "Open Folder" }),
           rootPath && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sidebar-root", children: rootPath.split("/").pop() })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: tree, onSelect: selectFile, openDirs, onToggleDir: toggleDir })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: tree, onSelect: selectFile, openDirs, onToggleDir: toggleDir, onContextMenu: handleContextMenu })
       ] }) : activeSidebar === "git" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
         SourceControl,
         {
@@ -17458,6 +17749,30 @@ function App() {
         ] })
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "center-column", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab-container", children: [
+          tabs.map((t2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: `tab ${openFile === t2 ? "tab--active" : ""}`,
+              onClick: () => selectFile(t2, true),
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: t2.endsWith(".js") || t2.endsWith(".ts") ? "📄" : "📝" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-label", children: t2.split(/[\\/]/).pop() }),
+                dirtyTabs.has(t2) && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#fff", fontSize: "10px", marginLeft: "4px" }, children: "●" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: (e) => closeTab(t2, e), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z" }) }) })
+              ]
+            },
+            t2
+          )),
+          diffInfo && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab tab--active tab--diff", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: "↔" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "tab-label", children: [
+              diffInfo.filename,
+              " (Diff)"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: () => setDiffInfo(null), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z" }) }) })
+          ] })
+        ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-area", children: diffInfo ? /* @__PURE__ */ jsxRuntimeExports.jsx(
           DiffView,
           {
@@ -17470,7 +17785,12 @@ function App() {
           {
             path: openFile,
             content: fileContent,
-            onChange: setFileContent,
+            onChange: (val) => {
+              setFileContent(val);
+              if (openFile) {
+                setDirtyTabs((prev) => new Set(prev).add(openFile));
+              }
+            },
             onSave: saveFile
           }
         ) }),
