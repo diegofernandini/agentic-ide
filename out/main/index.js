@@ -1,7 +1,31 @@
 "use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 const electron = require("electron");
 const fs = require("fs");
 const path = require("path");
+const child_process = require("child_process");
+const util = require("util");
 const pty = require("node-pty");
 const os = require("os");
 function _interopNamespaceDefault(e) {
@@ -24,6 +48,16 @@ const fs__namespace = /* @__PURE__ */ _interopNamespaceDefault(fs);
 const path__namespace = /* @__PURE__ */ _interopNamespaceDefault(path);
 const pty__namespace = /* @__PURE__ */ _interopNamespaceDefault(pty);
 const os__namespace = /* @__PURE__ */ _interopNamespaceDefault(os);
+const execFileAsync = util.promisify(child_process.execFile);
+let currentWatcher = null;
+const forensicsLogPath = path__namespace.join(electron.app.getPath("userData"), "forensics.log");
+async function logActivity(type, details) {
+  const entry = JSON.stringify({ timestamp: (/* @__PURE__ */ new Date()).toISOString(), type, ...details }) + "\n";
+  try {
+    await fs__namespace.promises.appendFile(forensicsLogPath, entry, "utf-8");
+  } catch {
+  }
+}
 function createWindow() {
   const win = new electron.BrowserWindow({
     width: 1400,
@@ -47,57 +81,109 @@ electron.app.on("window-all-closed", () => electron.app.quit());
 electron.ipcMain.handle("open-folder", async () => {
   const result = await electron.dialog.showOpenDialog({ properties: ["openDirectory"] });
   if (result.canceled) return null;
-  return result.filePaths[0];
+  const dirPath = result.filePaths[0];
+  const chokidar = await import("chokidar");
+  if (currentWatcher) currentWatcher.close();
+  currentWatcher = chokidar.watch(dirPath, {
+    ignored: /(^|[\/\\])\../,
+    persistent: true,
+    ignoreInitial: true
+  });
+  currentWatcher.on("all", (event, path2) => {
+    electron.BrowserWindow.getAllWindows()[0]?.webContents.send("file-changed", { event, path: path2 });
+  });
+  return dirPath;
 });
-electron.ipcMain.handle("read-dir", (_e, dirPath) => {
-  function walk(dir) {
+electron.ipcMain.handle("read-dir", async (_e, dirPath) => {
+  async function walk(dir) {
     try {
-      return fs__namespace.readdirSync(dir).map((name) => {
-        const full = path__namespace.join(dir, name);
-        const isDir = fs__namespace.statSync(full).isDirectory();
-        return { name, path: full, isDir, children: isDir ? walk(full) : [] };
-      });
+      const entries = await fs__namespace.promises.readdir(dir, { withFileTypes: true });
+      return await Promise.all(entries.map(async (entry) => {
+        const full = path__namespace.join(dir, entry.name);
+        const isDir = entry.isDirectory();
+        return { name: entry.name, path: full, isDir, children: isDir ? await walk(full) : [] };
+      }));
     } catch {
       return [];
     }
   }
   return walk(dirPath);
 });
-electron.ipcMain.handle("read-file", (_e, filePath) => {
-  return fs__namespace.readFileSync(filePath, "utf-8");
+electron.ipcMain.handle("read-file", async (_e, filePath) => {
+  try {
+    return await fs__namespace.promises.readFile(filePath, "utf-8");
+  } catch {
+    return "";
+  }
 });
-electron.ipcMain.handle("write-file", (_e, filePath, content) => {
-  fs__namespace.mkdirSync(path__namespace.dirname(filePath), { recursive: true });
-  fs__namespace.writeFileSync(filePath, content, "utf-8");
+electron.ipcMain.handle("write-file", async (_e, filePath, content) => {
+  await fs__namespace.promises.mkdir(path__namespace.dirname(filePath), { recursive: true });
+  await fs__namespace.promises.writeFile(filePath, content, "utf-8");
+  await logActivity("file-write", { path: filePath, length: content.length });
   return true;
 });
-electron.ipcMain.handle("list-files", (_e, dirPath) => {
+electron.ipcMain.handle("delete-file", async (_e, p) => {
+  try {
+    await fs__namespace.promises.rm(p, { recursive: true, force: true });
+    return true;
+  } catch {
+    return false;
+  }
+});
+electron.ipcMain.handle("rename-file", async (_e, oldPath, newPath) => {
+  try {
+    await fs__namespace.promises.rename(oldPath, newPath);
+    return true;
+  } catch {
+    return false;
+  }
+});
+electron.ipcMain.handle("show-context-menu", async (_e, itemPath, isDir) => {
+  return new Promise((resolve) => {
+    const template = [
+      { label: "Rename", click: () => resolve("rename") },
+      { label: "Delete", click: () => resolve("delete") }
+    ];
+    if (isDir) {
+      template.unshift(
+        { label: "New File", click: () => resolve("new-file") },
+        { label: "New Folder", click: () => resolve("new-folder") },
+        { type: "separator" }
+      );
+    }
+    const menu = electron.Menu.buildFromTemplate(template);
+    menu.once("menu-will-close", () => setTimeout(() => resolve(null), 100));
+    menu.popup({ window: electron.BrowserWindow.getAllWindows()[0] });
+  });
+});
+electron.ipcMain.handle("list-files", async (_e, dirPath) => {
   const IGNORE = /* @__PURE__ */ new Set(["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv", "build", "coverage", ".DS_Store"]);
   const results = [];
-  function walk(dir) {
+  async function walk(dir) {
     try {
-      for (const name of fs__namespace.readdirSync(dir)) {
-        if (IGNORE.has(name)) continue;
-        const full = path__namespace.join(dir, name);
-        if (fs__namespace.statSync(full).isDirectory()) walk(full);
+      const entries = await fs__namespace.promises.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (IGNORE.has(entry.name)) continue;
+        const full = path__namespace.join(dir, entry.name);
+        if (entry.isDirectory()) await walk(full);
         else results.push(full);
       }
     } catch {
     }
   }
-  walk(dirPath);
+  await walk(dirPath);
   return results;
 });
 electron.ipcMain.handle("git-status", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    const stdout = execSync("git status --porcelain", { cwd: dirPath, encoding: "utf-8" });
-    const branch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: dirPath, encoding: "utf-8" }).trim();
+    const { stdout } = await execFileAsync("git", ["status", "--porcelain"], { cwd: dirPath, encoding: "utf-8" });
+    const { stdout: branchOut } = await execFileAsync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: dirPath, encoding: "utf-8" });
+    const branch = branchOut.trim();
     let ahead = 0;
     let behind = 0;
     try {
-      const syncStatus = execSync("git rev-list --count --left-right HEAD...@{u}", { cwd: dirPath, encoding: "utf-8" }).trim();
-      const parts = syncStatus.split("	");
+      const { stdout: syncStatus } = await execFileAsync("git", ["rev-list", "--count", "--left-right", "HEAD...@{u}"], { cwd: dirPath, encoding: "utf-8" });
+      const parts = syncStatus.trim().split("	");
       if (parts.length === 2) {
         ahead = parseInt(parts[0]);
         behind = parseInt(parts[1]);
@@ -115,86 +201,79 @@ electron.ipcMain.handle("git-status", async (_e, dirPath) => {
   }
 });
 electron.ipcMain.handle("git-stage", async (_e, dirPath, filePath) => {
-  const { execSync } = require("child_process");
   try {
-    execSync(`git add "${filePath}"`, { cwd: dirPath });
+    await execFileAsync("git", ["add", filePath], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-unstage", async (_e, dirPath, filePath) => {
-  const { execSync } = require("child_process");
   try {
-    execSync(`git reset HEAD "${filePath}"`, { cwd: dirPath });
+    await execFileAsync("git", ["reset", "HEAD", filePath], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-commit", async (_e, dirPath, message) => {
-  const { execSync } = require("child_process");
   try {
-    execSync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: dirPath });
+    await execFileAsync("git", ["commit", "-m", message], { cwd: dirPath });
+    await logActivity("git-commit", { dir: dirPath, message });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-get-staged-diff", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    const diff = execSync(`git diff --staged`, { cwd: dirPath }).toString();
-    return diff;
+    const { stdout } = await execFileAsync("git", ["diff", "--staged"], { cwd: dirPath });
+    return stdout;
   } catch {
     return "";
   }
 });
 electron.ipcMain.handle("git-get-file-diff", async (_e, dirPath, filePath) => {
-  const { execSync } = require("child_process");
   try {
     let original = "";
     try {
-      original = execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath }).toString();
+      const { stdout } = await execFileAsync("git", ["show", `HEAD:${filePath}`], { cwd: dirPath });
+      original = stdout;
     } catch {
     }
-    const current = fs__namespace.readFileSync(path__namespace.join(dirPath, filePath), "utf-8");
+    const current = await fs__namespace.promises.readFile(path__namespace.join(dirPath, filePath), "utf-8");
     return { original, current };
   } catch (e) {
     return { original: "", current: "", error: e.message };
   }
 });
 electron.ipcMain.handle("git-push", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    execSync("git push", { cwd: dirPath });
+    await execFileAsync("git", ["push"], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-pull", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    execSync("git pull", { cwd: dirPath });
+    await execFileAsync("git", ["pull"], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-fetch", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    execSync("git fetch", { cwd: dirPath });
+    await execFileAsync("git", ["fetch"], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
   }
 });
 electron.ipcMain.handle("git-log", async (_e, dirPath) => {
-  const { execSync } = require("child_process");
   try {
-    const stdout = execSync("git log --oneline -n 20", { cwd: dirPath, encoding: "utf-8" });
+    const { stdout } = await execFileAsync("git", ["log", "--oneline", "-n", "20"], { cwd: dirPath, encoding: "utf-8" });
     return stdout.split("\n").filter(Boolean).map((line) => {
       const hash = line.slice(0, 7);
       const message = line.slice(8);
@@ -212,19 +291,54 @@ electron.ipcMain.handle("github-login", async () => {
   return true;
 });
 const sessionsPath = path__namespace.join(electron.app.getPath("userData"), "sessions.json");
-electron.ipcMain.handle("load-sessions", () => {
+electron.ipcMain.handle("load-sessions", async () => {
   try {
-    if (fs__namespace.existsSync(sessionsPath)) {
-      return JSON.parse(fs__namespace.readFileSync(sessionsPath, "utf-8"));
-    }
+    const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
+    return JSON.parse(data);
   } catch {
   }
   return null;
 });
-electron.ipcMain.handle("save-sessions", (_e, data) => {
+electron.ipcMain.handle("list-backups", async () => {
   try {
-    fs__namespace.writeFileSync(sessionsPath, data, "utf-8");
+    const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+    if (!fs__namespace.existsSync(backupDir)) return [];
+    const files = await fs__namespace.promises.readdir(backupDir);
+    return files.filter((f) => f.startsWith("sessions.")).sort().reverse();
   } catch {
+    return [];
+  }
+});
+electron.ipcMain.handle("restore-backup", async (_e, backupFileName) => {
+  try {
+    const backupPath = path__namespace.join(electron.app.getPath("userData"), "backups", backupFileName);
+    await fs__namespace.promises.copyFile(backupPath, sessionsPath);
+    await logActivity("snapshot-restore", { snapshot: backupFileName });
+    const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
+    return JSON.parse(data);
+  } catch {
+    return null;
+  }
+});
+electron.ipcMain.handle("save-sessions", async (_e, data) => {
+  try {
+    if (fs__namespace.existsSync(sessionsPath)) {
+      const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+      if (!fs__namespace.existsSync(backupDir)) fs__namespace.mkdirSync(backupDir);
+      const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+      const backupPath = path__namespace.join(backupDir, `sessions.${timestamp}.json`);
+      await fs__namespace.promises.copyFile(sessionsPath, backupPath);
+      const backups = (await fs__namespace.promises.readdir(backupDir)).filter((f) => f.startsWith("sessions.")).sort().reverse();
+      if (backups.length > 10) {
+        for (const old of backups.slice(10)) {
+          await fs__namespace.promises.unlink(path__namespace.join(backupDir, old));
+        }
+      }
+    }
+    await fs__namespace.promises.writeFile(sessionsPath, data, "utf-8");
+    await logActivity("sessions-save", { size: data.length });
+  } catch (e) {
+    console.error("Failed to save sessions:", e);
   }
 });
 const terminals = /* @__PURE__ */ new Map();

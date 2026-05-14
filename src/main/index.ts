@@ -1,7 +1,19 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, MenuItemConstructorOptions } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'
 import { join } from 'path'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
+import type { FSWatcher } from 'chokidar'
+
+const execFileAsync = promisify(execFile)
+let currentWatcher: FSWatcher | null = null
+
+const forensicsLogPath = path.join(app.getPath('userData'), 'forensics.log')
+async function logActivity(type: string, details: any) {
+  const entry = JSON.stringify({ timestamp: new Date().toISOString(), type, ...details }) + '\n'
+  try { await fs.promises.appendFile(forensicsLogPath, entry, 'utf-8') } catch {}
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -36,60 +48,114 @@ interface FileNode {
 ipcMain.handle('open-folder', async () => {
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
   if (result.canceled) return null
-  return result.filePaths[0]
+  const dirPath = result.filePaths[0]
+  
+  const chokidar = await import('chokidar')
+  if (currentWatcher) currentWatcher.close()
+  currentWatcher = chokidar.watch(dirPath, {
+    ignored: /(^|[\/\\])\../,
+    persistent: true,
+    ignoreInitial: true
+  })
+  
+  currentWatcher.on('all', (event, path) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send('file-changed', { event, path })
+  })
+
+  return dirPath
 })
 
-ipcMain.handle('read-dir', (_e, dirPath: string) => {
-  function walk(dir: string): FileNode[] {
+ipcMain.handle('read-dir', async (_e, dirPath: string) => {
+  async function walk(dir: string): Promise<FileNode[]> {
     try {
-      return fs.readdirSync(dir).map(name => {
-        const full = path.join(dir, name)
-        const isDir = fs.statSync(full).isDirectory()
-        return { name, path: full, isDir, children: isDir ? walk(full) : [] }
-      })
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+      return await Promise.all(entries.map(async entry => {
+        const full = path.join(dir, entry.name)
+        const isDir = entry.isDirectory()
+        return { name: entry.name, path: full, isDir, children: isDir ? await walk(full) : [] }
+      }))
     } catch { return [] }
   }
   return walk(dirPath)
 })
 
-ipcMain.handle('read-file', (_e, filePath: string) => {
-  return fs.readFileSync(filePath, 'utf-8')
+ipcMain.handle('read-file', async (_e, filePath: string) => {
+  try {
+    return await fs.promises.readFile(filePath, 'utf-8')
+  } catch {
+    return ''
+  }
 })
 
-ipcMain.handle('write-file', (_e, filePath: string, content: string) => {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  fs.writeFileSync(filePath, content, 'utf-8')
+ipcMain.handle('write-file', async (_e, filePath: string, content: string) => {
+  await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
+  await fs.promises.writeFile(filePath, content, 'utf-8')
+  await logActivity('file-write', { path: filePath, length: content.length })
   return true
 })
 
-ipcMain.handle('list-files', (_e, dirPath: string) => {
+ipcMain.handle('delete-file', async (_e, p: string) => {
+  try {
+    await fs.promises.rm(p, { recursive: true, force: true })
+    return true
+  } catch { return false }
+})
+
+ipcMain.handle('rename-file', async (_e, oldPath: string, newPath: string) => {
+  try {
+    await fs.promises.rename(oldPath, newPath)
+    return true
+  } catch { return false }
+})
+
+ipcMain.handle('show-context-menu', async (_e, itemPath: string, isDir: boolean) => {
+  return new Promise<string | null>((resolve) => {
+    const template: MenuItemConstructorOptions[] = [
+      { label: 'Rename', click: () => resolve('rename') },
+      { label: 'Delete', click: () => resolve('delete') }
+    ]
+    if (isDir) {
+      template.unshift(
+        { label: 'New File', click: () => resolve('new-file') },
+        { label: 'New Folder', click: () => resolve('new-folder') },
+        { type: 'separator' }
+      )
+    }
+    const menu = Menu.buildFromTemplate(template)
+    menu.once('menu-will-close', () => setTimeout(() => resolve(null), 100))
+    menu.popup({ window: BrowserWindow.getAllWindows()[0] })
+  })
+})
+
+ipcMain.handle('list-files', async (_e, dirPath: string) => {
   const IGNORE = new Set(['node_modules', '.git', 'dist', 'out', '.next', '__pycache__', '.venv', 'venv', 'build', 'coverage', '.DS_Store'])
   const results: string[] = []
-  function walk(dir: string) {
+  async function walk(dir: string) {
     try {
-      for (const name of fs.readdirSync(dir)) {
-        if (IGNORE.has(name)) continue
-        const full = path.join(dir, name)
-        if (fs.statSync(full).isDirectory()) walk(full)
+      const entries = await fs.promises.readdir(dir, { withFileTypes: true })
+      for (const entry of entries) {
+        if (IGNORE.has(entry.name)) continue
+        const full = path.join(dir, entry.name)
+        if (entry.isDirectory()) await walk(full)
         else results.push(full)
       }
     } catch {}
   }
-  walk(dirPath)
+  await walk(dirPath)
   return results
 })
 
 ipcMain.handle('git-status', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    const stdout = execSync('git status --porcelain', { cwd: dirPath, encoding: 'utf-8' })
-    const branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: dirPath, encoding: 'utf-8' }).trim()
+    const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: dirPath, encoding: 'utf-8' })
+    const { stdout: branchOut } = await execFileAsync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dirPath, encoding: 'utf-8' })
+    const branch = branchOut.trim()
     
     let ahead = 0
     let behind = 0
     try {
-      const syncStatus = execSync('git rev-list --count --left-right HEAD...@{u}', { cwd: dirPath, encoding: 'utf-8' }).trim()
-      const parts = syncStatus.split('\t')
+      const { stdout: syncStatus } = await execFileAsync('git', ['rev-list', '--count', '--left-right', 'HEAD...@{u}'], { cwd: dirPath, encoding: 'utf-8' })
+      const parts = syncStatus.trim().split('\t')
       if (parts.length === 2) {
         ahead = parseInt(parts[0])
         behind = parseInt(parts[1])
@@ -97,7 +163,7 @@ ipcMain.handle('git-status', async (_e, dirPath: string) => {
     } catch {}
 
     const changes = stdout.split('\n').filter(Boolean).map(line => {
-      const status = line.slice(0, 2) // Keep both characters for staging info
+      const status = line.slice(0, 2)
       const path = line.slice(3)
       return { status, path }
     })
@@ -109,9 +175,8 @@ ipcMain.handle('git-status', async (_e, dirPath: string) => {
 })
 
 ipcMain.handle('git-stage', async (_e, dirPath: string, filePath: string) => {
-  const { execSync } = require('child_process')
   try {
-    execSync(`git add "${filePath}"`, { cwd: dirPath })
+    await execFileAsync('git', ['add', filePath], { cwd: dirPath })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -119,10 +184,8 @@ ipcMain.handle('git-stage', async (_e, dirPath: string, filePath: string) => {
 })
 
 ipcMain.handle('git-unstage', async (_e, dirPath: string, filePath: string) => {
-  const { execSync } = require('child_process')
   try {
-    // If it's a new file (status A), we might need to use reset
-    execSync(`git reset HEAD "${filePath}"`, { cwd: dirPath })
+    await execFileAsync('git', ['reset', 'HEAD', filePath], { cwd: dirPath })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -130,10 +193,9 @@ ipcMain.handle('git-unstage', async (_e, dirPath: string, filePath: string) => {
 })
 
 ipcMain.handle('git-commit', async (_e, dirPath: string, message: string) => {
-  const { execSync } = require('child_process')
   try {
-    // Only commit staged changes
-    execSync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: dirPath })
+    await execFileAsync('git', ['commit', '-m', message], { cwd: dirPath })
+    await logActivity('git-commit', { dir: dirPath, message })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -141,27 +203,22 @@ ipcMain.handle('git-commit', async (_e, dirPath: string, message: string) => {
 })
 
 ipcMain.handle('git-get-staged-diff', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    const diff = execSync(`git diff --staged`, { cwd: dirPath }).toString()
-    return diff
+    const { stdout } = await execFileAsync('git', ['diff', '--staged'], { cwd: dirPath })
+    return stdout
   } catch {
     return ''
   }
 })
 
 ipcMain.handle('git-get-file-diff', async (_e, dirPath: string, filePath: string) => {
-  const { execSync } = require('child_process')
   try {
-    // Get diff of specific file (unstaged or staged)
-    // We try to get the original content from HEAD
     let original = ''
     try {
-      original = execSync(`git show HEAD:"${filePath}"`, { cwd: dirPath }).toString()
-    } catch {
-      // Might be a new file
-    }
-    const current = fs.readFileSync(path.join(dirPath, filePath), 'utf-8')
+      const { stdout } = await execFileAsync('git', ['show', `HEAD:${filePath}`], { cwd: dirPath })
+      original = stdout
+    } catch {}
+    const current = await fs.promises.readFile(path.join(dirPath, filePath), 'utf-8')
     return { original, current }
   } catch (e: any) {
     return { original: '', current: '', error: e.message }
@@ -169,9 +226,8 @@ ipcMain.handle('git-get-file-diff', async (_e, dirPath: string, filePath: string
 })
 
 ipcMain.handle('git-push', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    execSync('git push', { cwd: dirPath })
+    await execFileAsync('git', ['push'], { cwd: dirPath })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -179,9 +235,8 @@ ipcMain.handle('git-push', async (_e, dirPath: string) => {
 })
 
 ipcMain.handle('git-pull', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    execSync('git pull', { cwd: dirPath })
+    await execFileAsync('git', ['pull'], { cwd: dirPath })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -189,9 +244,8 @@ ipcMain.handle('git-pull', async (_e, dirPath: string) => {
 })
 
 ipcMain.handle('git-fetch', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    execSync('git fetch', { cwd: dirPath })
+    await execFileAsync('git', ['fetch'], { cwd: dirPath })
     return { success: true }
   } catch (e: any) {
     return { success: false, error: e.message }
@@ -199,9 +253,8 @@ ipcMain.handle('git-fetch', async (_e, dirPath: string) => {
 })
 
 ipcMain.handle('git-log', async (_e, dirPath: string) => {
-  const { execSync } = require('child_process')
   try {
-    const stdout = execSync('git log --oneline -n 20', { cwd: dirPath, encoding: 'utf-8' })
+    const { stdout } = await execFileAsync('git', ['log', '--oneline', '-n', '20'], { cwd: dirPath, encoding: 'utf-8' })
     return stdout.split('\n').filter(Boolean).map(line => {
       const hash = line.slice(0, 7)
       const message = line.slice(8)
@@ -223,19 +276,60 @@ ipcMain.handle('github-login', async () => {
 // Sessions persistence
 const sessionsPath = path.join(app.getPath('userData'), 'sessions.json')
 
-ipcMain.handle('load-sessions', () => {
+ipcMain.handle('load-sessions', async () => {
   try {
-    if (fs.existsSync(sessionsPath)) {
-      return JSON.parse(fs.readFileSync(sessionsPath, 'utf-8'))
-    }
+    const data = await fs.promises.readFile(sessionsPath, 'utf-8')
+    return JSON.parse(data)
   } catch {}
   return null
 })
 
-ipcMain.handle('save-sessions', (_e, data: string) => {
+ipcMain.handle('list-backups', async () => {
   try {
-    fs.writeFileSync(sessionsPath, data, 'utf-8')
-  } catch {}
+    const backupDir = path.join(app.getPath('userData'), 'backups')
+    if (!fs.existsSync(backupDir)) return []
+    const files = await fs.promises.readdir(backupDir)
+    return files.filter(f => f.startsWith('sessions.')).sort().reverse()
+  } catch { return [] }
+})
+
+ipcMain.handle('restore-backup', async (_e, backupFileName: string) => {
+  try {
+    const backupPath = path.join(app.getPath('userData'), 'backups', backupFileName)
+    await fs.promises.copyFile(backupPath, sessionsPath)
+    await logActivity('snapshot-restore', { snapshot: backupFileName })
+    const data = await fs.promises.readFile(sessionsPath, 'utf-8')
+    return JSON.parse(data)
+  } catch { return null }
+})
+
+ipcMain.handle('save-sessions', async (_e, data: string) => {
+  try {
+    // Before overwriting, create a rotating backup
+    if (fs.existsSync(sessionsPath)) {
+      const backupDir = path.join(app.getPath('userData'), 'backups')
+      if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir)
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const backupPath = path.join(backupDir, `sessions.${timestamp}.json`)
+      await fs.promises.copyFile(sessionsPath, backupPath)
+      
+      // Keep only last 10 backups
+      const backups = (await fs.promises.readdir(backupDir))
+        .filter(f => f.startsWith('sessions.'))
+        .sort()
+        .reverse()
+      if (backups.length > 10) {
+        for (const old of backups.slice(10)) {
+          await fs.promises.unlink(path.join(backupDir, old))
+        }
+      }
+    }
+    await fs.promises.writeFile(sessionsPath, data, 'utf-8')
+    await logActivity('sessions-save', { size: data.length })
+  } catch (e) {
+    console.error('Failed to save sessions:', e)
+  }
 })
 
 // Terminal (node-pty)

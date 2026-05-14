@@ -6,6 +6,9 @@ electron.contextBridge.exposeInMainWorld("api", {
   readFile: (p) => electron.ipcRenderer.invoke("read-file", p),
   writeFile: (p, content) => electron.ipcRenderer.invoke("write-file", p, content),
   listFiles: (p) => electron.ipcRenderer.invoke("list-files", p),
+  deleteFile: (p) => electron.ipcRenderer.invoke("delete-file", p),
+  renameFile: (oldP, newP) => electron.ipcRenderer.invoke("rename-file", oldP, newP),
+  showContextMenu: (p, isDir) => electron.ipcRenderer.invoke("show-context-menu", p, isDir),
   getGitStatus: (p) => electron.ipcRenderer.invoke("git-status", p),
   gitCommit: (p, msg) => electron.ipcRenderer.invoke("git-commit", p, msg),
   gitGetStagedDiff: (p) => electron.ipcRenderer.invoke("git-get-staged-diff", p),
@@ -19,6 +22,8 @@ electron.contextBridge.exposeInMainWorld("api", {
   githubLogin: () => electron.ipcRenderer.invoke("github-login"),
   loadSessions: () => electron.ipcRenderer.invoke("load-sessions"),
   saveSessions: (data) => electron.ipcRenderer.invoke("save-sessions", data),
+  listBackups: () => electron.ipcRenderer.invoke("list-backups"),
+  restoreBackup: (name) => electron.ipcRenderer.invoke("restore-backup", name),
   terminalCreate: (id, cwd) => electron.ipcRenderer.invoke("terminal-create", id, cwd),
   terminalWrite: (id, data) => electron.ipcRenderer.invoke("terminal-write", id, data),
   terminalResize: (id, cols, rows) => electron.ipcRenderer.invoke("terminal-resize", id, cols, rows),
@@ -31,5 +36,11 @@ electron.contextBridge.exposeInMainWorld("api", {
   },
   offTerminalData: (id) => {
     electron.ipcRenderer.removeAllListeners(`terminal-data-${id}`);
+  },
+  onFileChanged: (cb) => {
+    electron.ipcRenderer.on("file-changed", (_e, data) => cb(data));
+  },
+  offFileChanged: () => {
+    electron.ipcRenderer.removeAllListeners("file-changed");
   }
 });

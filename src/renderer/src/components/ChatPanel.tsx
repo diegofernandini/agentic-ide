@@ -20,6 +20,9 @@ interface Session {
   name: string
   messages: Message[]
   mode: 'planning' | 'questions' | 'default'
+  createdAt: number
+  lastActive: number
+  isDeleted?: boolean
 }
 
 const AGENT_MODES = ['planning', 'questions', 'default'] as const
@@ -33,6 +36,8 @@ declare global {
       listFiles: (p: string) => Promise<string[]>
       loadSessions: () => Promise<Session[] | null>
       saveSessions: (data: string) => Promise<void>
+      listBackups: () => Promise<string[]>
+      restoreBackup: (name: string) => Promise<Session[] | null>
     }
   }
 }
@@ -48,9 +53,16 @@ interface Props {
   onRefreshTree: () => void
 }
 
-let sessionCounter = 1
-function newSession(mode: AgentMode = 'default'): Session {
-  return { id: crypto.randomUUID(), name: `Session ${sessionCounter++}`, messages: [], mode }
+function newSession(count: number, mode: AgentMode = 'default'): Session {
+  const now = Date.now()
+  return { 
+    id: crypto.randomUUID(), 
+    name: `Session ${count}`, 
+    messages: [], 
+    mode,
+    createdAt: now,
+    lastActive: now
+  }
 }
 
 function MessageContent({ content, writes, onAccept, onRevert }: {
@@ -59,15 +71,16 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
   onAccept: (path: string) => void
   onRevert: (path: string) => void
 }) {
-  const writeRe = /```write:([^\n]+)\n([\s\S]*?)```/g
+  const blockRe = /```(write|replace):([^\n]+)\n([\s\S]*?)```/g
   const parts: React.ReactNode[] = []
   let last = 0
   let match
 
-  while ((match = writeRe.exec(content)) !== null) {
+  while ((match = blockRe.exec(content)) !== null) {
     if (match.index > last) parts.push(<span key={last}>{content.slice(last, match.index)}</span>)
-    const filePath = match[1].trim()
-    const fileContent = match[2]
+    const type = match[1]
+    const filePath = match[2].trim()
+    const blockContent = match[3]
     const write = writes?.find(w => w.path.endsWith(filePath) || w.path === filePath)
     const fileName = filePath.split('/').pop()
 
@@ -75,12 +88,12 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
       <div key={match.index} className="write-block">
         <div className="write-block-header">
           <span className="write-block-chevron">›</span>
-          <span className="write-block-count">{fileContent.split('\n').length} edits to file</span>
+          <span className="write-block-count">{type === 'replace' ? 'Diff patch' : 'Write file'}</span>
           <span className="write-block-file">
             <span className="write-block-dot" />{fileName}
           </span>
           <div className="write-block-actions">
-            <button className="write-action-btn" title="Copy" onClick={() => navigator.clipboard.writeText(fileContent)}>
+            <button className="write-action-btn" title="Copy" onClick={() => navigator.clipboard.writeText(blockContent)}>
               <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
               </svg>
@@ -88,7 +101,7 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
           </div>
           {write && write.accepted !== null && (
             <span className={`write-status ${write.accepted ? 'write-status--accepted' : 'write-status--reverted'}`}>
-              {write.accepted ? '✓ Accepted' : write.error ? `⚠ ${write.error}` : '↩ Reverted'}
+              {write.accepted ? '✓ Accepted' : write.error ? `⚠ Error` : '↩ Reverted'}
             </span>
           )}
         </div>
@@ -121,79 +134,138 @@ export default function ChatPanel({
   const autopilotRef = useRef(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const [historySearch, setHistorySearch] = useState('')
+  const [showDeleted, setShowDeleted] = useState(false)
+  const [showForensics, setShowForensics] = useState(false)
+  const [backups, setBackups] = useState<string[]>([])
+  const hasLoadedRef = useRef(false)
   const startTimeRef = useRef<number>(0)
 
   useEffect(() => {
     window.api.loadSessions().then(saved => {
-      if (saved && saved.length > 0) { setSessions(saved); setActiveId(saved[0].id) }
+      if (saved && saved.length > 0) { 
+        // Migrate legacy sessions missing timestamps
+        const migrated = saved.map((s: any) => ({
+          ...s,
+          createdAt: s.createdAt || Date.now(),
+          lastActive: s.lastActive || Date.now()
+        }))
+        setSessions(migrated)
+        setActiveId(migrated[0].id) 
+      }
+      hasLoadedRef.current = true
     })
   }, [])
 
-  useEffect(() => { window.api.saveSessions(JSON.stringify(sessions)) }, [sessions])
+  useEffect(() => { 
+    if (hasLoadedRef.current) {
+      window.api.saveSessions(JSON.stringify(sessions)) 
+    }
+  }, [sessions])
 
   const activeSession = sessions.find(s => s.id === activeId) ?? sessions[0]
   const messages = activeSession.messages
 
+  useEffect(() => {
+    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, lastActive: Date.now() } : s))
+  }, [activeId])
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   function setMessages(updater: (prev: Message[]) => Message[]) {
-    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, messages: updater(s.messages) } : s))
+    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, messages: updater(s.messages), lastActive: Date.now() } : s))
   }
 
   function addSession() {
-    const s = newSession(); setSessions(prev => [...prev, s]); setActiveId(s.id); setInput('')
+    const nextNum = sessions.length + 1
+    const s = newSession(nextNum); 
+    setSessions(prev => [...prev, s]); 
+    setActiveId(s.id); 
+    setInput('')
+  }
+
+  function restoreSession(id: string) {
+    setSessions(prev => prev.map(s => s.id === id ? { ...s, isDeleted: false, lastActive: Date.now() } : s))
+    setActiveId(id)
+  }
+
+  async function openForensics() {
+    const list = await window.api.listBackups()
+    setBackups(list)
+    setShowForensics(true)
+  }
+
+  async function applyBackup(name: string) {
+    if (!confirm(`Restore history from ${name}? This will overwrite your current active sessions.`)) return
+    const restored = await window.api.restoreBackup(name)
+    if (restored) {
+      setSessions(restored)
+      setActiveId(restored[0].id)
+      setShowForensics(false)
+      setShowHistory(false)
+    }
   }
 
   function closeSession(id: string) {
     setSessions(prev => {
-      const next = prev.filter(s => s.id !== id)
-      if (next.length === 0) { const s = newSession(); setActiveId(s.id); return [s] }
-      if (id === activeId) setActiveId(next[next.length - 1].id)
+      const next = prev.map(s => s.id === id ? { ...s, isDeleted: true } : s)
+      const visible = next.filter(s => !s.isDeleted)
+      if (visible.length === 0) { 
+        const s = newSession(prev.length + 1)
+        setActiveId(s.id)
+        return [...next, s] 
+      }
+      if (id === activeId) {
+        setActiveId(visible[visible.length - 1].id)
+      }
       return next
     })
   }
 
   function clearSession() {
-    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, messages: [] } : s))
+    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, messages: [], lastActive: Date.now() } : s))
   }
+
+  function startRename(id: string, name: string) {
+    setEditingId(id); setEditingName(name)
+  }
+
+  function saveRename() {
+    if (!editingId) return
+    setSessions(prev => prev.map(s => s.id === editingId ? { ...s, name: editingName.trim() || s.name } : s))
+    setEditingId(null)
+  }
+
+  const filteredHistory = sessions
+    .filter(s => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(historySearch.toLowerCase()))
+    .sort((a, b) => b.lastActive - a.lastActive)
 
   // Build system prompt with real project context
   async function buildSystemPrompt(mode?: AgentMode): Promise<string> {
     const sessionMode = mode ?? activeSession.mode
     let sys = `You are an agentic coding assistant with direct write access to the user's project files.
 
-When you need to create or modify files, you MUST use this exact format:
+When you need to modify existing files, you MUST use this exact format to specify ONLY the parts that need to change:
+\`\`\`replace:relative/path/to/file.ext
+<<<<
+existing code to replace (must match exactly)
+====
+new code to insert
+>>>>
+\`\`\`
+
+When you need to create entirely NEW files, use this format:
 \`\`\`write:relative/path/to/file.ext
-file content here
+full file content here
 \`\`\`
 
 Rules:
-- ALWAYS use write blocks to create or edit files. Never give manual instructions like "run this command" or "create this file yourself".
+- ALWAYS use replace blocks to edit files. Never rewrite the entire file unless it's a new file.
+- The code in the <<<< section MUST be an exact string match of the original file content.
 - ALWAYS use relative paths (e.g. src/main.py, index.html). Never absolute paths.
-- Write ALL necessary files immediately without asking for confirmation.
-- If asked to create a project, write ALL files in one response.
-
-Example — if the user says "create a hello world python script", you respond:
-I'll create that for you.
-\`\`\`write:hello.py
-print("Hello, world!")
-\`\`\`
-
-Example — if the user says "create a flask app", you respond:
-\`\`\`write:app.py
-from flask import Flask
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return 'Hello!'
-
-if __name__ == '__main__':
-    app.run(debug=True)
-\`\`\`
-\`\`\`write:requirements.txt
-flask
-\`\`\``
+- Write ALL necessary files immediately without asking for confirmation.`
 
     // Add mode-specific instructions
     if (sessionMode === 'planning') {
@@ -307,26 +379,40 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
 
               // Detect completed write blocks during streaming and write immediately
               // Only scan the new portion of text to avoid re-processing old blocks
-              const blockRe = /```write:\s*([^\n]+?)\s*\n([\s\S]*?)```/g
+              const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
               blockRe.lastIndex = processedUpTo
               let m
               while ((m = blockRe.exec(assistantText)) !== null) {
                 processedUpTo = m.index + m[0].length
-                const filePath = decodeURIComponent(m[1].trim())
-                const content = m[2]
+                const type = m[1]
+                const filePath = decodeURIComponent(m[2].trim())
+                const blockContent = m[3]
                 if (!rootPath && !filePath.startsWith('/')) {
-                  streamWrites.push({ path: filePath, content, accepted: false, error: 'No workspace folder open' })
+                  streamWrites.push({ path: filePath, content: blockContent, accepted: false, error: 'No workspace folder open' })
                   continue
                 }
                 const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath!, filePath)
                 let prevContent: string | undefined
                 try { prevContent = await window.api.readFile(abs) } catch {}
+                
+                let finalContent = blockContent
+                if (type === 'replace' && prevContent) {
+                  const parts = blockContent.split('====')
+                  if (parts.length === 2) {
+                    const target = parts[0].replace('<<<<\n', '').trimEnd()
+                    const replacement = parts[1].replace('\n>>>>', '').replace('>>>>', '').trimStart()
+                    finalContent = prevContent.replace(target, replacement)
+                  } else {
+                    finalContent = prevContent // Fallback, malformed block
+                  }
+                }
+
                 if (autopilotRef.current) {
-                  await window.api.writeFile(abs, content)
-                  if (openFile && abs === openFile) onWriteFile(content)
+                  await window.api.writeFile(abs, finalContent)
+                  if (openFile && abs === openFile) onWriteFile(finalContent)
                   onRefreshTree()
                 }
-                streamWrites.push({ path: abs, content, accepted: autopilotRef.current ? null : null, prevContent })
+                streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent })
               }
             }
           } catch {}
@@ -342,6 +428,11 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
         updated[updated.length - 1] = { ...updated[updated.length - 1], writes, elapsed }
         return updated
       })
+
+      // Auto-generate title if it's the first message or still named "Session X"
+      if (activeSession.name.startsWith('Session ') && history.length >= 1) {
+        generateSessionTitle(activeIdAtSend, [...history, { role: 'assistant', content: assistantText }])
+      }
     } catch (err) {
       console.error('[send] error:', err)
       setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${String(err)}` }])
@@ -350,34 +441,67 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
     }
   }
 
+  async function generateSessionTitle(sessionId: string, msgs: Message[]) {
+    try {
+      const res = await fetch('http://localhost:11434/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model, stream: false,
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant. Summarize the following coding conversation into a concise 3-5 word title. Return ONLY the title, no punctuation, no quotes, no extra text.' },
+            ...msgs.slice(-2) // Use last exchange for context
+          ]
+        })
+      })
+      if (!res.ok) return
+      const json = await res.json()
+      const title = json.message?.content?.trim()
+      if (title && title.length > 3 && title.length < 50) {
+        setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, name: title } : s))
+      }
+    } catch (e) {
+      console.warn('Failed to generate title:', e)
+    }
+  }
+
   function joinPath(base: string, rel: string): string {
     return base.replace(/\/$/, '') + '/' + rel.replace(/^\//, '')
   }
 
   async function processWrites(text: string): Promise<WriteAction[]> {
-    const re = /```write:\s*([^\n]+?)\s*\n([\s\S]*?)```/g
+    const re = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
     let match
     const actions: WriteAction[] = []
-    console.log('[processWrites] text length:', text.length)
-    console.log('[processWrites] has write block:', text.includes('```write:'))
     while ((match = re.exec(text)) !== null) {
-      const filePath = decodeURIComponent(match[1].trim())
-      const content = match[2]
-      console.log('[processWrites] found write:', filePath, 'rootPath:', rootPath)
+      const type = match[1]
+      const filePath = decodeURIComponent(match[2].trim())
+      const blockContent = match[3]
       if (!rootPath && !filePath.startsWith('/')) {
-        actions.push({ path: filePath, content, accepted: false, error: 'No workspace folder open' })
+        actions.push({ path: filePath, content: blockContent, accepted: false, error: 'No workspace folder open' })
         continue
       }
       const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath!, filePath)
-      console.log('[processWrites] writing to:', abs)
       let prevContent: string | undefined
       try { prevContent = await window.api.readFile(abs) } catch {}
-      if (autopilotRef.current) {
-        const ok = await window.api.writeFile(abs, content)
-        console.log('[processWrites] writeFile result:', ok)
-        if (openFile && abs === openFile) onWriteFile(content)
+      
+      let finalContent = blockContent
+      if (type === 'replace' && prevContent) {
+        const parts = blockContent.split('====')
+        if (parts.length === 2) {
+          const target = parts[0].replace('<<<<\n', '').trimEnd()
+          const replacement = parts[1].replace('\n>>>>', '').replace('>>>>', '').trimStart()
+          finalContent = prevContent.replace(target, replacement)
+        } else {
+          finalContent = prevContent
+        }
       }
-      actions.push({ path: abs, content, accepted: null, prevContent })
+
+      if (autopilotRef.current) {
+        await window.api.writeFile(abs, finalContent)
+        if (openFile && abs === openFile) onWriteFile(finalContent)
+      }
+      actions.push({ path: abs, content: finalContent, accepted: null, prevContent })
     }
     if (actions.length > 0) onRefreshTree()
     return actions
@@ -426,9 +550,25 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
     <div className="chat-panel">
       <div className="session-bar">
         <div className="session-tabs">
-          {sessions.map(s => (
-            <div key={s.id} className={`session-tab ${s.id === activeId ? 'session-tab--active' : ''}`} onClick={() => setActiveId(s.id)}>
-              <span className="session-tab-name">{s.name}</span>
+          {sessions.filter(s => !s.isDeleted).map(s => (
+            <div 
+              key={s.id} 
+              className={`session-tab ${s.id === activeId ? 'session-tab--active' : ''}`} 
+              onClick={() => setActiveId(s.id)}
+              onDoubleClick={() => startRename(s.id, s.name)}
+            >
+              {editingId === s.id ? (
+                <input
+                  autoFocus
+                  className="session-tab-input"
+                  value={editingName}
+                  onChange={e => setEditingName(e.target.value)}
+                  onBlur={saveRename}
+                  onKeyDown={e => e.key === 'Enter' && saveRename()}
+                />
+              ) : (
+                <span className="session-tab-name" title={s.name}>{s.name}</span>
+              )}
               <button className="session-tab-close" onClick={e => { e.stopPropagation(); closeSession(s.id) }}>×</button>
             </div>
           ))}
@@ -447,17 +587,97 @@ IMPORTANT: In this mode, you MUST ask clarifying questions BEFORE proposing a so
       </div>
 
       {showHistory && (
-        <div className="session-history">
-          <div className="session-history-title">Sessions</div>
-          {sessions.map(s => (
-            <div key={s.id} className={`session-history-item ${s.id === activeId ? 'session-history-item--active' : ''}`} onClick={() => { setActiveId(s.id); setShowHistory(false) }}>
-              <span>{s.name}</span>
-              <span className="session-history-count">{s.messages.length} msgs</span>
+        <div className="session-history-overlay">
+          <div className="session-history">
+            <div className="session-history-header">
+              <span className="session-history-title">Chat History</span>
+              <div className="history-header-actions">
+                <button className="history-action-link" onClick={openForensics}>
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 4 }}><path d="M11.5 4a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM9.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM9.5 9a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1h-4zM9.5 11a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 2v12h6V2H2z"/></svg>
+                  Time Machine
+                </button>
+                <button className="session-history-close" onClick={() => setShowHistory(false)}>×</button>
+              </div>
             </div>
-          ))}
+            <div className="session-history-search">
+              <input 
+                type="text" 
+                placeholder="Search sessions..." 
+                value={historySearch}
+                onChange={e => setHistorySearch(e.target.value)}
+                autoFocus
+              />
+              <div className="history-filters">
+                <label className="history-filter-label">
+                  <input type="checkbox" checked={showDeleted} onChange={e => setShowDeleted(e.target.checked)} />
+                  Show Deleted
+                </label>
+              </div>
+            </div>
+            <div className="session-history-list">
+              {filteredHistory.map(s => (
+                <div 
+                  key={s.id} 
+                  className={`session-history-item ${s.id === activeId ? 'session-history-item--active' : ''}`} 
+                  onClick={() => { setActiveId(s.id); setShowHistory(false) }}
+                >
+                  <div className={`history-item-main ${s.isDeleted ? 'history-item--deleted' : ''}`}>
+                    <span className="history-item-name">{s.name} {s.isDeleted && '(Deleted)'}</span>
+                    <span className="history-item-meta">
+                      {s.messages.length} msgs • {new Date(s.lastActive).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="history-item-actions">
+                    {s.isDeleted ? (
+                      <button onClick={e => { e.stopPropagation(); restoreSession(s.id) }} title="Restore">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M10.243 6.243L8 8.485 5.757 6.243 4.343 7.657 8 11.314l3.657-3.657-1.414-1.414z"/></svg>
+                      </button>
+                    ) : (
+                      <button onClick={e => { e.stopPropagation(); closeSession(s.id) }} title="Delete">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1 0-2h3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3h11V2h-11v1z"/></svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {filteredHistory.length === 0 && (
+                <div className="history-empty">No sessions found</div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
+      {showForensics && (
+        <div className="session-history-overlay">
+          <div className="session-history">
+            <div className="session-history-header">
+              <span className="session-history-title">Forensic Time Machine</span>
+              <button className="session-history-close" onClick={() => setShowForensics(false)}>×</button>
+            </div>
+            <div className="forensic-info">
+              These are rotating snapshots of your history taken every time you save.
+              Restoring one will replace your current sessions.
+            </div>
+            <div className="session-history-list">
+              {backups.map(name => (
+                <div key={name} className="session-history-item" onClick={() => applyBackup(name)}>
+                  <div className="history-item-main">
+                    <span className="history-item-name">{name.replace('sessions.', '').replace('.json', '')}</span>
+                    <span className="history-item-meta">Snapshot Backup</span>
+                  </div>
+                  <div className="history-item-actions">
+                    <button title="Restore Snapshot">
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M10.243 6.243L8 8.485 5.757 6.243 4.343 7.657 8 11.314l3.657-3.657-1.414-1.414z"/></svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {backups.length === 0 && <div className="history-empty">No snapshots found yet.</div>}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="chat-header">
         <span>Agent</span>
         <select value={model} onChange={e => onModelChange(e.target.value)} className="model-select">

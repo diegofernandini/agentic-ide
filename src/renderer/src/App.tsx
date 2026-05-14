@@ -37,6 +37,9 @@ declare global {
       readFile: (p: string) => Promise<string>
       writeFile: (p: string, content: string) => Promise<boolean>
       listFiles: (p: string) => Promise<string[]>
+      deleteFile: (p: string) => Promise<boolean>
+      renameFile: (oldP: string, newP: string) => Promise<boolean>
+      showContextMenu: (p: string, isDir: boolean) => Promise<string | null>
       loadSessions: () => Promise<Session[] | null>
       saveSessions: (data: string) => Promise<void>
       getGitStatus: (p: string) => Promise<{ branch: string; ahead: number; behind: number; changes: { status: string; path: string }[] }>
@@ -50,6 +53,8 @@ declare global {
       gitFetch: (p: string) => Promise<{ success: boolean; error?: string }>
       gitLog: (p: string) => Promise<{ hash: string; message: string }[]>
       githubLogin: () => Promise<boolean>
+      onFileChanged: (cb: (data: { event: string; path: string }) => void) => void
+      offFileChanged: () => void
     }
   }
 }
@@ -60,6 +65,7 @@ export default function App() {
   const [openDirs, setOpenDirs] = useState<Set<string>>(new Set())
   const [openFile, setOpenFile] = useState<string | null>(null)
   const [tabs, setTabs] = useState<string[]>([])
+  const [dirtyTabs, setDirtyTabs] = useState<Set<string>>(new Set())
   const [fileContent, setFileContent] = useState('')
   const [diffInfo, setDiffInfo] = useState<{ filename: string; original: string; current: string } | null>(null)
   const [model, setModel] = useState('')
@@ -100,6 +106,17 @@ export default function App() {
       }
     })
   }, [])
+
+  useEffect(() => {
+    if (rootPath) {
+      window.api.onFileChanged(() => {
+        refreshTree()
+      })
+    }
+    return () => {
+      window.api.offFileChanged()
+    }
+  }, [rootPath])
 
   // Cmd+P to open quick open
   useEffect(() => {
@@ -152,8 +169,20 @@ export default function App() {
 
   function closeTab(path: string, e?: React.MouseEvent) {
     if (e) e.stopPropagation()
+    
+    if (dirtyTabs.has(path)) {
+      if (!window.confirm('You have unsaved changes. Are you sure you want to close this tab?')) {
+        return
+      }
+    }
+
     const newTabs = tabs.filter(t => t !== path)
     setTabs(newTabs)
+    setDirtyTabs(prev => {
+      const next = new Set(prev)
+      next.delete(path)
+      return next
+    })
     
     if (openFile === path) {
       if (newTabs.length > 0) {
@@ -192,10 +221,47 @@ export default function App() {
     if (!openFile) return
     await window.api.writeFile(openFile, content)
     setFileContent(content)
+    setDirtyTabs(prev => {
+      const next = new Set(prev)
+      next.delete(openFile)
+      return next
+    })
   }
 
   async function refreshTree() {
     if (rootPath) setTree(await window.api.readDir(rootPath))
+  }
+
+  async function handleContextMenu(path: string, isDir: boolean) {
+    const action = await window.api.showContextMenu(path, isDir)
+    if (!action) return
+    
+    if (action === 'delete') {
+      if (window.confirm(`Are you sure you want to delete ${path.split('/').pop()}?`)) {
+        await window.api.deleteFile(path)
+        refreshTree()
+      }
+    } else if (action === 'rename') {
+      const newName = window.prompt('Enter new name:', path.split('/').pop())
+      if (newName) {
+        const newPath = path.substring(0, path.lastIndexOf('/')) + '/' + newName
+        await window.api.renameFile(path, newPath)
+        refreshTree()
+      }
+    } else if (action === 'new-file') {
+      const newName = window.prompt('Enter file name:')
+      if (newName) {
+        await window.api.writeFile(path + '/' + newName, '')
+        refreshTree()
+      }
+    } else if (action === 'new-folder') {
+      const newName = window.prompt('Enter folder name:')
+      if (newName) {
+        // Create an empty file to force directory creation
+        await window.api.writeFile(path + '/' + newName + '/.gitkeep', '')
+        refreshTree()
+      }
+    }
   }
 
   async function handleLogin() {
@@ -372,7 +438,7 @@ export default function App() {
                 <button className="sidebar-btn" onClick={openFolder}>Open Folder</button>
                 {rootPath && <span className="sidebar-root">{rootPath.split('/').pop()}</span>}
               </div>
-              <FileTree nodes={tree} onSelect={selectFile} openDirs={openDirs} onToggleDir={toggleDir} />
+              <FileTree nodes={tree} onSelect={selectFile} openDirs={openDirs} onToggleDir={toggleDir} onContextMenu={handleContextMenu} />
             </>
           ) : activeSidebar === 'git' ? (
             <SourceControl 
@@ -453,6 +519,7 @@ export default function App() {
                   {t.endsWith('.js') || t.endsWith('.ts') ? '📄' : '📝'}
                 </span>
                 <span className="tab-label">{t.split(/[\\/]/).pop()}</span>
+                {dirtyTabs.has(t) && <span style={{ color: '#fff', fontSize: '10px', marginLeft: '4px' }}>●</span>}
                 <button className="tab-close" onClick={(e) => closeTab(t, e)}>
                   <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z"/>
@@ -483,7 +550,12 @@ export default function App() {
               <Editor
                 path={openFile}
                 content={fileContent}
-                onChange={setFileContent}
+                onChange={(val) => {
+                  setFileContent(val)
+                  if (openFile) {
+                    setDirtyTabs(prev => new Set(prev).add(openFile))
+                  }
+                }}
                 onSave={saveFile}
               />
             )}

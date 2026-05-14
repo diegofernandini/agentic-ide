@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('api', {
   readFile: (p: string) => ipcRenderer.invoke('read-file', p),
   writeFile: (p: string, content: string) => ipcRenderer.invoke('write-file', p, content),
   listFiles: (p: string) => ipcRenderer.invoke('list-files', p),
+  deleteFile: (p: string) => ipcRenderer.invoke('delete-file', p),
+  renameFile: (oldP: string, newP: string) => ipcRenderer.invoke('rename-file', oldP, newP),
+  showContextMenu: (p: string, isDir: boolean) => ipcRenderer.invoke('show-context-menu', p, isDir),
   getGitStatus: (p: string) => ipcRenderer.invoke('git-status', p),
   gitCommit: (p: string, msg: string) => ipcRenderer.invoke('git-commit', p, msg),
   gitGetStagedDiff: (p: string) => ipcRenderer.invoke('git-get-staged-diff', p),
@@ -19,6 +22,8 @@ contextBridge.exposeInMainWorld('api', {
   githubLogin: () => ipcRenderer.invoke('github-login'),
   loadSessions: () => ipcRenderer.invoke('load-sessions'),
   saveSessions: (data: string) => ipcRenderer.invoke('save-sessions', data),
+  listBackups: () => ipcRenderer.invoke('list-backups'),
+  restoreBackup: (name: string) => ipcRenderer.invoke('restore-backup', name),
   terminalCreate: (id: string, cwd: string) => ipcRenderer.invoke('terminal-create', id, cwd),
   terminalWrite: (id: string, data: string) => ipcRenderer.invoke('terminal-write', id, data),
   terminalResize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('terminal-resize', id, cols, rows),
@@ -31,5 +36,11 @@ contextBridge.exposeInMainWorld('api', {
   },
   offTerminalData: (id: string) => {
     ipcRenderer.removeAllListeners(`terminal-data-${id}`)
+  },
+  onFileChanged: (cb: (data: { event: string, path: string }) => void) => {
+    ipcRenderer.on('file-changed', (_e, data) => cb(data))
+  },
+  offFileChanged: () => {
+    ipcRenderer.removeAllListeners('file-changed')
   }
 })
