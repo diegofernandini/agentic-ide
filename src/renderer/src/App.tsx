@@ -5,6 +5,7 @@ import ChatPanel from './components/ChatPanel'
 import TerminalPanel from './components/Terminal'
 import SourceControl from './components/SourceControl'
 import DiffView from './components/DiffView'
+import Dashboard from './components/Dashboard'
 
 interface Session {
   id: string
@@ -76,7 +77,7 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false)
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeSidebar, setActiveSidebar] = useState<'explorer' | 'git' | 'account'>('explorer')
+  const [activeSidebar, setActiveSidebar] = useState<'explorer' | 'git' | 'account' | 'dashboard'>('explorer')
 
   // Navigation history
   const [history, setHistory] = useState<string[]>([])
@@ -383,7 +384,12 @@ export default function App() {
       )}
 
       {/* Main 4-column layout */}
-      <div className="main-layout" style={{ '--sidebar-width': sidebarOpen ? '220px' : '0px' } as React.CSSProperties}>
+      <div 
+        className="main-layout" 
+        style={{ 
+          gridTemplateColumns: (sidebarOpen && activeSidebar !== 'dashboard') ? '48px 220px 1fr 400px' : '48px 1fr 400px' 
+        } as React.CSSProperties}
+      >
         <div className="activity-bar">
           <button 
             className={`activity-btn ${activeSidebar === 'explorer' && sidebarOpen ? 'activity-btn--active' : ''}`}
@@ -423,6 +429,15 @@ export default function App() {
                 <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
               </svg>
             </button>
+            <button 
+              className={`activity-btn ${activeSidebar === 'dashboard' ? 'activity-btn--active' : ''}`}
+              onClick={() => setActiveSidebar('dashboard')}
+              title="Dashboard"
+            >
+              <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM2 1h12a1 1 0 0 1 1 1v2H1V2a1 1 0 0 1 1-1zm12 14H2a1 1 0 0 1-1-1V5h14v9a1 1 0 0 1-1 1zM4 7h2v6H4V7zm4-2h2v8H8V5zm4 4h2v4h-2V9z"/>
+              </svg>
+            </button>
             <button className="activity-btn" title="Settings">
               <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M9.1 1.9L9 0H7l-.1 1.9c-.3.1-.6.2-.9.4L3.3.9l-1.4 1.4 1.4 1.7c-.2.3-.3.6-.4.9L1 5v2l1.9.1c.1.3.2.6.4.9l-1.4 1.7 1.4 1.4 1.7-1.4c.3.2.6.3.9.4L7 12h2l.1-1.9c.3-.1.6-.2.9-.4l1.7 1.4 1.4-1.4-1.4-1.7c.2-.3.3-.6.4-.9l1.9-.1V5l-1.9-.1c-.1-.3-.2-.6-.4-.9l1.4-1.7-1.4-1.4-1.7 1.4c-.3-.2-.6-.3-.9-.4zM8 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
@@ -431,7 +446,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="sidebar" style={{ display: sidebarOpen ? 'flex' : 'none' }}>
+        <div className="sidebar" style={{ display: (sidebarOpen && activeSidebar !== 'dashboard') ? 'flex' : 'none' }}>
           {activeSidebar === 'explorer' ? (
             <>
               <div className="sidebar-header">
@@ -508,7 +523,11 @@ export default function App() {
           )}
         </div>
         <div className="center-column">
-          <div className="tab-container">
+          {activeSidebar === 'dashboard' ? (
+            <Dashboard />
+          ) : (
+            <>
+              <div className="tab-container">
             {tabs.map(t => (
               <div 
                 key={t} 
@@ -560,8 +579,10 @@ export default function App() {
               />
             )}
           </div>
-          {terminalOpen && (
+          {terminalOpen && activeSidebar !== 'dashboard' && (
             <TerminalPanel cwd={rootPath} />
+          )}
+            </>
           )}
         </div>
         <ChatPanel
