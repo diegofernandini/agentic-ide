@@ -174,6 +174,10 @@ function Markdown({ text }: { text: string }) {
           tokens.push(<b key={i}>{t.slice(i + 2, end)}</b>)
           i = end + 2
           continue
+        } else {
+          tokens.push('**')
+          i += 2
+          continue
         }
       }
       // Inline Code `
@@ -182,6 +186,10 @@ function Markdown({ text }: { text: string }) {
         if (end !== -1) {
           tokens.push(<code key={i} className="md-inline-code">{t.slice(i + 1, end)}</code>)
           i = end + 1
+          continue
+        } else {
+          tokens.push('`')
+          i += 1
           continue
         }
       }
@@ -401,7 +409,12 @@ export default function ChatPanel({
 
   async function buildSystemPrompt(mode?: AgentMode): Promise<string> {
     const sessionMode = mode ?? activeSession.mode
-    let sys = `You are an agentic coding assistant with direct write access to the user's project files.
+    let sys = `You are an expert agentic coding assistant.`
+
+    if (sessionMode === 'ask') {
+      sys += `\n\n[MODE: ASK]\nYou are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code. DO NOT output any file modifications. If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:' or 'replace:' prefixes. If you detect a possible improvement or a code change that should be applied, explicitly prompt the user to switch to 'Agent' mode so you can implement it for them, or offer related subjects to clear up any doubts.`
+    } else {
+      sys += ` You have direct write access to the user's project files.
 
 When you need to modify existing files, you MUST use this exact format:
 \`\`\`replace:relative/path/to/file.ext
@@ -422,11 +435,10 @@ Rules:
 - The <<<< section must match exactly.
 - ALWAYS use relative paths.
 - Write ALL necessary files immediately.`
+    }
 
     if (sessionMode === 'plan') {
       sys += `\n\n[MODE: PLANNING] Create a detailed plan BEFORE implementation.`
-    } else if (sessionMode === 'ask') {
-      sys += `\n\n[MODE: QUESTIONS] Ask 3-5 focused questions before proposing anything.`
     } else if (sessionMode === 'debug') {
       sys += `\n\n[MODE: DEBUG] Analyze logs and hypothesize root causes.`
     } else if (sessionMode === 'multitask') {
@@ -560,16 +572,30 @@ Rules:
         body: JSON.stringify({
           model, stream: false,
           messages: [
-            { role: 'system', content: 'Summarize the conversation into 3-5 word title. ONLY the title.' },
+            { role: 'system', content: 'Summarize the conversation into a 3-5 word title. ONLY the title. No quotes, no markdown, no prefixes.' },
             ...msgs.slice(-2)
           ]
         })
       })
-      if (!res.ok) return
+      if (!res.ok) throw new Error('API failed')
       const json = await res.json()
-      const title = json.message?.content?.trim()
-      if (title) setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, name: title } : s))
-    } catch {}
+      const rawTitle = json.message?.content?.trim()
+      if (rawTitle) {
+        const title = rawTitle.replace(/^["']|["']$/g, '').replace(/\*/g, '')
+        setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, name: title } : s))
+        return
+      }
+    } catch (err) {
+      console.error('Auto-naming failed:', err)
+    }
+    
+    // Fallback: Use the first few words of the user's prompt
+    const userMsg = msgs.find(m => m.role === 'user')
+    if (userMsg) {
+      const words = userMsg.content.trim().split(/\s+/).slice(0, 4).join(' ')
+      const fallbackTitle = words + (userMsg.content.length > words.length ? '...' : '')
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, name: fallbackTitle } : s))
+    }
   }
 
   function joinPath(base: string, rel: string): string {
@@ -767,19 +793,85 @@ Rules:
       </div>
 
       {showHistory && (
-        <div className="history-panel">
-          <div className="history-header">
-            <h3>History</h3>
-            <input placeholder="Search sessions..." value={historySearch} onChange={e => setHistorySearch(e.target.value)} className="history-search" />
-            <button className="history-close" onClick={() => setShowHistory(false)}>×</button>
-          </div>
-          <div className="history-list">
-            {filteredHistory.map(s => (
-              <div key={s.id} className="history-item" onClick={() => { setActiveId(s.id); setShowHistory(false) }}>
-                <span className="history-name">{s.name}</span>
-                <span className="history-time">{new Date(s.lastActive).toLocaleDateString()}</span>
+        <div className="session-history-overlay" onClick={() => setShowHistory(false)}>
+          <div className="session-history" onClick={e => e.stopPropagation()}>
+            <div className="session-history-header">
+              <input 
+                autoFocus
+                placeholder="Search history..." 
+                value={historySearch} 
+                onChange={e => setHistorySearch(e.target.value)} 
+                className="history-search" 
+              />
+              <div className="history-header-actions">
+                <button className="history-action-link" onClick={openForensics}>
+                  Time Machine
+                </button>
+                <button className="history-action-link" onClick={() => setShowDeleted(!showDeleted)}>
+                  {showDeleted ? 'Hide Deleted' : 'Show Deleted'}
+                </button>
+                <button className="chat-action-btn" onClick={() => setShowHistory(false)}>×</button>
               </div>
-            ))}
+            </div>
+            <div className="history-list">
+              {filteredHistory.map(s => (
+                <div key={s.id} className="history-item" onClick={() => { setActiveId(s.id); setShowHistory(false) }}>
+                  <div className="history-item-left">
+                    <span className="history-name">{s.name}</span>
+                    <span className="history-path">{new Date(s.lastActive).toLocaleString()}</span>
+                  </div>
+                  {s.isDeleted && (
+                    <div className="history-item-status">
+                      <span className="history-tag">Deleted</span>
+                      <button 
+                        className="history-restore-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSessions(prev => prev.map(sess => sess.id === s.id ? { ...sess, isDeleted: false } : sess));
+                          setActiveId(s.id);
+                          setShowHistory(false);
+                        }}
+                      >Restore</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showForensics && (
+        <div className="session-history-overlay" onClick={() => setShowForensics(false)}>
+          <div className="session-history" onClick={e => e.stopPropagation()}>
+            <div className="session-history-header" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="history-name" style={{fontWeight:700, fontSize:'13px'}}>Time Machine (Backups)</span>
+              <button 
+                className="history-action-link" 
+                onClick={() => setShowForensics(false)}
+                style={{ fontSize: '16px', padding: '0 6px', border: 'none' }}
+              >×</button>
+            </div>
+            <div style={{ padding: '10px 14px', fontSize: '11px', color: '#888', borderBottom: '1px solid #333', lineHeight: '1.4' }}>
+              Restore your entire workspace to a previous point in time.
+              <br />
+              <span style={{ color: '#d4d4d4' }}>Warning: Restoring a snapshot will completely overwrite your current active sessions.</span>
+            </div>
+            <div className="history-list">
+              {backups.map((b, index) => {
+                const cleanName = b.replace('sessions.', '').replace('.json', '');
+                return (
+                  <div key={b} className="history-item" onClick={() => applyBackup(b)}>
+                    <div className="history-item-left">
+                      <span className="history-name">{cleanName}</span>
+                      <span className="history-path">Project snapshot</span>
+                    </div>
+                    {index === 0 && <span className="history-tag" style={{ background: '#0e639c', color: '#fff' }}>Latest</span>}
+                  </div>
+                );
+              })}
+              {backups.length === 0 && <div style={{padding:20, textAlign:'center', color:'#666'}}>No backups found</div>}
+            </div>
           </div>
         </div>
       )}
