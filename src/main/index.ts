@@ -38,6 +38,16 @@ function createWindow() {
 app.whenReady().then(createWindow)
 app.on('window-all-closed', () => app.quit())
 
+app.on('before-quit', () => {
+  if (currentWatcher) {
+    currentWatcher.close()
+  }
+  // Kill all terminals
+  for (const term of terminals.values()) {
+    try { term.kill() } catch {}
+  }
+})
+
 interface FileNode {
   name: string
   path: string
