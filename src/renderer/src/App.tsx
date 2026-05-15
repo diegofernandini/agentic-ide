@@ -524,7 +524,7 @@ export default function App() {
         </div>
         <div className="center-column">
           {activeSidebar === 'dashboard' ? (
-            <Dashboard />
+            <Dashboard models={models} />
           ) : (
             <>
               <div className="tab-container">

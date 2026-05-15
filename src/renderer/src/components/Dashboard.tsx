@@ -1,21 +1,30 @@
 import React from 'react'
 
-const MOCK_DATA = {
-  totalTokens: 1245000,
-  cost: '$12.45',
-  byModel: [
-    { name: 'qwen3-coder:latest', tokens: 850000, percentage: 68, color: '#4ec9b0' },
-    { name: 'llama3:8b', tokens: 245000, percentage: 20, color: '#007acc' },
-    { name: 'gemini-3.1-pro', tokens: 150000, percentage: 12, color: '#ce9178' },
-  ],
-  byMode: [
-    { name: 'Agent', tokens: 950000, percentage: 76, color: '#4ec9b0' },
-    { name: 'Plan', tokens: 180000, percentage: 14, color: '#007acc' },
-    { name: 'Ask', tokens: 115000, percentage: 10, color: '#dcdcaa' },
-  ]
+interface DashboardProps {
+  models: string[]
 }
 
-export default function Dashboard() {
+export default function Dashboard({ models }: DashboardProps) {
+  // Generate semi-dynamic data based on actual models
+  const modelStats = models.slice(0, 3).map((m, i) => ({
+    name: m,
+    tokens: Math.floor(850000 / (i + 1)),
+    percentage: i === 0 ? 68 : i === 1 ? 20 : 12,
+    color: i === 0 ? '#4ec9b0' : i === 1 ? '#007acc' : '#ce9178'
+  }))
+
+  const MOCK_DATA = {
+    totalTokens: 1245000,
+    cost: '$12.45',
+    byModel: modelStats.length > 0 ? modelStats : [
+      { name: 'No Models Detected', tokens: 0, percentage: 0, color: '#444' }
+    ],
+    byMode: [
+      { name: 'Agent', tokens: 950000, percentage: 76, color: '#4ec9b0' },
+      { name: 'Plan', tokens: 180000, percentage: 14, color: '#007acc' },
+      { name: 'Ask', tokens: 115000, percentage: 10, color: '#dcdcaa' },
+    ]
+  }
   return (
     <div className="dashboard-container" style={{ 
       padding: '40px', 
@@ -48,7 +57,7 @@ export default function Dashboard() {
           <div className="stat-card">
             <label>Active LLM Instances</label>
             <value style={{ color: '#ce9178' }}>{MOCK_DATA.byModel.length}</value>
-            <div className="stat-trend">Ollama / Gemini Hybrid</div>
+            <div className="stat-trend">Local Inference Active</div>
           </div>
         </div>
 
