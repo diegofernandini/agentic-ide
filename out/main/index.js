@@ -78,6 +78,17 @@ function createWindow() {
 }
 electron.app.whenReady().then(createWindow);
 electron.app.on("window-all-closed", () => electron.app.quit());
+electron.app.on("before-quit", () => {
+  if (currentWatcher) {
+    currentWatcher.close();
+  }
+  for (const term of terminals.values()) {
+    try {
+      term.kill();
+    } catch {
+    }
+  }
+});
 electron.ipcMain.handle("open-folder", async () => {
   const result = await electron.dialog.showOpenDialog({ properties: ["openDirectory"] });
   if (result.canceled) return null;

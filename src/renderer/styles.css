@@ -239,17 +239,61 @@ body {
 }
 
 .tree-dir, .tree-file {
-  display: block;
-  padding: 2px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
   cursor: pointer;
   white-space: nowrap;
+  overflow: hidden;
+  border-radius: 4px;
+  margin: 0 4px;
+  transition: background 0.1s;
+}
+
+.tree-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #555;
+}
+
+.tree-folder-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: #e8bf6a;
+}
+
+.tree-label {
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tree-dir { color: #ccc; }
-.tree-file { color: #9cdcfe; }
+.tree-dir .tree-label { color: #d4d4d4; }
+.tree-file .tree-label { color: #ccc; }
 .tree-dir:hover, .tree-file:hover { background: #2a2d2e; }
+
+.tree-file-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  min-width: 22px;
+  text-align: center;
+}
 
 /* ── Activity Bar ── */
 .activity-bar {
@@ -266,7 +310,7 @@ body {
 .activity-btn {
   background: none;
   border: none;
-  color: #858585;
+  color: #555;
   width: 48px;
   height: 48px;
   cursor: pointer;
@@ -274,19 +318,20 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
-.activity-btn:hover { color: #fff; }
+.activity-btn:hover { color: #ccc; }
 .activity-btn--active { color: #fff; }
 .activity-btn--active::before {
   content: '';
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
+  top: 12px;
+  bottom: 12px;
   width: 2px;
-  background: #fff;
+  border-radius: 0 2px 2px 0;
+  background: #007acc;
 }
 
 .activity-bar-bottom {
@@ -1928,15 +1973,23 @@ body {
   background: #007acc;
   color: white;
   border: none;
-  padding: 4px 12px;
+  padding: 4px 14px;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .send-btn:hover { background: #0062a3; }
 .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+.chat-action-btn.active {
+  color: #f5c518;
+  background: rgba(245, 197, 24, 0.1);
+}
 
 /* ── Write blocks ── */
 .write-block {
@@ -1957,7 +2010,13 @@ body {
 }
 
 .write-block-info { display: flex; align-items: center; gap: 8px; }
-.write-block-icon { font-family: monospace; font-weight: bold; color: #4ec9b0; width: 16px; text-align: center; }
+.write-block-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4ec9b0;
+  width: 18px;
+}
 .write-block-file { font-size: 12px; font-weight: 600; color: #ccc; }
 .write-block-type { font-size: 9px; text-transform: uppercase; color: #666; background: #1e1e1e; padding: 1px 4px; border-radius: 3px; }
 
@@ -2002,11 +2061,15 @@ body {
 .write-btn--revert:hover { border-color: #666; color: #ccc; }
 
 .write-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 10px;
-  font-weight: bold;
+  font-weight: 700;
   padding: 2px 8px;
   border-radius: 10px;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .pill--accepted { background: rgba(78, 201, 176, 0.15); color: #4ec9b0; }
@@ -2192,7 +2255,7 @@ body {
 }
 
 .tab-close {
-  margin-left: 8px;
+  margin-left: 6px;
   background: none;
   border: none;
   color: transparent;
@@ -2203,6 +2266,8 @@ body {
   height: 16px;
   border-radius: 3px;
   cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .tab:hover .tab-close, .tab--active .tab-close {
@@ -2210,8 +2275,16 @@ body {
 }
 
 .tab-close:hover {
-  background: #333;
+  background: #3c3c3c;
   color: #eee !important;
+}
+
+.tab-dirty {
+  color: #4ec9b0;
+  font-size: 10px;
+  margin-left: 4px;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .tab--diff {
@@ -2345,3 +2418,47 @@ body {
   flex-direction: column;
   gap: 8px;
 }
+
+/* ── Planning Mode Visual Banner ── */
+.planning-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(232, 191, 106, 0.08);
+  border-bottom: 1px solid rgba(232, 191, 106, 0.15);
+  padding: 8px 14px;
+  font-size: 11.5px;
+  color: #e8bf6a;
+  animation: slideDown 0.25s ease-out;
+  flex-shrink: 0;
+}
+
+.planning-banner-icon {
+  flex-shrink: 0;
+  color: #e8bf6a;
+}
+
+.planning-banner-text {
+  line-height: 1.4;
+}
+
+.planning-banner-text strong {
+  font-weight: 700;
+  color: #ffd685;
+}
+
+.planning-banner-text code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1.5px 5px;
+  border-radius: 3px;
+  font-family: 'Fira Code', monospace;
+  font-size: 10.5px;
+  border: 1px solid rgba(232, 191, 106, 0.1);
+  color: #ffd685;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+

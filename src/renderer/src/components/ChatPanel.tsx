@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { Plus, History, Trash2, Paperclip, Send, Zap, Copy, FilePlus, FileDiff, CheckCircle2, RotateCcw, X, Bot, ClipboardList, Bug, Layers, MessageCircleQuestion } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -51,6 +52,7 @@ interface Props {
   fileContent: string
   onWriteFile: (content: string) => void
   onRefreshTree: () => void
+  onOpenFile?: (path: string) => void
 }
 
 function newSession(count: number, mode: AgentMode = 'agent'): Session {
@@ -240,14 +242,14 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
       <div key={match.index} className="write-block">
         <div className="write-block-header">
           <div className="write-block-info">
-            <span className="write-block-icon">{type === 'replace' ? 'Δ' : '+'}</span>
+            <span className="write-block-icon">{type === 'replace' ? <FileDiff size={13} strokeWidth={2} /> : <FilePlus size={13} strokeWidth={2} />}</span>
             <span className="write-block-file">{fileName}</span>
             <span className="write-block-type">{type === 'replace' ? 'patch' : 'write'}</span>
           </div>
           <div className="write-block-actions">
             {write && write.accepted !== null ? (
               <div className={`write-status-pill ${write.accepted ? 'pill--accepted' : 'pill--reverted'}`}>
-                {write.accepted ? 'Accepted' : 'Reverted'}
+                {write.accepted ? <><CheckCircle2 size={10} strokeWidth={2.5} /> Accepted</> : <><RotateCcw size={10} strokeWidth={2.5} /> Reverted</>}
               </div>
             ) : (
               <div className="write-pending-actions">
@@ -256,7 +258,7 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
               </div>
             )}
             <button className="write-icon-btn" onClick={() => navigator.clipboard.writeText(blockContent)} title="Copy">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/></svg>
+              <Copy size={12} strokeWidth={1.8} />
             </button>
           </div>
         </div>
@@ -272,18 +274,18 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
 }
 
 function ModeIcon({ mode }: { mode: AgentMode }) {
-  if (mode === 'agent') return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/></svg>
-  if (mode === 'plan') return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3 4.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1z"/><circle cx="1.5" cy="5" r=".5"/><circle cx="1.5" cy="8" r=".5"/><circle cx="1.5" cy="11" r=".5"/></svg>
-  if (mode === 'debug') return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.352 11.162c.03.03.064.057.1.082l.643.43c.123.083.272.128.425.128h4.96c.153 0 .302-.045.425-.128l.643-.43c.036-.025.07-.052.1-.082l.405-.405c.08-.08.128-.19.128-.304V5.47c0-.115-.048-.224-.128-.304l-.405-.405a.434.434 0 0 0-.1-.082L11.4 4.25a.515.515 0 0 0-.425-.128H5.625c-.153 0-.302.045-.425.128l-.643.43a.434.434 0 0 0-.1.082l-.405.405c-.08.08-.128.19-.128.304v5.076c0 .114.048.224.128.304l.405.405zM3.25 5.47c0-.4.162-.782.45-1.07l.405-.405a1.434 1.434 0 0 1 .33-.27L5.078 3.3a1.514 1.514 0 0 1 1.246-.375h3.35c.465 0 .91.135 1.246.375l.643.43a1.434 1.434 0 0 1 .33.27l.405.405c.288.288.45.67.45 1.07v5.076c0 .4-.162.782-.45 1.07l-.405.405a1.434 1.434 0 0 1-.33.27l-.643.43a1.514 1.514 0 0 1-1.246.375H6.325c-.465 0-.91-.135-1.246-.375l-.643-.43a1.434 1.434 0 0 1-.33-.27l-.405-.405a1.516 1.516 0 0 1-.45-1.07V5.47z"/><path d="M8 5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0v-5A.5.5 0 0 1 8 5zM5.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 5.5 8z"/></svg>
-  if (mode === 'multitask') return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1 1a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V1zm1 0v6h6V1H2z"/><path d="M7 7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7zm1 0v6h6V7H8z"/></svg>
-  if (mode === 'ask') return <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 3a.5.5 0 0 0-.5-.5H2a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h4.646l3.354 3.354V11H14a.5.5 0 0 0 .5-.5V3zm-1 7H9.5a.5.5 0 0 0-.5.5v2.293L6.354 10a.5.5 0 0 0-.354-.146H2.5V3.5h11V10z"/></svg>
+  if (mode === 'agent')     return <Bot size={13} strokeWidth={1.8} />
+  if (mode === 'plan')      return <ClipboardList size={13} strokeWidth={1.8} />
+  if (mode === 'debug')     return <Bug size={13} strokeWidth={1.8} />
+  if (mode === 'multitask') return <Layers size={13} strokeWidth={1.8} />
+  if (mode === 'ask')       return <MessageCircleQuestion size={13} strokeWidth={1.8} />
   return null
 }
 
 export default function ChatPanel({
   model, models, onModelChange,
   rootPath, openFile, fileContent,
-  onWriteFile, onRefreshTree
+  onWriteFile, onRefreshTree, onOpenFile
 }: Props) {
   const [sessions, setSessions] = useState<Session[]>([newSession(1)])
   const [activeId, setActiveId] = useState<string>(sessions[0].id)
@@ -413,6 +415,49 @@ export default function ChatPanel({
 
     if (sessionMode === 'ask') {
       sys += `\n\n[MODE: ASK]\nYou are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code. DO NOT output any file modifications. If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:' or 'replace:' prefixes. If you detect a possible improvement or a code change that should be applied, explicitly prompt the user to switch to 'Agent' mode so you can implement it for them, or offer related subjects to clear up any doubts.`
+    } else if (sessionMode === 'plan') {
+      // Plan mode: forbid all code implementation, only allow writing the plan document
+      const planFile = `plans/PLAN-${new Date().toISOString().slice(0,10)}.md`
+      sys += ` You are in PLANNING mode. Your ONLY output must be a structured requirements and implementation plan written to a markdown file.
+
+⛔ STRICTLY FORBIDDEN:
+- Do NOT write, modify, or replace ANY source code files (.ts, .tsx, .js, .py, .css, etc.)
+- Do NOT use replace: blocks under any circumstance
+- Do NOT suggest the user manually make changes
+- Do NOT implement anything
+
+✅ YOUR ONLY ALLOWED OUTPUT:
+Write the complete plan to a single markdown file using this exact format:
+\`\`\`write:${planFile}
+# Plan: [Feature/Task Name]
+
+## Overview
+[2-3 sentence summary of what will be built and why]
+
+## Requirements
+### Functional Requirements
+- FR-1: ...
+- FR-2: ...
+
+### Non-Functional Requirements
+- NFR-1: ...
+
+## Technical Approach
+[Architecture decisions, technology choices, patterns to use]
+
+## Implementation Steps
+1. **Step name** — description, files affected: \`path/to/file.ts\`
+2. **Step name** — description, files affected: \`path/to/file.ts\`
+...
+
+## Edge Cases & Risks
+- Risk 1: description + mitigation
+
+## Open Questions
+- [ ] Question that needs clarification before implementation
+\`\`\`
+
+After writing the plan file, briefly summarize what you've planned in 1-2 sentences. The user can then review PLAN.md and switch to Agent mode to implement it.`
     } else {
       sys += ` You have direct write access to the user's project files.
 
@@ -437,9 +482,7 @@ Rules:
 - Write ALL necessary files immediately.`
     }
 
-    if (sessionMode === 'plan') {
-      sys += `\n\n[MODE: PLANNING] Create a detailed plan BEFORE implementation.`
-    } else if (sessionMode === 'debug') {
+    if (sessionMode === 'debug') {
       sys += `\n\n[MODE: DEBUG] Analyze logs and hypothesize root causes.`
     } else if (sessionMode === 'multitask') {
       sys += `\n\n[MODE: MULTITASK] Optimized for many file changes at once.`
@@ -519,7 +562,14 @@ Rules:
                 const filePath = decodeURIComponent(m[2].trim())
                 const blockContent = m[3]
                 if (!rootPath) continue
-                
+
+                // In plan mode, ONLY allow writing .md plan files — block all source code writes
+                const isPlanMode = activeSession.mode === 'plan'
+                const isPlanFile = filePath.endsWith('.md') && (filePath.startsWith('plans/') || filePath.includes('PLAN'))
+                if (isPlanMode && !isPlanFile) continue
+                // Also block replace blocks in plan mode entirely
+                if (isPlanMode && type === 'replace') continue
+
                 const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath, filePath)
                 let prevContent: string | undefined
                 try { prevContent = await window.api.readFile(abs) } catch {}
@@ -538,6 +588,10 @@ Rules:
                   await window.api.writeFile(abs, finalContent)
                   if (openFile && abs === openFile) onWriteFile(finalContent)
                   onRefreshTree()
+                  // In plan mode, auto-open the written plan file
+                  if (isPlanMode && isPlanFile && onOpenFile) {
+                    onOpenFile(abs)
+                  }
                 }
                 streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent })
               }
@@ -606,11 +660,18 @@ Rules:
     const re = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
     let match
     const actions: WriteAction[] = []
+    const isPlanMode = activeSession.mode === 'plan'
     while ((match = re.exec(text)) !== null) {
       const type = match[1]
       const filePath = decodeURIComponent(match[2].trim())
       const blockContent = match[3]
       if (!rootPath) continue
+
+      // Plan mode: only allow .md plan files, block replace blocks
+      const isPlanFile = filePath.endsWith('.md') && (filePath.startsWith('plans/') || filePath.includes('PLAN'))
+      if (isPlanMode && !isPlanFile) continue
+      if (isPlanMode && type === 'replace') continue
+
       const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath, filePath)
       let prevContent: string | undefined
       try { prevContent = await window.api.readFile(abs) } catch {}
@@ -628,6 +689,7 @@ Rules:
       if (autopilotRef.current) {
         await window.api.writeFile(abs, finalContent)
         if (openFile && abs === openFile) onWriteFile(finalContent)
+        if (isPlanMode && isPlanFile && onOpenFile) onOpenFile(abs)
       }
       actions.push({ path: abs, content: finalContent, accepted: null, prevContent })
     }
@@ -690,22 +752,33 @@ Rules:
               ) : (
                 <span className="session-tab-name" title={s.name}>{s.name}</span>
               )}
-              <button className="session-tab-close" onClick={e => { e.stopPropagation(); closeSession(s.id) }}>×</button>
+              <button className="session-tab-close" onClick={e => { e.stopPropagation(); closeSession(s.id) }}>
+                <X size={10} strokeWidth={2.5} />
+              </button>
             </div>
           ))}
         </div>
         <div className="session-actions">
           <button className="chat-action-btn" onClick={addSession} title="New Session">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z"/></svg>
+            <Plus size={14} strokeWidth={2} />
           </button>
           <button className="chat-action-btn" onClick={() => setShowHistory(h => !h)} title="History">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 1 8 0a8 8 0 0 1 0 16zm0-1.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM9 4v4.5l3.5 2-.75 1.25L8 9V4h1z"/></svg>
+            <History size={14} strokeWidth={1.8} />
           </button>
-          <button className="chat-action-btn" onClick={clearSession} title="Clear">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5zM4.5 3.5l.844 10.55a1 1 0 0 0 .997.95h6.23a1 1 0 0 0 .997-.95L14.414 3.5H4.5z"/></svg>
+          <button className="chat-action-btn" onClick={clearSession} title="Clear Session">
+            <Trash2 size={14} strokeWidth={1.8} />
           </button>
         </div>
       </div>
+
+      {activeSession.mode === 'plan' && (
+        <div className="planning-banner">
+          <ClipboardList size={14} className="planning-banner-icon" />
+          <span className="planning-banner-text">
+            <strong>Planning Mode Active:</strong> The agent will design a high-level requirements plan inside <code>plans/PLAN-[date].md</code>. Source code modifications are disabled.
+          </span>
+        </div>
+      )}
 
       {/* Messages Area */}
       <div className="chat-messages">
@@ -755,7 +828,7 @@ Rules:
           />
           <div className="chat-input-footer">
             <button className="chat-action-btn" onClick={() => fileInputRef.current?.click()} title="Attach File">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.406 3.342l.707-.707L9.13 6.652a2.5 2.5 0 0 1 0 3.536l-4.243 4.242a4 4 0 0 1-5.657-5.657l4.597-4.596a5.5 5.5 0 0 1 7.778 7.778l-3.536 3.536-.707-.707 3.536-3.536a4.5 4.5 0 0 0-6.364-6.364l-4.596 4.596a3 3 0 0 0 4.243 4.243l4.242-4.243a1.5 1.5 0 0 0 0-2.121l-4.018-4.018z"/></svg>
+              <Paperclip size={14} strokeWidth={1.8} />
             </button>
             <input type="file" ref={fileInputRef} style={{display:'none'}} onChange={handleFileAttach} />
 
@@ -780,12 +853,13 @@ Rules:
             <button 
               className={`chat-action-btn ${autopilot ? 'active' : ''}`} 
               onClick={() => { const next = !autopilot; setAutopilot(next); autopilotRef.current = next }}
-              title="Autopilot"
+              title={autopilot ? 'Autopilot ON' : 'Autopilot OFF'}
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 11.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5h-7z"/></svg>
+              <Zap size={14} strokeWidth={1.8} />
             </button>
 
             <button className="send-btn" onClick={send} disabled={loading || !input.trim()}>
+              <Send size={13} strokeWidth={2} />
               Send
             </button>
           </div>

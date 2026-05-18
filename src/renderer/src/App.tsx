@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
+import {
+  ChevronLeft, ChevronRight, Search, TerminalSquare,
+  Files, GitBranch, User, LayoutDashboard, Settings2,
+  Plus, X, ArrowLeftRight, RefreshCw, LogOut
+} from 'lucide-react'
 import FileTree from './components/FileTree'
 import Editor from './components/Editor'
 import ChatPanel from './components/ChatPanel'
@@ -303,28 +308,34 @@ export default function App() {
     ? allFiles.filter(f => f.toLowerCase().includes(quickQuery.toLowerCase())).slice(0, 12)
     : allFiles.slice(0, 12)
 
+  function getFileIcon(filePath: string) {
+    const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
+    const icons: Record<string, string> = {
+      ts: '󰛦', tsx: '󰜈', js: '󰌞', jsx: '󰜈',
+      json: '󰘦', md: '󰍔', css: '󰌜', html: '󰌝',
+      py: '󰌠', rs: '󱘗', go: '󰟓', sh: '󰆍',
+      svg: '󰜡', png: '󰋩', jpg: '󰋩', gif: '󰋩',
+      lock: '󰌾', yml: '󰬴', yaml: '󰬴', env: '󰒓',
+    }
+    return <span style={{ fontFamily: 'monospace', fontSize: '11px', opacity: 0.7 }}>{icons[ext] ?? '󰈙'}</span>
+  }
+
   return (
     <div className="app">
       {/* Top bar */}
       <div className="topbar">
         <div className="topbar-nav">
           <button className="nav-btn" onClick={goBack} disabled={historyIdx <= 0} title="Go Back">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M11 2L5 8l6 6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ChevronLeft size={16} strokeWidth={1.8} />
           </button>
           <button className="nav-btn" onClick={goForward} disabled={historyIdx >= history.length - 1} title="Go Forward">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M5 2l6 6-6 6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <ChevronRight size={16} strokeWidth={1.8} />
           </button>
         </div>
 
         <div className="topbar-center">
           <button className="quick-open-trigger" onClick={() => { setQuickOpen(true); setQuickQuery('') }}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" style={{ opacity: 0.5 }}>
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-            </svg>
+            <Search size={13} strokeWidth={1.8} style={{ opacity: 0.5, flexShrink: 0 }} />
             <span className="quick-open-label">
               {openFile ? getBreadcrumbs(openFile).join(' › ') : 'Open file... (⌘P)'}
             </span>
@@ -337,10 +348,7 @@ export default function App() {
             onClick={() => setTerminalOpen(o => !o)}
             title="Toggle Terminal"
           >
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9zM3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2z"/>
-              <path d="M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12z"/>
-            </svg>
+            <TerminalSquare size={16} strokeWidth={1.8} />
           </button>
           <span className="topbar-model">{model}</span>
         </div>
@@ -351,9 +359,7 @@ export default function App() {
         <div className="quick-overlay" onClick={() => setQuickOpen(false)}>
           <div className="quick-panel" onClick={e => e.stopPropagation()}>
             <div className="quick-input-wrap">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style={{ opacity: 0.5, flexShrink: 0 }}>
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-              </svg>
+              <Search size={14} strokeWidth={1.8} style={{ opacity: 0.5, flexShrink: 0 }} />
               <input
                 ref={quickRef}
                 className="quick-input"
@@ -399,9 +405,7 @@ export default function App() {
             }}
             title="Explorer"
           >
-            <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8.187 1.01l.445.511L13.19 6.2a.5.5 0 0 1 .127.324V14.5a.5.5 0 0 1-.5.5H3.18a.5.5 0 0 1-.5-.5V6.524a.5.5 0 0 1 .127-.323l4.558-4.678.446-.512a.25.25 0 0 1 .376 0zM3.68 7.037V14h9.133V7.037L8.187 2.25 3.68 7.037z"/>
-            </svg>
+            <Files size={22} strokeWidth={1.6} />
           </button>
           <button 
             className={`activity-btn ${activeSidebar === 'git' && sidebarOpen ? 'activity-btn--active' : ''}`}
@@ -411,9 +415,7 @@ export default function App() {
             }}
             title="Source Control"
           >
-            <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M15.55 8.12l-6.8-6.8a1 1 0 0 0-1.41 0l-.88.88 1.6 1.6a1.5 1.5 0 1 1-1 1l-1.6-1.6-3.8 3.8a1 1 0 0 0 0 1.41l6.8 6.8a1 1 0 0 0 1.41 0l6.8-6.8a1 1 0 0 0 0-1.41zM8.5 11.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1.5-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-            </svg>
+            <GitBranch size={22} strokeWidth={1.6} />
           </button>
 
           <div className="activity-bar-bottom">
@@ -425,23 +427,17 @@ export default function App() {
               }}
               title="Accounts"
             >
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-              </svg>
+              <User size={22} strokeWidth={1.6} />
             </button>
             <button 
               className={`activity-btn ${activeSidebar === 'dashboard' ? 'activity-btn--active' : ''}`}
               onClick={() => setActiveSidebar('dashboard')}
               title="Dashboard"
             >
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM2 1h12a1 1 0 0 1 1 1v2H1V2a1 1 0 0 1 1-1zm12 14H2a1 1 0 0 1-1-1V5h14v9a1 1 0 0 1-1 1zM4 7h2v6H4V7zm4-2h2v8H8V5zm4 4h2v4h-2V9z"/>
-              </svg>
+              <LayoutDashboard size={22} strokeWidth={1.6} />
             </button>
             <button className="activity-btn" title="Settings">
-              <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M9.1 1.9L9 0H7l-.1 1.9c-.3.1-.6.2-.9.4L3.3.9l-1.4 1.4 1.4 1.7c-.2.3-.3.6-.4.9L1 5v2l1.9.1c.1.3.2.6.4.9l-1.4 1.7 1.4 1.4 1.7-1.4c.3.2.6.3.9.4L7 12h2l.1-1.9c.3-.1.6-.2.9-.4l1.7 1.4 1.4-1.4-1.4-1.7c.2-.3.3-.6.4-.9l1.9-.1V5l-1.9-.1c-.1-.3-.2-.6-.4-.9l1.4-1.7-1.4-1.4-1.7 1.4c-.3-.2-.6-.3-.9-.4zM8 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-              </svg>
+              <Settings2 size={22} strokeWidth={1.6} />
             </button>
           </div>
         </div>
@@ -478,9 +474,7 @@ export default function App() {
                     {loginLoading ? (
                       <div className="toolbar-spinner" />
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                      </svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
                     )}
                     {loginLoading ? 'Signing in...' : 'Sign in with GitHub'}
                   </button>
@@ -508,12 +502,11 @@ export default function App() {
 
                   <div className="profile-actions">
                     <button className="profile-btn profile-btn--primary">
-                      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 3.5a.5.5 0 0 0-1 0V7H3.5a.5.5 0 0 0 0 1H7v3.5a.5.5 0 0 0 1 0V8h3.5a.5.5 0 0 0 0-1H8V3.5z"/>
-                      </svg>
+                      <RefreshCw size={13} strokeWidth={2} />
                       Sync Settings
                     </button>
                     <button className="profile-btn" onClick={handleLogout}>
+                      <LogOut size={13} strokeWidth={2} />
                       Sign Out
                     </button>
                   </div>
@@ -534,26 +527,20 @@ export default function App() {
                 className={`tab ${openFile === t ? 'tab--active' : ''}`}
                 onClick={() => selectFile(t, true)}
               >
-                <span className="tab-icon">
-                  {t.endsWith('.js') || t.endsWith('.ts') ? '📄' : '📝'}
-                </span>
+                <span className="tab-icon">{getFileIcon(t)}</span>
                 <span className="tab-label">{t.split(/[\\/]/).pop()}</span>
-                {dirtyTabs.has(t) && <span style={{ color: '#fff', fontSize: '10px', marginLeft: '4px' }}>●</span>}
+                {dirtyTabs.has(t) && <span className="tab-dirty">●</span>}
                 <button className="tab-close" onClick={(e) => closeTab(t, e)}>
-                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z"/>
-                  </svg>
+                  <X size={10} strokeWidth={2.5} />
                 </button>
               </div>
             ))}
             {diffInfo && (
               <div className="tab tab--active tab--diff">
-                <span className="tab-icon">↔</span>
+                <span className="tab-icon"><ArrowLeftRight size={12} strokeWidth={2} /></span>
                 <span className="tab-label">{diffInfo.filename} (Diff)</span>
                 <button className="tab-close" onClick={() => setDiffInfo(null)}>
-                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z"/>
-                  </svg>
+                  <X size={10} strokeWidth={2.5} />
                 </button>
               </div>
             )}
@@ -594,6 +581,7 @@ export default function App() {
           fileContent={fileContent}
           onWriteFile={saveFile}
           onRefreshTree={refreshTree}
+          onOpenFile={(path) => selectFile(path, true)}
         />
       </div>
     </div>
