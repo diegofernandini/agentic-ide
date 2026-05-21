@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('api', {
   terminalWrite: (id: string, data: string) => ipcRenderer.invoke('terminal-write', id, data),
   terminalResize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('terminal-resize', id, cols, rows),
   terminalKill: (id: string) => ipcRenderer.invoke('terminal-kill', id),
+  getHistoricalSessions: () => ipcRenderer.invoke('get-historical-sessions'),
   onTerminalData: (id: string, cb: (data: string) => void) => {
     ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data))
   },

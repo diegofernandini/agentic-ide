@@ -136,7 +136,7 @@ function T$1(a) {
   throw a._result;
 }
 var U$2 = { current: null }, V$1 = { transition: null }, W$1 = { ReactCurrentDispatcher: U$2, ReactCurrentBatchConfig: V$1, ReactCurrentOwner: K$2 };
-function X$2() {
+function X$3() {
   throw Error("act(...) is not supported in production builds of React.");
 }
 react_production_min.Children = { map: S$2, forEach: function(a, b2, e) {
@@ -164,7 +164,7 @@ react_production_min.PureComponent = G$2;
 react_production_min.StrictMode = q$2;
 react_production_min.Suspense = w$1;
 react_production_min.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = W$1;
-react_production_min.act = X$2;
+react_production_min.act = X$3;
 react_production_min.cloneElement = function(a, b2, e) {
   if (null === a || void 0 === a) throw Error("React.cloneElement(...): The argument must be a React element, but you passed " + a + ".");
   var d = C$2({}, a.props), c = a.key, k2 = a.ref, h2 = a._owner;
@@ -216,7 +216,7 @@ react_production_min.startTransition = function(a) {
     V$1.transition = b2;
   }
 };
-react_production_min.unstable_act = X$2;
+react_production_min.unstable_act = X$3;
 react_production_min.useCallback = function(a, b2) {
   return U$2.current.useCallback(a, b2);
 };
@@ -5014,7 +5014,7 @@ function Wj(a, b2, c) {
   if (5 === d || 6 === d) a = a.stateNode, b2 ? c.insertBefore(a, b2) : c.appendChild(a);
   else if (4 !== d && (a = a.child, null !== a)) for (Wj(a, b2, c), a = a.sibling; null !== a; ) Wj(a, b2, c), a = a.sibling;
 }
-var X$1 = null, Xj = false;
+var X$2 = null, Xj = false;
 function Yj(a, b2, c) {
   for (c = c.child; null !== c; ) Zj(a, b2, c), c = c.sibling;
 }
@@ -5027,23 +5027,23 @@ function Zj(a, b2, c) {
     case 5:
       U$1 || Lj(c, b2);
     case 6:
-      var d = X$1, e = Xj;
-      X$1 = null;
+      var d = X$2, e = Xj;
+      X$2 = null;
       Yj(a, b2, c);
-      X$1 = d;
+      X$2 = d;
       Xj = e;
-      null !== X$1 && (Xj ? (a = X$1, c = c.stateNode, 8 === a.nodeType ? a.parentNode.removeChild(c) : a.removeChild(c)) : X$1.removeChild(c.stateNode));
+      null !== X$2 && (Xj ? (a = X$2, c = c.stateNode, 8 === a.nodeType ? a.parentNode.removeChild(c) : a.removeChild(c)) : X$2.removeChild(c.stateNode));
       break;
     case 18:
-      null !== X$1 && (Xj ? (a = X$1, c = c.stateNode, 8 === a.nodeType ? Kf(a.parentNode, c) : 1 === a.nodeType && Kf(a, c), bd(a)) : Kf(X$1, c.stateNode));
+      null !== X$2 && (Xj ? (a = X$2, c = c.stateNode, 8 === a.nodeType ? Kf(a.parentNode, c) : 1 === a.nodeType && Kf(a, c), bd(a)) : Kf(X$2, c.stateNode));
       break;
     case 4:
-      d = X$1;
+      d = X$2;
       e = Xj;
-      X$1 = c.stateNode.containerInfo;
+      X$2 = c.stateNode.containerInfo;
       Xj = true;
       Yj(a, b2, c);
-      X$1 = d;
+      X$2 = d;
       Xj = e;
       break;
     case 0:
@@ -5100,23 +5100,23 @@ function ck(a, b2) {
       a: for (; null !== h2; ) {
         switch (h2.tag) {
           case 5:
-            X$1 = h2.stateNode;
+            X$2 = h2.stateNode;
             Xj = false;
             break a;
           case 3:
-            X$1 = h2.stateNode.containerInfo;
+            X$2 = h2.stateNode.containerInfo;
             Xj = true;
             break a;
           case 4:
-            X$1 = h2.stateNode.containerInfo;
+            X$2 = h2.stateNode.containerInfo;
             Xj = true;
             break a;
         }
         h2 = h2.return;
       }
-      if (null === X$1) throw Error(p(160));
+      if (null === X$2) throw Error(p(160));
       Zj(f2, g2, e);
-      X$1 = null;
+      X$2 = null;
       Xj = false;
       var k2 = e.alternate;
       null !== k2 && (k2.return = null);
@@ -6966,8 +6966,574 @@ var m = reactDomExports;
   client.createRoot = m.createRoot;
   client.hydrateRoot = m.hydrateRoot;
 }
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const mergeClasses = (...classes) => classes.filter((className, index2, array) => {
+  return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index2;
+}).join(" ").trim();
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const toKebabCase = (string) => string.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const toCamelCase = (string) => string.replace(
+  /^([A-Z])|[\s-_]+(\w)/g,
+  (match, p1, p2) => p2 ? p2.toUpperCase() : p1.toLowerCase()
+);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const toPascalCase = (string) => {
+  const camelCase = toCamelCase(string);
+  return camelCase.charAt(0).toUpperCase() + camelCase.slice(1);
+};
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+var defaultAttributes = {
+  xmlns: "http://www.w3.org/2000/svg",
+  width: 24,
+  height: 24,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round"
+};
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const hasA11yProp = (props) => {
+  for (const prop in props) {
+    if (prop.startsWith("aria-") || prop === "role" || prop === "title") {
+      return true;
+    }
+  }
+  return false;
+};
+const LucideContext = reactExports.createContext({});
+const useLucideContext = () => reactExports.useContext(LucideContext);
+const Icon = reactExports.forwardRef(
+  ({ color, size, strokeWidth, absoluteStrokeWidth, className = "", children, iconNode, ...rest }, ref) => {
+    const {
+      size: contextSize = 24,
+      strokeWidth: contextStrokeWidth = 2,
+      absoluteStrokeWidth: contextAbsoluteStrokeWidth = false,
+      color: contextColor = "currentColor",
+      className: contextClass = ""
+    } = useLucideContext() ?? {};
+    const calculatedStrokeWidth = absoluteStrokeWidth ?? contextAbsoluteStrokeWidth ? Number(strokeWidth ?? contextStrokeWidth) * 24 / Number(size ?? contextSize) : strokeWidth ?? contextStrokeWidth;
+    return reactExports.createElement(
+      "svg",
+      {
+        ref,
+        ...defaultAttributes,
+        width: size ?? contextSize ?? defaultAttributes.width,
+        height: size ?? contextSize ?? defaultAttributes.height,
+        stroke: color ?? contextColor,
+        strokeWidth: calculatedStrokeWidth,
+        className: mergeClasses("lucide", contextClass, className),
+        ...!children && !hasA11yProp(rest) && { "aria-hidden": "true" },
+        ...rest
+      },
+      [
+        ...iconNode.map(([tag, attrs]) => reactExports.createElement(tag, attrs)),
+        ...Array.isArray(children) ? children : [children]
+      ]
+    );
+  }
+);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const createLucideIcon = (iconName, iconNode) => {
+  const Component = reactExports.forwardRef(
+    ({ className, ...props }, ref) => reactExports.createElement(Icon, {
+      ref,
+      iconNode,
+      className: mergeClasses(
+        `lucide-${toKebabCase(toPascalCase(iconName))}`,
+        `lucide-${iconName}`,
+        className
+      ),
+      ...props
+    })
+  );
+  Component.displayName = toPascalCase(iconName);
+  return Component;
+};
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$s = [
+  ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
+  ["path", { d: "M4 7h16", key: "6tx8e3" }],
+  ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
+  ["path", { d: "M20 17H4", key: "h6l3hr" }]
+];
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$s);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$r = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$r);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$q = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$q);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$p = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$p);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+];
+const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$n = [
+  ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
+  [
+    "path",
+    {
+      d: "M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2",
+      key: "116196"
+    }
+  ],
+  ["path", { d: "M12 11h4", key: "1jrz19" }],
+  ["path", { d: "M12 16h4", key: "n85exb" }],
+  ["path", { d: "M8 11h.01", key: "1dfujw" }],
+  ["path", { d: "M8 16h.01", key: "18s6g9" }]
+];
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$n);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$m = [
+  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
+  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
+];
+const Copy = createLucideIcon("copy", __iconNode$m);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$l = [
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+];
+const Database = createLucideIcon("database", __iconNode$l);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$k = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M9 10h6", key: "9gxzsh" }],
+  ["path", { d: "M12 13V7", key: "h0r20n" }],
+  ["path", { d: "M9 17h6", key: "r8uit2" }]
+];
+const FileDiff = createLucideIcon("file-diff", __iconNode$k);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$j = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M9 15h6", key: "cctwl0" }],
+  ["path", { d: "M12 18v-6", key: "17g6i2" }]
+];
+const FilePlus = createLucideIcon("file-plus", __iconNode$j);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$i = [
+  ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
+  [
+    "path",
+    {
+      d: "M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z",
+      key: "1970lx"
+    }
+  ],
+  ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
+];
+const Files = createLucideIcon("files", __iconNode$i);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$h = [
+  [
+    "path",
+    {
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
+    }
+  ]
+];
+const FolderOpen = createLucideIcon("folder-open", __iconNode$h);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$g = [
+  [
+    "path",
+    {
+      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+      key: "1kt360"
+    }
+  ]
+];
+const Folder = createLucideIcon("folder", __iconNode$g);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [
+  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
+  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
+  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
+];
+const GitBranch = createLucideIcon("git-branch", __iconNode$f);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
+  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
+];
+const History = createLucideIcon("history", __iconNode$e);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$d = [
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
+];
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$d);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
+];
+const LogOut = createLucideIcon("log-out", __iconNode$c);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$b = [
+  [
+    "path",
+    {
+      d: "m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551",
+      key: "1miecu"
+    }
+  ]
+];
+const Paperclip = createLucideIcon("paperclip", __iconNode$b);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$a);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$9 = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$9);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+];
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$8);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$7 = [
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+];
+const Search = createLucideIcon("search", __iconNode$7);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  [
+    "path",
+    {
+      d: "M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z",
+      key: "1ffxy3"
+    }
+  ],
+  ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
+];
+const Send = createLucideIcon("send", __iconNode$6);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$5 = [
+  ["path", { d: "M14 17H5", key: "gfn3mx" }],
+  ["path", { d: "M19 7h-9", key: "6i9tg" }],
+  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
+  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+];
+const Settings2 = createLucideIcon("settings-2", __iconNode$5);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$4 = [
+  ["path", { d: "m7 11 2-2-2-2", key: "1lz0vl" }],
+  ["path", { d: "M11 13h4", key: "1p7l4v" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }]
+];
+const SquareTerminal = createLucideIcon("square-terminal", __iconNode$4);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$3 = [
+  ["path", { d: "M10 11v6", key: "nco0om" }],
+  ["path", { d: "M14 11v6", key: "outv1u" }],
+  ["path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6", key: "miytrc" }],
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2", key: "e791ji" }]
+];
+const Trash2 = createLucideIcon("trash-2", __iconNode$3);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$2 = [
+  ["path", { d: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2", key: "975kel" }],
+  ["circle", { cx: "12", cy: "7", r: "4", key: "17ys0d" }]
+];
+const User = createLucideIcon("user", __iconNode$2);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$1 = [
+  ["path", { d: "M18 6 6 18", key: "1bl5f8" }],
+  ["path", { d: "m6 6 12 12", key: "d8bk6v" }]
+];
+const X$1 = createLucideIcon("x", __iconNode$1);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode = [
+  [
+    "path",
+    {
+      d: "M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z",
+      key: "1xq2db"
+    }
+  ]
+];
+const Zap = createLucideIcon("zap", __iconNode);
 function FileTree({ nodes, onSelect, openDirs, onToggleDir, onContextMenu, depth = 0 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "file-tree", style: { paddingLeft: depth * 12 }, children: nodes.map((node) => /* @__PURE__ */ jsxRuntimeExports.jsx(TreeNode, { node, onSelect, openDirs, onToggleDir, onContextMenu, depth }, node.path)) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "file-tree", style: { paddingLeft: depth === 0 ? 0 : 10 }, children: nodes.map((node) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+    TreeNode,
+    {
+      node,
+      onSelect,
+      openDirs,
+      onToggleDir,
+      onContextMenu,
+      depth
+    },
+    node.path
+  )) });
+}
+const FILE_COLORS = {
+  ts: "#3178c6",
+  tsx: "#61dafb",
+  js: "#f1e05a",
+  jsx: "#61dafb",
+  json: "#cbcb41",
+  md: "#b0bec5",
+  css: "#a06ccd",
+  html: "#e34c26",
+  py: "#4b8bbe",
+  rs: "#dea584",
+  go: "#00ADD8",
+  sh: "#89e051",
+  svg: "#ffb13b",
+  png: "#90a4ae",
+  jpg: "#90a4ae",
+  gif: "#90a4ae",
+  lock: "#777",
+  yml: "#cbcb41",
+  yaml: "#cbcb41",
+  env: "#aaa",
+  toml: "#9c4221",
+  sql: "#e38d40",
+  graphql: "#e535ab"
+};
+const FILE_LABELS = {
+  ts: "ts",
+  tsx: "tsx",
+  js: "js",
+  jsx: "jsx",
+  json: "{}",
+  css: "css",
+  html: "htm",
+  py: "py",
+  rs: "rs",
+  go: "go",
+  md: "md",
+  sh: "sh",
+  sql: "sql",
+  toml: "tml",
+  yml: "yml",
+  yaml: "yml"
+};
+function FileTypeIcon({ name }) {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  const color = FILE_COLORS[ext] ?? "#9cdcfe";
+  const label = FILE_LABELS[ext];
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-file-badge", style: { color, borderColor: `${color}40`, background: `${color}10` }, children: label ?? "·" });
 }
 function TreeNode({ node, onSelect, openDirs, onToggleDir, onContextMenu, depth }) {
   const open = openDirs.has(node.path);
@@ -6983,13 +7549,23 @@ function TreeNode({ node, onSelect, openDirs, onToggleDir, onContextMenu, depth 
             onContextMenu?.(node.path, true);
           },
           children: [
-            open ? "▾" : "▸",
-            " ",
-            node.name
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-chevron", children: open ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { size: 11, strokeWidth: 2.2 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { size: 11, strokeWidth: 2.2 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-folder-icon", children: open ? /* @__PURE__ */ jsxRuntimeExports.jsx(FolderOpen, { size: 14, strokeWidth: 1.6 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Folder, { size: 14, strokeWidth: 1.6 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-label", children: node.name })
           ]
         }
       ),
-      open && /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: node.children, onSelect, openDirs, onToggleDir, onContextMenu, depth: depth + 1 })
+      open && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        FileTree,
+        {
+          nodes: node.children,
+          onSelect,
+          openDirs,
+          onToggleDir,
+          onContextMenu,
+          depth: depth + 1
+        }
+      )
     ] });
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -7002,8 +7578,9 @@ function TreeNode({ node, onSelect, openDirs, onToggleDir, onContextMenu, depth 
         onContextMenu?.(node.path, false);
       },
       children: [
-        "  ",
-        node.name
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-chevron" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FileTypeIcon, { name: node.name }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tree-label", children: node.name })
       ]
     }
   ) });
@@ -7637,7 +8214,7 @@ function getLanguage(path) {
   };
   return map[ext] || "plaintext";
 }
-function Editor({ path, content, onChange, onSave }) {
+function Editor({ path, content, onChange, onSave, sessions, onRestoreSession, onOpenFolder }) {
   const editorRef = reactExports.useRef(null);
   const [wordWrap, setWordWrap] = reactExports.useState("on");
   function handleMount(ed2, monaco) {
@@ -7714,10 +8291,145 @@ function Editor({ path, content, onChange, onSave }) {
         }
       }
     )
-  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-empty", children: "Open a folder and select a file" }) });
+  ] }) : (() => {
+    const recentSessions = (sessions || []).filter((s15) => !s15.isDeleted).sort((a, b2) => (b2.lastActive || b2.createdAt || 0) - (a.lastActive || a.createdAt || 0)).slice(0, 3);
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "100%",
+      width: "100%",
+      padding: "40px",
+      color: "#d4d4d4",
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      background: "linear-gradient(135deg, #1e1e1e 0%, #121212 100%)",
+      overflowY: "auto"
+    }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+        fontSize: "40px",
+        marginBottom: "16px",
+        background: "linear-gradient(45deg, #0e639c, #007acc)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        fontWeight: 800,
+        letterSpacing: "-1px"
+      }, children: "Agentic IDE" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+        fontSize: "13px",
+        color: "#888",
+        marginBottom: "32px",
+        textAlign: "center",
+        maxWidth: "420px",
+        lineHeight: "1.5"
+      }, children: "Un entorno de desarrollo potenciado por Inteligencia Artificial. Abre una carpeta de proyecto o restaura una sesión reciente." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: onOpenFolder,
+          style: {
+            padding: "10px 24px",
+            fontSize: "13px",
+            fontWeight: 600,
+            color: "#fff",
+            background: "#0e639c",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+            boxShadow: "0 4px 12px rgba(14, 99, 156, 0.3)",
+            marginBottom: "48px"
+          },
+          onMouseOver: (e) => e.currentTarget.style.background = "#1177bb",
+          onMouseOut: (e) => e.currentTarget.style.background = "#0e639c",
+          children: "Abrir carpeta de proyecto"
+        }
+      ),
+      recentSessions.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { width: "100%", maxWidth: "600px" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+          fontSize: "11px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "1.2px",
+          color: "#666",
+          marginBottom: "16px",
+          borderBottom: "1px solid #2d2d2d",
+          paddingBottom: "8px"
+        }, children: "Restaurar sesión reciente" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gap: "12px" }, children: recentSessions.map((s15) => {
+          const projectPath = s15.workspace || "";
+          const projectName = projectPath ? projectPath.split(/[\\/]/).pop() : "Ninguno";
+          const openTabs = s15.tabs || [];
+          const openFilesText = openTabs.length > 0 ? openTabs.map((t2) => t2.split(/[\\/]/).pop()).join(", ") : "Sin archivos abiertos";
+          const activeModel = s15.model || "Default Model";
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              onClick: () => onRestoreSession && onRestoreSession(s15.id),
+              style: {
+                padding: "16px",
+                background: "#1a1a1a",
+                border: "1px solid #2d2d2d",
+                borderRadius: "8px",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                transition: "all 0.2s ease",
+                textAlign: "left"
+              },
+              onMouseOver: (e) => {
+                e.currentTarget.style.borderColor = "#0e639c";
+                e.currentTarget.style.background = "#222222";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              },
+              onMouseOut: (e) => {
+                e.currentTarget.style.borderColor = "#2d2d2d";
+                e.currentTarget.style.background = "#1a1a1a";
+                e.currentTarget.style.transform = "translateY(0)";
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "14px", fontWeight: 600, color: "#fff" }, children: s15.name }),
+                  s15.mode && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                    fontSize: "9px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    background: s15.mode === "plan" ? "#c2780e" : s15.mode === "ask" ? "#1f8244" : "#0e639c",
+                    color: "#fff",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    letterSpacing: "0.5px"
+                  }, children: s15.mode })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "4px", fontSize: "11px", color: "#888" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: "#aaa" }, children: "Proyecto:" }),
+                    " ",
+                    projectName
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: "#aaa" }, children: "Archivos abiertos:" }),
+                    " ",
+                    openFilesText
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: "#aaa" }, children: "Modelo:" }),
+                    " ",
+                    activeModel
+                  ] })
+                ] })
+              ]
+            },
+            s15.id
+          );
+        }) })
+      ] })
+    ] });
+  })() });
 }
 const AGENT_MODES = ["agent", "plan", "debug", "multitask", "ask"];
-function newSession(count, mode = "agent") {
+function newSession(count, mode = "agent", workspace = null) {
   const now = Date.now();
   const id2 = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
   return {
@@ -7726,7 +8438,8 @@ function newSession(count, mode = "agent") {
     messages: [],
     mode,
     createdAt: now,
-    lastActive: now
+    lastActive: now,
+    workspace
   };
 }
 function Markdown({ text }) {
@@ -7758,13 +8471,35 @@ function Markdown({ text }) {
     } else if (mode === "list") {
       parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2) }, idx)) }, key));
     } else {
+      const paraLines = [];
+      const flushPara = (k2) => {
+        if (paraLines.length === 0) return;
+        const nodes = [];
+        paraLines.forEach((l3, li2) => {
+          if (li2 > 0) nodes.push(/* @__PURE__ */ jsxRuntimeExports.jsx("br", {}, `br-${li2}`));
+          nodes.push(...parseInline(l3));
+        });
+        parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "md-p", children: nodes }, k2));
+        paraLines.length = 0;
+      };
       currentBlock.forEach((line, idx) => {
-        if (line.startsWith("### ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "md-h3", children: parseInline(line.slice(4)) }, `${key}-${idx}`));
-        else if (line.startsWith("## ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "md-h2", children: parseInline(line.slice(3)) }, `${key}-${idx}`));
-        else if (line.startsWith("# ")) parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "md-h1", children: parseInline(line.slice(2)) }, `${key}-${idx}`));
-        else if (line.trim() === "") parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "md-spacer" }, `${key}-${idx}`));
-        else parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "md-p", children: parseInline(line) }, `${key}-${idx}`));
+        if (line.startsWith("### ")) {
+          flushPara(`${key}-para-${idx}`);
+          parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "md-h3", children: parseInline(line.slice(4)) }, `${key}-${idx}`));
+        } else if (line.startsWith("## ")) {
+          flushPara(`${key}-para-${idx}`);
+          parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "md-h2", children: parseInline(line.slice(3)) }, `${key}-${idx}`));
+        } else if (line.startsWith("# ")) {
+          flushPara(`${key}-para-${idx}`);
+          parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "md-h1", children: parseInline(line.slice(2)) }, `${key}-${idx}`));
+        } else if (line.trim() === "") {
+          flushPara(`${key}-para-${idx}`);
+          parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "md-spacer" }, `${key}-${idx}`));
+        } else {
+          paraLines.push(line);
+        }
       });
+      flushPara(`${key}-para-end`);
     }
     currentBlock = [];
   };
@@ -7821,6 +8556,10 @@ function Markdown({ text }) {
           tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, i));
           i = end + 2;
           continue;
+        } else {
+          tokens.push("**");
+          i += 2;
+          continue;
         }
       }
       if (t2[i] === "`") {
@@ -7828,6 +8567,10 @@ function Markdown({ text }) {
         if (end !== -1) {
           tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, i));
           i = end + 1;
+          continue;
+        } else {
+          tokens.push("`");
+          i += 1;
           continue;
         }
       }
@@ -7849,7 +8592,7 @@ function Markdown({ text }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "markdown-body", children: parts });
 }
 function MessageContent({ content, writes, onAccept, onRevert }) {
-  const blockRe = /```(write|replace):([^\n]+)\n([\s\S]*?)```/g;
+  const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
   const parts = [];
   let last = 0;
   let match;
@@ -7858,23 +8601,29 @@ function MessageContent({ content, writes, onAccept, onRevert }) {
       parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { text: content.slice(last, match.index) }, `text-${last}`));
     }
     const type = match[1];
-    const filePath = match[2].trim();
+    const filePath = decodeURIComponent(match[2].trim());
     const blockContent = match[3];
     const write = writes?.find((w2) => w2.path.endsWith(filePath) || w2.path === filePath);
     const fileName = filePath.split("/").pop();
     parts.push(
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-header", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-info", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-icon", children: type === "replace" ? "Δ" : "+" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-icon", children: type === "replace" ? /* @__PURE__ */ jsxRuntimeExports.jsx(FileDiff, { size: 13, strokeWidth: 2 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(FilePlus, { size: 13, strokeWidth: 2 }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-file", children: fileName }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-type", children: type === "replace" ? "patch" : "write" })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-actions", children: [
-          write && write.accepted !== null ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `write-status-pill ${write.accepted ? "pill--accepted" : "pill--reverted"}`, children: write.accepted ? "Accepted" : "Reverted" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
+          write && write.accepted !== null ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `write-status-pill ${write.accepted ? "pill--accepted" : "pill--reverted"}`, children: write.accepted ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { size: 10, strokeWidth: 2.5 }),
+            " Accepted"
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 10, strokeWidth: 2.5 }),
+            " Reverted"
+          ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--revert", onClick: () => onRevert(filePath), children: "Discard" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onAccept(filePath), children: "Apply" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-icon-btn", onClick: () => navigator.clipboard.writeText(blockContent), title: "Copy", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z" }) }) })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-icon-btn", onClick: () => navigator.clipboard.writeText(blockContent), title: "Copy", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { size: 12, strokeWidth: 1.8 }) })
         ] })
       ] }) }, match.index)
     );
@@ -7885,28 +8634,6 @@ function MessageContent({ content, writes, onAccept, onRevert }) {
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "msg-content-inner", children: parts });
 }
-function ModeIcon({ mode }) {
-  if (mode === "agent") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z" })
-  ] });
-  if (mode === "plan") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 4.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1zm0 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1 0-1z" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "5", r: ".5" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "8", r: ".5" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "1.5", cy: "11", r: ".5" })
-  ] });
-  if (mode === "debug") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4.352 11.162c.03.03.064.057.1.082l.643.43c.123.083.272.128.425.128h4.96c.153 0 .302-.045.425-.128l.643-.43c.036-.025.07-.052.1-.082l.405-.405c.08-.08.128-.19.128-.304V5.47c0-.115-.048-.224-.128-.304l-.405-.405a.434.434 0 0 0-.1-.082L11.4 4.25a.515.515 0 0 0-.425-.128H5.625c-.153 0-.302.045-.425.128l-.643.43a.434.434 0 0 0-.1.082l-.405.405c-.08.08-.128.19-.128.304v5.076c0 .114.048.224.128.304l.405.405zM3.25 5.47c0-.4.162-.782.45-1.07l.405-.405a1.434 1.434 0 0 1 .33-.27L5.078 3.3a1.514 1.514 0 0 1 1.246-.375h3.35c.465 0 .91.135 1.246.375l.643.43a1.434 1.434 0 0 1 .33.27l.405.405c.288.288.45.67.45 1.07v5.076c0 .4-.162.782-.45 1.07l-.405.405a1.434 1.434 0 0 1-.33.27l-.643.43a1.514 1.514 0 0 1-1.246.375H6.325c-.465 0-.91-.135-1.246-.375l-.643-.43a1.434 1.434 0 0 1-.33-.27l-.405-.405a1.516 1.516 0 0 1-.45-1.07V5.47z" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 5a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-1 0v-5A.5.5 0 0 1 8 5zM5.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4A.5.5 0 0 1 5.5 8z" })
-  ] });
-  if (mode === "multitask") return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1 1a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V1zm1 0v6h6V1H2z" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M7 7a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V7zm1 0v6h6V7H8z" })
-  ] });
-  if (mode === "ask") return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M14.5 3a.5.5 0 0 0-.5-.5H2a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5h4.646l3.354 3.354V11H14a.5.5 0 0 0 .5-.5V3zm-1 7H9.5a.5.5 0 0 0-.5.5v2.293L6.354 10a.5.5 0 0 0-.354-.146H2.5V3.5h11V10z" }) });
-  return null;
-}
 function ChatPanel({
   model,
   models,
@@ -7915,12 +8642,52 @@ function ChatPanel({
   openFile,
   fileContent,
   onWriteFile,
-  onRefreshTree
+  onRefreshTree,
+  onOpenFile,
+  onSessionsChange,
+  activeId: activeIdProp,
+  onActiveIdChange,
+  openFiles,
+  activeFile
 }) {
-  const [sessions, setSessions] = reactExports.useState([newSession(1)]);
+  const [sessions, setSessions] = reactExports.useState(() => [newSession(1, "agent", rootPath)]);
   const [activeId, setActiveId] = reactExports.useState(sessions[0].id);
+  reactExports.useEffect(() => {
+    if (activeId && onActiveIdChange) {
+      onActiveIdChange(activeId);
+    }
+  }, [activeId, onActiveIdChange]);
+  reactExports.useEffect(() => {
+    if (activeIdProp && activeIdProp !== activeId) {
+      setActiveId(activeIdProp);
+    }
+  }, [activeIdProp]);
+  reactExports.useEffect(() => {
+    if (activeId && (openFiles || activeFile)) {
+      setSessions((prev) => {
+        const current = prev.find((s15) => s15.id === activeId);
+        if (!current) return prev;
+        const isTabsEqual = JSON.stringify(current.tabs || []) === JSON.stringify(openFiles || []);
+        const isFileEqual = current.openFile === activeFile;
+        if (isTabsEqual && isFileEqual) return prev;
+        return prev.map((s15) => s15.id === activeId ? { ...s15, tabs: openFiles, openFile: activeFile } : s15);
+      });
+    }
+  }, [openFiles, activeFile, activeId]);
+  reactExports.useEffect(() => {
+    if (activeId && rootPath) {
+      setSessions((prev) => {
+        const current = prev.find((s15) => s15.id === activeId);
+        if (current && current.workspace !== rootPath) {
+          return prev.map((s15) => s15.id === activeId ? { ...s15, workspace: rootPath } : s15);
+        }
+        return prev;
+      });
+    }
+  }, [rootPath, activeId]);
   const [input, setInput] = reactExports.useState("");
   const [loading, setLoading] = reactExports.useState(false);
+  const [statusText, setStatusText] = reactExports.useState("Generando ideas...");
   const [showHistory, setShowHistory] = reactExports.useState(false);
   const [autopilot, setAutopilot] = reactExports.useState(true);
   const autopilotRef = reactExports.useRef(true);
@@ -7933,6 +8700,8 @@ function ChatPanel({
   const [showForensics, setShowForensics] = reactExports.useState(false);
   const [showModeMenu, setShowModeMenu] = reactExports.useState(false);
   const [backups, setBackups] = reactExports.useState([]);
+  const [attachments, setAttachments] = reactExports.useState([]);
+  const [isDragging, setIsDragging] = reactExports.useState(false);
   const hasLoadedRef = reactExports.useRef(false);
   const startTimeRef = reactExports.useRef(0);
   reactExports.useEffect(() => {
@@ -7945,6 +8714,7 @@ function ChatPanel({
         }));
         setSessions(migrated);
         setActiveId(migrated[0].id);
+        if (onSessionsChange) onSessionsChange(migrated);
       }
       hasLoadedRef.current = true;
     });
@@ -7952,10 +8722,45 @@ function ChatPanel({
   reactExports.useEffect(() => {
     if (hasLoadedRef.current) {
       window.api.saveSessions(JSON.stringify(sessions));
+      if (onSessionsChange) onSessionsChange(sessions);
     }
   }, [sessions]);
+  reactExports.useEffect(() => {
+    if (rootPath && sessions.length > 0) {
+      const hasEmptyWorkspace = sessions.some((s15) => !s15.workspace);
+      if (hasEmptyWorkspace) {
+        setSessions((prev) => prev.map((s15) => s15.workspace ? s15 : { ...s15, workspace: rootPath }));
+      }
+    }
+  }, [rootPath, sessions.length]);
+  reactExports.useEffect(() => {
+    const STATUS_MESSAGES = [
+      "Generando ideas...",
+      "Pensando...",
+      "Uniendo conceptos...",
+      "Analizando contexto...",
+      "Estructurando respuesta...",
+      "Refinando detalles..."
+    ];
+    let intervalId = null;
+    if (loading) {
+      let index2 = 0;
+      setStatusText(STATUS_MESSAGES[0]);
+      intervalId = setInterval(() => {
+        index2 = (index2 + 1) % STATUS_MESSAGES.length;
+        setStatusText(STATUS_MESSAGES[index2]);
+      }, 3e3);
+    } else {
+      setStatusText(STATUS_MESSAGES[0]);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [loading]);
   const activeSession = sessions.find((s15) => s15.id === activeId) ?? sessions[0];
   const messages = activeSession.messages;
+  const lastMsg = messages[messages.length - 1];
+  const isWaitingFirstToken = lastMsg && lastMsg.role === "assistant" && !lastMsg.content;
   reactExports.useEffect(() => {
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, lastActive: Date.now() } : s15));
   }, [activeId]);
@@ -7971,10 +8776,25 @@ function ChatPanel({
   }
   function addSession() {
     const nextNum = sessions.length + 1;
-    const s15 = newSession(nextNum);
+    const s15 = newSession(nextNum, "agent", rootPath);
     setSessions((prev) => [...prev, s15]);
     setActiveId(s15.id);
     setInput("");
+  }
+  async function openForensics() {
+    const list = await window.api.listBackups();
+    setBackups(list);
+    setShowForensics(true);
+  }
+  async function applyBackup(name) {
+    if (!confirm(`Restore history from ${name}? This will overwrite your current active sessions.`)) return;
+    const restored = await window.api.restoreBackup(name);
+    if (restored) {
+      setSessions(restored);
+      setActiveId(restored[0].id);
+      setShowForensics(false);
+      setShowHistory(false);
+    }
   }
   function closeSession(id2) {
     setSessions((prev) => {
@@ -8006,7 +8826,56 @@ function ChatPanel({
   const filteredHistory = sessions.filter((s15) => (showDeleted || !s15.isDeleted) && s15.name.toLowerCase().includes(historySearch.toLowerCase())).sort((a, b2) => b2.lastActive - a.lastActive);
   async function buildSystemPrompt(mode) {
     const sessionMode = activeSession.mode;
-    let sys = `You are an agentic coding assistant with direct write access to the user's project files.
+    let sys = `You are an expert agentic coding assistant.`;
+    if (sessionMode === "ask") {
+      sys += `
+
+[MODE: ASK]
+You are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code. DO NOT output any file modifications. If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:' or 'replace:' prefixes. If you detect a possible improvement or a code change that should be applied, explicitly prompt the user to switch to 'Agent' mode so you can implement it for them, or offer related subjects to clear up any doubts.`;
+    } else if (sessionMode === "plan") {
+      const planFile = `plans/PLAN-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.md`;
+      sys += ` You are in PLANNING mode. Your ONLY output must be a structured requirements and implementation plan written to a markdown file.
+
+⛔ STRICTLY FORBIDDEN:
+- Do NOT write, modify, or replace ANY source code files (.ts, .tsx, .js, .py, .css, etc.)
+- Do NOT use replace: blocks under any circumstance
+- Do NOT suggest the user manually make changes
+- Do NOT implement anything
+
+✅ YOUR ONLY ALLOWED OUTPUT:
+Write the complete plan to a single markdown file using this exact format:
+\`\`\`write:${planFile}
+# Plan: [Feature/Task Name]
+
+## Overview
+[2-3 sentence summary of what will be built and why]
+
+## Requirements
+### Functional Requirements
+- FR-1: ...
+- FR-2: ...
+
+### Non-Functional Requirements
+- NFR-1: ...
+
+## Technical Approach
+[Architecture decisions, technology choices, patterns to use]
+
+## Implementation Steps
+1. **Step name** — description, files affected: \`path/to/file.ts\`
+2. **Step name** — description, files affected: \`path/to/file.ts\`
+...
+
+## Edge Cases & Risks
+- Risk 1: description + mitigation
+
+## Open Questions
+- [ ] Question that needs clarification before implementation
+\`\`\`
+
+After writing the plan file, briefly summarize what you've planned in 1-2 sentences. The user can then review PLAN.md and switch to Agent mode to implement it.`;
+    } else {
+      sys += ` You have direct write access to the user's project files.
 
 When you need to modify existing files, you MUST use this exact format:
 \`\`\`replace:relative/path/to/file.ext
@@ -8027,15 +8896,8 @@ Rules:
 - The <<<< section must match exactly.
 - ALWAYS use relative paths.
 - Write ALL necessary files immediately.`;
-    if (sessionMode === "plan") {
-      sys += `
-
-[MODE: PLANNING] Create a detailed plan BEFORE implementation.`;
-    } else if (sessionMode === "ask") {
-      sys += `
-
-[MODE: QUESTIONS] Ask 3-5 focused questions before proposing anything.`;
-    } else if (sessionMode === "debug") {
+    }
+    if (sessionMode === "debug") {
       sys += `
 
 [MODE: DEBUG] Analyze logs and hypothesize root causes.`;
@@ -8079,21 +8941,40 @@ ${fileContent.slice(0, 3e3)}
   }
   async function send() {
     if (!input.trim() || loading || !model) return;
-    const userMsg = { role: "user", content: input.trim() };
+    const userMsg = {
+      role: "user",
+      content: input.trim(),
+      images: attachments.length > 0 ? attachments.map((a) => a.base64) : void 0
+    };
     const history = [...messages, userMsg];
     setMessages(() => history);
     setInput("");
+    setAttachments([]);
     setLoading(true);
+    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, workspace: s15.workspace || rootPath } : s15));
     startTimeRef.current = Date.now();
     try {
       const systemPrompt = await buildSystemPrompt();
+      const chatMessages = [
+        { role: "system", content: systemPrompt },
+        ...history.map((msg) => {
+          if (msg.role === "user" && msg.images) {
+            return {
+              role: msg.role,
+              content: msg.content,
+              images: msg.images.map((img) => img.includes(",") ? img.split(",")[1] : img)
+            };
+          }
+          return { role: msg.role, content: msg.content };
+        })
+      ];
       const res = await fetch("http://localhost:11434/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
           stream: true,
-          messages: [{ role: "system", content: systemPrompt }, ...history]
+          messages: chatMessages
         })
       });
       if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
@@ -8103,6 +8984,8 @@ ${fileContent.slice(0, 3e3)}
       const activeIdAtSend = activeId;
       let processedUpTo = 0;
       const streamWrites = [];
+      let promptTokens = 0;
+      let responseTokens = 0;
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
       while (true) {
         const { done, value } = await reader.read();
@@ -8111,6 +8994,12 @@ ${fileContent.slice(0, 3e3)}
           if (!line.trim()) continue;
           try {
             const json = JSON.parse(line);
+            if (json.prompt_eval_count) {
+              promptTokens = json.prompt_eval_count;
+            }
+            if (json.eval_count) {
+              responseTokens = json.eval_count;
+            }
             if (json.message?.content) {
               assistantText += json.message.content;
               setSessions((prev) => prev.map((s15) => {
@@ -8128,7 +9017,11 @@ ${fileContent.slice(0, 3e3)}
                 const filePath = decodeURIComponent(m2[2].trim());
                 const blockContent = m2[3];
                 if (!rootPath) continue;
-                const abs = filePath.startsWith("/") ? filePath : joinPath(rootPath, filePath);
+                const isPlanMode = activeSession.mode === "plan";
+                const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
+                if (isPlanMode && !isPlanFile) continue;
+                if (isPlanMode && type === "replace") continue;
+                const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ""));
                 let prevContent;
                 try {
                   prevContent = await window.api.readFile(abs);
@@ -8138,15 +9031,25 @@ ${fileContent.slice(0, 3e3)}
                 if (type === "replace" && prevContent) {
                   const parts = blockContent.split("====");
                   if (parts.length === 2) {
-                    const target = parts[0].replace("<<<<\n", "").trimEnd();
-                    const replacement = parts[1].replace("\n>>>>", "").replace(">>>>", "").trimStart();
-                    finalContent = prevContent.replace(target, replacement);
+                    const target = parts[0].replace("<<<<\n", "").replace("<<<<\r\n", "").trimEnd();
+                    const replacement = parts[1].replace("\n>>>>", "").replace("\r\n>>>>", "").replace(">>>>", "").trimStart();
+                    const normalizedPrev = prevContent.replace(/\r\n/g, "\n");
+                    const normalizedTarget = target.replace(/\r\n/g, "\n");
+                    const normalizedReplacement = replacement.replace(/\r\n/g, "\n");
+                    if (normalizedPrev.includes(normalizedTarget)) {
+                      finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement);
+                    } else {
+                      finalContent = prevContent.replace(target, replacement);
+                    }
                   }
                 }
                 if (autopilotRef.current) {
                   await window.api.writeFile(abs, finalContent);
                   if (openFile && abs === openFile) onWriteFile(finalContent);
                   onRefreshTree();
+                  if (isPlanMode && isPlanFile && onOpenFile) {
+                    onOpenFile(abs);
+                  }
                 }
                 streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent });
               }
@@ -8159,7 +9062,14 @@ ${fileContent.slice(0, 3e3)}
       const writes = streamWrites.length > 0 ? streamWrites : await processWrites(assistantText);
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1] = { ...updated[updated.length - 1], writes, elapsed };
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          writes,
+          elapsed,
+          promptTokens,
+          responseTokens,
+          model
+        };
         return updated;
       });
       if (activeSession.name.startsWith("Session ") && history.length >= 1) {
@@ -8180,16 +9090,27 @@ ${fileContent.slice(0, 3e3)}
           model,
           stream: false,
           messages: [
-            { role: "system", content: "Summarize the conversation into 3-5 word title. ONLY the title." },
+            { role: "system", content: "Summarize the conversation into a 3-5 word title. ONLY the title. No quotes, no markdown, no prefixes." },
             ...msgs.slice(-2)
           ]
         })
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("API failed");
       const json = await res.json();
-      const title = json.message?.content?.trim();
-      if (title) setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: title } : s15));
-    } catch {
+      const rawTitle = json.message?.content?.trim();
+      if (rawTitle) {
+        const title = rawTitle.replace(/^["']|["']$/g, "").replace(/\*/g, "");
+        setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: title } : s15));
+        return;
+      }
+    } catch (err) {
+      console.error("Auto-naming failed:", err);
+    }
+    const userMsg = msgs.find((m2) => m2.role === "user");
+    if (userMsg) {
+      const words = userMsg.content.trim().split(/\s+/).slice(0, 4).join(" ");
+      const fallbackTitle = words + (userMsg.content.length > words.length ? "..." : "");
+      setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: fallbackTitle } : s15));
     }
   }
   function joinPath(base, rel) {
@@ -8199,12 +9120,16 @@ ${fileContent.slice(0, 3e3)}
     const re2 = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
     let match;
     const actions = [];
+    const isPlanMode = activeSession.mode === "plan";
     while ((match = re2.exec(text)) !== null) {
       const type = match[1];
       const filePath = decodeURIComponent(match[2].trim());
       const blockContent = match[3];
       if (!rootPath) continue;
-      const abs = filePath.startsWith("/") ? filePath : joinPath(rootPath, filePath);
+      const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
+      if (isPlanMode && !isPlanFile) continue;
+      if (isPlanMode && type === "replace") continue;
+      const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ""));
       let prevContent;
       try {
         prevContent = await window.api.readFile(abs);
@@ -8214,14 +9139,22 @@ ${fileContent.slice(0, 3e3)}
       if (type === "replace" && prevContent) {
         const parts = blockContent.split("====");
         if (parts.length === 2) {
-          const target = parts[0].replace("<<<<\n", "").trimEnd();
-          const replacement = parts[1].replace("\n>>>>", "").replace(">>>>", "").trimStart();
-          finalContent = prevContent.replace(target, replacement);
+          const target = parts[0].replace("<<<<\n", "").replace("<<<<\r\n", "").trimEnd();
+          const replacement = parts[1].replace("\n>>>>", "").replace("\r\n>>>>", "").replace(">>>>", "").trimStart();
+          const normalizedPrev = prevContent.replace(/\r\n/g, "\n");
+          const normalizedTarget = target.replace(/\r\n/g, "\n");
+          const normalizedReplacement = replacement.replace(/\r\n/g, "\n");
+          if (normalizedPrev.includes(normalizedTarget)) {
+            finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement);
+          } else {
+            finalContent = prevContent.replace(target, replacement);
+          }
         }
       }
       if (autopilotRef.current) {
         await window.api.writeFile(abs, finalContent);
         if (openFile && abs === openFile) onWriteFile(finalContent);
+        if (isPlanMode && isPlanFile && onOpenFile) onOpenFile(abs);
       }
       actions.push({ path: abs, content: finalContent, accepted: null, prevContent });
     }
@@ -8252,18 +9185,61 @@ ${fileContent.slice(0, 3e3)}
       writes: m2.writes?.map((w2) => w2.path === write.path ? { ...w2, accepted: false } : w2)
     } : m2));
   }
-  function handleFileAttach(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setInput((prev) => prev + `
+  function processFile(file) {
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const base64 = ev.target?.result;
+        setAttachments((prev) => [...prev, { name: file.name, base64, type: file.type }]);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setInput((prev) => prev + `
 \`\`\`${file.name}
 ${ev.target?.result}
 \`\`\``);
-    };
-    reader.readAsText(file);
+      };
+      reader.readAsText(file);
+    }
+  }
+  function handleFileAttach(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
     e.target.value = "";
+  }
+  function handleDragOver(e) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+  function handleDragLeave() {
+    setIsDragging(false);
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        processFile(files[i]);
+      }
+    }
+  }
+  function handlePaste(e) {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          processFile(file);
+        }
+      }
+    }
+  }
+  function removeAttachment(index2) {
+    setAttachments((prev) => prev.filter((_2, i) => i !== index2));
   }
   function handleKey(e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -8271,126 +9247,264 @@ ${ev.target?.result}
       send();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-panel", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-bar", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-tabs", children: sessions.filter((s15) => !s15.isDeleted).map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          className: `session-tab ${s15.id === activeId ? "session-tab--active" : ""}`,
-          onClick: () => setActiveId(s15.id),
-          onDoubleClick: () => startRename(s15.id, s15.name),
-          children: [
-            editingId === s15.id ? /* @__PURE__ */ jsxRuntimeExports.jsx("input", { autoFocus: true, className: "session-tab-input", value: editingName, onChange: (e) => setEditingName(e.target.value), onBlur: saveRename, onKeyDown: (e) => e.key === "Enter" && saveRename() }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "session-tab-name", title: s15.name, children: s15.name }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-tab-close", onClick: (e) => {
-              e.stopPropagation();
-              closeSession(s15.id);
-            }, children: "×" })
-          ]
-        },
-        s15.id
-      )) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-actions", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: addSession, title: "New Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 2a.75.75 0 0 1 .75.75v4.5h4.5a.75.75 0 0 1 0 1.5h-4.5v4.5a.75.75 0 0 1-1.5 0v-4.5h-4.5a.75.75 0 0 1 0-1.5h4.5v-4.5A.75.75 0 0 1 8 2z" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory((h2) => !h2), title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 16A8 8 0 1 1 8 0a8 8 0 0 1 0 16zm0-1.5a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13zM9 4v4.5l3.5 2-.75 1.25L8 9V4h1z" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: clearSession, title: "Clear", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5zM4.5 3.5l.844 10.55a1 1 0 0 0 .997.95h6.23a1 1 0 0 0 .997-.95L14.414 3.5H4.5z" }) }) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-header", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mode-selector", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "mode-btn", onClick: () => setShowModeMenu(!showModeMenu), children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(ModeIcon, { mode: activeSession.mode }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "capitalize" }, children: activeSession.mode })
-        ] }),
-        showModeMenu && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mode-menu", children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: `mode-menu-item ${activeSession.mode === m2 ? "active" : ""}`, onClick: () => {
-          setMode(m2);
-          setShowModeMenu(false);
-        }, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(ModeIcon, { mode: m2 }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { textTransform: "capitalize" }, children: m2 })
-        ] }, m2)) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "select",
-        {
-          className: "model-select",
-          value: model,
-          onChange: (e) => onModelChange(e.target.value),
-          children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: `chat-action-btn ${autopilot ? "active" : ""}`, onClick: (e) => {
-        const next = !autopilot;
-        setAutopilot(next);
-        autopilotRef.current = next;
-      }, title: "Autopilot", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", style: { color: autopilot ? "#4ec9b0" : "inherit" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 11.5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5h-7z" }) }) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
-      messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role}`, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: m2.role.toUpperCase() }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            MessageContent,
-            {
-              content: m2.content,
-              writes: m2.writes,
-              onAccept: (p2) => handleAccept(i, p2),
-              onRevert: (p2) => handleRevert(i, p2)
-            }
-          ),
-          (m2.writes || m2.elapsed) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
-            m2.writes && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
-              m2.writes.length,
-              " patches"
-            ] }),
-            m2.elapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
-              m2.elapsed.toFixed(1),
-              "s"
+  function isModelMultimodal(name) {
+    if (!name) return false;
+    const n2 = name.toLowerCase();
+    return n2.includes("llava") || n2.includes("vision") || n2.includes("vl") || n2.includes("moondream") || n2.includes("minicpm");
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "chat-panel",
+      onDragOver: handleDragOver,
+      onDragLeave: handleDragLeave,
+      onDrop: handleDrop,
+      children: [
+        isDragging && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-dropzone-overlay", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-dropzone-box", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 32, className: "chat-dropzone-icon" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "chat-dropzone-text", children: [
+            "Drop images or text files here",
+            !isModelMultimodal(model) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { color: "#ffd685", marginTop: "6px", fontSize: "11px", fontWeight: "normal" }, children: [
+              "⚠️ Model ",
+              model,
+              " may not support images"
             ] })
           ] })
-        ] })
-      ] }, i)),
-      loading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg chat-msg--assistant", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "typing", children: "▌" }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "textarea",
-        {
-          className: "chat-input",
-          placeholder: "Ask anything, @ to mention...",
-          value: input,
-          onChange: (e) => setInput(e.target.value),
-          onKeyDown: handleKey,
-          rows: Math.min(10, input.split("\n").length || 1),
-          style: { height: "auto" }
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-actions", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4.406 3.342l.707-.707L9.13 6.652a2.5 2.5 0 0 1 0 3.536l-4.243 4.242a4 4 0 0 1-5.657-5.657l4.597-4.596a5.5 5.5 0 0 1 7.778 7.778l-3.536 3.536-.707-.707 3.536-3.536a4.5 4.5 0 0 0-6.364-6.364l-4.596 4.596a3 3 0 0 0 4.243 4.243l4.242-4.243a1.5 1.5 0 0 0 0-2.121l-4.018-4.018z" }) }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-bar", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-tabs", children: sessions.filter((s15) => !s15.isDeleted).map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: `session-tab ${s15.id === activeId ? "session-tab--active" : ""}`,
+              onClick: () => setActiveId(s15.id),
+              onDoubleClick: () => startRename(s15.id, s15.name),
+              children: [
+                editingId === s15.id ? /* @__PURE__ */ jsxRuntimeExports.jsx("input", { autoFocus: true, className: "session-tab-input", value: editingName, onChange: (e) => setEditingName(e.target.value), onBlur: saveRename, onKeyDown: (e) => e.key === "Enter" && saveRename() }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "session-tab-name", title: s15.name, children: s15.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "session-tab-close", onClick: (e) => {
+                  e.stopPropagation();
+                  closeSession(s15.id);
+                }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
+              ]
+            },
+            s15.id
+          )) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-actions", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: addSession, title: "New Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 14, strokeWidth: 2 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory((h2) => !h2), title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 14, strokeWidth: 1.8 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: clearSession, title: "Clear Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 14, strokeWidth: 1.8 }) })
+          ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim(), children: "Send" })
-      ] })
-    ] }) }),
-    showHistory && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-panel", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-header", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "History" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { placeholder: "Search sessions...", value: historySearch, onChange: (e) => setHistorySearch(e.target.value), className: "history-search" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "history-close", onClick: () => setShowHistory(false), children: "×" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", children: filteredHistory.map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item", onClick: () => {
-        setActiveId(s15.id);
-        setShowHistory(false);
-      }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-name", children: s15.name }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-time", children: new Date(s15.lastActive).toLocaleDateString() })
-      ] }, s15.id)) })
-    ] })
-  ] });
+        activeSession.mode === "plan" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "planning-banner", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardList, { size: 14, className: "planning-banner-icon" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "planning-banner-text", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { children: "Planning Mode Active:" }),
+            " The agent will design a high-level requirements plan inside ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: "plans/PLAN-[date].md" }),
+            ". Source code modifications are disabled."
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
+          messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role}`, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: m2.role.toUpperCase() }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                MessageContent,
+                {
+                  content: m2.content,
+                  writes: m2.writes,
+                  onAccept: (p2) => handleAccept(i, p2),
+                  onRevert: (p2) => handleRevert(i, p2)
+                }
+              ),
+              m2.images && m2.images.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg-images", children: m2.images.map((img, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: img, className: "chat-msg-image", alt: "attachment", onClick: () => window.open(img) }, idx)) }),
+              (m2.writes || m2.elapsed) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
+                m2.writes && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
+                  m2.writes.length,
+                  " patches"
+                ] }),
+                m2.elapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
+                  m2.elapsed.toFixed(1),
+                  "s"
+                ] })
+              ] })
+            ] })
+          ] }, i)),
+          loading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg chat-msg--assistant", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: "AGENT" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner", style: { marginLeft: 8 } }),
+            isWaitingFirstToken && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "agent-loading-status", style: { fontSize: "11px", color: "#888", fontStyle: "italic", marginLeft: "12px", opacity: 0.8 }, children: statusText })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
+          attachments.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachments-preview", children: [
+            attachments.map((att, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachment-card", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: att.base64, alt: att.name, className: "chat-attachment-thumbnail" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-attachment-name", title: att.name, children: att.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-attachment-remove", onClick: () => removeAttachment(idx), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
+            ] }, idx)),
+            !isModelMultimodal(model) && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-attachment-warning", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              "⚠️ Model ",
+              model,
+              " may not support images"
+            ] }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "textarea",
+            {
+              className: "chat-input",
+              placeholder: "Ask anything, @ to mention...",
+              value: input,
+              onChange: (e) => setInput(e.target.value),
+              onKeyDown: handleKey,
+              onPaste: handlePaste,
+              rows: Math.min(10, input.split("\n").length || 1),
+              style: { height: "auto" }
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "select",
+              {
+                className: "chat-select chat-select--mode",
+                value: activeSession.mode,
+                onChange: (e) => setMode(e.target.value),
+                children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2.toUpperCase() }, m2))
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "select",
+              {
+                className: "chat-select chat-select--model",
+                value: model,
+                onChange: (e) => onModelChange(e.target.value),
+                children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `chat-action-btn ${autopilot ? "active" : ""}`,
+                onClick: () => {
+                  const next = !autopilot;
+                  setAutopilot(next);
+                  autopilotRef.current = next;
+                },
+                title: autopilot ? "Autopilot ON" : "Autopilot OFF",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 14, strokeWidth: 1.8 })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim(), children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { size: 13, strokeWidth: 2 }),
+              "Send"
+            ] })
+          ] })
+        ] }) }),
+        showHistory && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-history-overlay", onClick: () => setShowHistory(false), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history", onClick: (e) => e.stopPropagation(), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history-header", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "input",
+              {
+                autoFocus: true,
+                placeholder: "Search history...",
+                value: historySearch,
+                onChange: (e) => setHistorySearch(e.target.value),
+                className: "history-search"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-header-actions", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "history-action-link", onClick: openForensics, children: "Time Machine" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "history-action-link", onClick: () => setShowDeleted(!showDeleted), children: showDeleted ? "Hide Deleted" : "Show Deleted" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory(false), children: "×" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "history-list", children: filteredHistory.map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item", onClick: () => {
+            setActiveId(s15.id);
+            setShowHistory(false);
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item-left", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-name", children: s15.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-path", children: new Date(s15.lastActive).toLocaleString() })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+              fontSize: "10px",
+              color: "#888",
+              marginLeft: "auto",
+              marginRight: "8px",
+              fontFamily: "monospace",
+              background: "rgba(255, 255, 255, 0.03)",
+              padding: "2px 6px",
+              borderRadius: "4px",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              maxWidth: "120px"
+            }, title: s15.workspace || "No Project", children: s15.workspace ? s15.workspace.split(/[\\/]/).pop() : "No Project" }),
+            s15.isDeleted && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item-status", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-tag", children: "Deleted" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: "history-restore-btn",
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    setSessions((prev) => prev.map((sess) => sess.id === s15.id ? { ...sess, isDeleted: false } : sess));
+                    setActiveId(s15.id);
+                    setShowHistory(false);
+                  },
+                  children: "Restore"
+                }
+              )
+            ] })
+          ] }, s15.id)) })
+        ] }) }),
+        showForensics && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-history-overlay", onClick: () => setShowForensics(false), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history", onClick: (e) => e.stopPropagation(), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history-header", style: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-name", style: { fontWeight: 700, fontSize: "13px" }, children: "Time Machine (Backups)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: "history-action-link",
+                onClick: () => setShowForensics(false),
+                style: { fontSize: "16px", padding: "0 6px", border: "none" },
+                children: "×"
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "10px 14px", fontSize: "11px", color: "#888", borderBottom: "1px solid #333", lineHeight: "1.4" }, children: [
+            "Restore your entire workspace to a previous point in time.",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#d4d4d4" }, children: "Warning: Restoring a snapshot will completely overwrite your current active sessions." })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-list", children: [
+            backups.map((b2, index2) => {
+              const isObj = b2 && typeof b2 === "object";
+              const filename = isObj ? b2.filename : b2;
+              const workspaces = isObj ? b2.workspaces : [];
+              const summary = isObj ? b2.summary : "Project snapshot";
+              const cleanName = filename ? filename.replace("sessions.", "").replace(".json", "") : "";
+              const activeProject = rootPath ? rootPath.split(/[\\/]/).pop() : "";
+              const pathText = workspaces && workspaces.length > 0 ? `${workspaces.join(", ")} • ${summary}` : activeProject ? `${activeProject} • ${summary}` : summary;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item", onClick: () => applyBackup(filename), children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "history-item-left", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-name", children: cleanName }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-path", style: { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "280px" }, title: pathText, children: pathText })
+                ] }),
+                index2 === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "history-tag", style: { background: "#0e639c", color: "#fff", marginLeft: "auto" }, children: "Latest" })
+              ] }, filename);
+            }),
+            backups.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: 20, textAlign: "center", color: "#666" }, children: "No backups found" })
+          ] })
+        ] }) })
+      ]
+    }
+  );
 }
 /**
  * Copyright (c) 2014-2024 The xterm.js authors. All rights reserved.
@@ -17044,7 +18158,16 @@ function TerminalPanel({ cwd }) {
     }
   }, [activeId, tabs]);
   reactExports.useEffect(() => {
+    tabCounter = 1;
     createTab();
+    return () => {
+      instances.current.forEach((value, id2) => {
+        window.api.terminalKill(id2);
+        window.api.offTerminalData(id2);
+        value.xterm.dispose();
+      });
+      instances.current.clear();
+    };
   }, []);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "terminal-panel", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "terminal-tabbar", children: [
@@ -17374,11 +18497,547 @@ function DiffView({ filename, original, current }) {
     ] })
   ] });
 }
+function Dashboard({ models, sessions = [], rootPath }) {
+  const [activeTab, setActiveTab] = reactExports.useState("project");
+  const [historicalSessions, setHistoricalSessions] = reactExports.useState([]);
+  const [loadingHistorical, setLoadingHistorical] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    if (activeTab === "historical") {
+      setLoadingHistorical(true);
+      window.api.getHistoricalSessions().then((data) => {
+        setHistoricalSessions(data || []);
+      }).catch((err) => {
+        console.error("Error fetching historical sessions:", err);
+      }).finally(() => {
+        setLoadingHistorical(false);
+      });
+    }
+  }, [activeTab]);
+  function formatTokens(count) {
+    if (count >= 1e6) {
+      return (count / 1e6).toFixed(2) + "M";
+    }
+    if (count >= 1e3) {
+      return (count / 1e3).toFixed(1) + "K";
+    }
+    return count.toString();
+  }
+  const projectSessions = sessions.filter((s15) => {
+    if (s15.isDeleted) return false;
+    if (!rootPath) return true;
+    return s15.workspace === rootPath;
+  });
+  let pTotalTokens = 0;
+  const pTokensByModel = {};
+  const pTokensByMode = {
+    agent: 0,
+    plan: 0,
+    debug: 0,
+    multitask: 0,
+    ask: 0
+  };
+  projectSessions.forEach((session) => {
+    session.messages.forEach((msg) => {
+      if (msg.role === "assistant") {
+        const pTokens = msg.promptTokens || 0;
+        const rTokens = msg.responseTokens || 0;
+        const msgTotal = pTokens + rTokens;
+        pTotalTokens += msgTotal;
+        const modelName = msg.model || "Unknown Model";
+        pTokensByModel[modelName] = (pTokensByModel[modelName] || 0) + msgTotal;
+        const modeName = session.mode || "agent";
+        pTokensByMode[modeName] = (pTokensByMode[modeName] || 0) + msgTotal;
+      }
+    });
+  });
+  const pCostNumber = pTotalTokens * 2e-6;
+  const pFormattedCost = pCostNumber === 0 ? "$0.00" : pCostNumber < 0.01 ? `$${pCostNumber.toFixed(4)}` : `$${pCostNumber.toFixed(2)}`;
+  const pProjectedCost = (pCostNumber * 30).toFixed(2);
+  const pModelStats = Object.entries(pTokensByModel).map(([name, tokens]) => {
+    const percentage = pTotalTokens > 0 ? Math.round(tokens / pTotalTokens * 100) : 0;
+    return { name, tokens, percentage };
+  });
+  if (pModelStats.length === 0) {
+    if (models.length > 0) {
+      models.forEach((m2) => {
+        pModelStats.push({ name: m2, tokens: 0, percentage: 0 });
+      });
+    } else {
+      pModelStats.push({ name: "No Models Detected", tokens: 0, percentage: 0 });
+    }
+  }
+  pModelStats.sort((a, b2) => b2.tokens - a.tokens);
+  const colors = ["#4ec9b0", "#007acc", "#ce9178", "#dcdcaa", "#c586c0", "#4fc1ff"];
+  const pModelStatsWithColors = pModelStats.map((item, index2) => ({
+    ...item,
+    color: colors[index2 % colors.length]
+  }));
+  const pTotalModeTokens = Object.values(pTokensByMode).reduce((a, b2) => a + b2, 0);
+  const modeColors = {
+    agent: "#4ec9b0",
+    plan: "#007acc",
+    ask: "#dcdcaa",
+    debug: "#f44747",
+    multitask: "#c586c0"
+  };
+  const pModeStats = Object.entries(pTokensByMode).map(([name, tokens]) => {
+    const percentage = pTotalModeTokens > 0 ? Math.round(tokens / pTotalModeTokens * 100) : 0;
+    return {
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      tokens,
+      percentage,
+      color: modeColors[name] || "#ce9178"
+    };
+  }).sort((a, b2) => b2.tokens - a.tokens);
+  let hTotalTokens = 0;
+  const hTokensByModel = {};
+  const projectsMap = {};
+  historicalSessions.forEach((session) => {
+    const wsPath = session.workspace || "No Project Folder Associated";
+    const folderName = wsPath.split(/[\\/]/).pop() || wsPath;
+    if (!projectsMap[wsPath]) {
+      projectsMap[wsPath] = {
+        path: wsPath,
+        name: folderName,
+        tokens: 0,
+        sessionsCount: 0,
+        models: /* @__PURE__ */ new Set()
+      };
+    }
+    let sessionTokens = 0;
+    session.messages.forEach((msg) => {
+      if (msg.role === "assistant") {
+        const pTokens = msg.promptTokens || 0;
+        const rTokens = msg.responseTokens || 0;
+        const msgTotal = pTokens + rTokens;
+        sessionTokens += msgTotal;
+        hTotalTokens += msgTotal;
+        const modelName = msg.model || "Unknown Model";
+        hTokensByModel[modelName] = (hTokensByModel[modelName] || 0) + msgTotal;
+        if (msg.model) {
+          projectsMap[wsPath].models.add(msg.model);
+        }
+      }
+    });
+    projectsMap[wsPath].tokens += sessionTokens;
+    projectsMap[wsPath].sessionsCount += 1;
+  });
+  const hCostNumber = hTotalTokens * 2e-6;
+  const hFormattedCost = hCostNumber === 0 ? "$0.00" : hCostNumber < 0.01 ? `$${hCostNumber.toFixed(4)}` : `$${hCostNumber.toFixed(2)}`;
+  const projectsList = Object.values(projectsMap).sort((a, b2) => b2.tokens - a.tokens);
+  const hModelStats = Object.entries(hTokensByModel).map(([name, tokens]) => {
+    const percentage = hTotalTokens > 0 ? Math.round(tokens / hTotalTokens * 100) : 0;
+    return { name, tokens, percentage };
+  }).sort((a, b2) => b2.tokens - a.tokens);
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "dashboard-container", style: {
+    padding: "40px",
+    color: "#d4d4d4",
+    overflowY: "auto",
+    height: "100%",
+    background: "linear-gradient(135deg, #1e1e1e 0%, #141414 100%)"
+  }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { maxWidth: "1000px", margin: "0 auto" }, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "40px", gap: "20px", flexWrap: "wrap" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { style: { fontSize: "28px", color: "#fff", marginBottom: "12px", fontWeight: 300, letterSpacing: "-0.5px" }, children: [
+            "System ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600 }, children: "Analytics" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "14px", lineHeight: 1.6 }, children: activeTab === "project" ? "Real-time administrative overview of performance and token usage for the current workspace folder." : "Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+          display: "flex",
+          gap: "4px",
+          background: "rgba(255, 255, 255, 0.03)",
+          padding: "4px",
+          borderRadius: "8px",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+        }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setActiveTab("project"),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 500,
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "none",
+                background: activeTab === "project" ? "#007acc" : "transparent",
+                color: activeTab === "project" ? "#fff" : "#888",
+                cursor: "pointer"
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Folder, { size: 14 }),
+                "Current Project"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setActiveTab("historical"),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 500,
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "none",
+                background: activeTab === "historical" ? "#007acc" : "transparent",
+                color: activeTab === "historical" ? "#fff" : "#888",
+                cursor: "pointer"
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 14 }),
+                "Time Machine (Historical)"
+              ]
+            }
+          )
+        ] })
+      ] }),
+      activeTab === "project" && rootPath && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        background: "rgba(0, 122, 204, 0.05)",
+        border: "1px solid rgba(0, 122, 204, 0.15)",
+        padding: "10px 16px",
+        borderRadius: "8px",
+        marginBottom: "32px",
+        fontSize: "12px",
+        color: "#a0a0a0"
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#007acc", fontWeight: 600 }, children: "WORKSPACE ROOT:" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { fontFamily: "monospace", background: "rgba(0,0,0,0.2)", padding: "2px 6px", borderRadius: "4px", color: "#ddd" }, children: rootPath })
+      ] }),
+      loadingHistorical && activeTab === "historical" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "16px", alignItems: "center", padding: "60px 0" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+          width: "32px",
+          height: "32px",
+          border: "2px solid rgba(255,255,255,0.05)",
+          borderTopColor: "#007acc",
+          borderRadius: "50%",
+          animation: "spin 1s linear infinite"
+        } }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "13px", color: "#888" }, children: "Reading all Time Machine backups and active sessions..." })
+      ] }),
+      activeTab === "project" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        pTotalTokens === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+          background: "rgba(255, 255, 255, 0.02)",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+          borderRadius: "12px",
+          padding: "40px 32px",
+          textAlign: "center",
+          marginBottom: "48px",
+          backdropFilter: "blur(10px)"
+        }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { color: "#fff", marginBottom: "8px", fontWeight: 500 }, children: "No Workspace Activity Recorded" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "13px", maxWidth: "500px", margin: "0 auto", lineHeight: 1.5 }, children: "No LLM interactions have been logged inside the current project directory. Open the Chat Panel on the right and prompt a model to start logging performance stats!" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px", marginBottom: "48px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Workspace Tokens" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#4ec9b0" }, children: formatTokens(pTotalTokens) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-trend", children: "Current folder only" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Estimated Project Cost" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#007acc" }, children: pFormattedCost }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-trend", children: [
+              "Projected: $",
+              pProjectedCost,
+              "/mo"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Active Local Models" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#ce9178" }, children: models.length }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-trend", children: "Ollama service connected" })
+          ] })
+        ] }),
+        pTotalTokens > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "32px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "usage-section", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "section-title", children: "Model Distribution (Current Workspace)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "usage-list", children: pModelStatsWithColors.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-info", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "usage-name", children: m2.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "usage-value", children: [
+                  m2.tokens.toLocaleString(),
+                  " tkns (",
+                  m2.percentage,
+                  "%)"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-wrapper", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-fill", style: { width: (m2.percentage || 0) + "%", backgroundColor: m2.color } }) })
+            ] }, m2.name)) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "usage-section", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "section-title", children: "Agent Mode Breakdown" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "usage-list", children: pModeStats.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-info", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "usage-name", children: m2.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "usage-value", children: [
+                  m2.tokens.toLocaleString(),
+                  " tkns (",
+                  m2.percentage,
+                  "%)"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-wrapper", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-fill", style: { width: (m2.percentage || 0) + "%", backgroundColor: m2.color } }) })
+            ] }, m2.name)) })
+          ] })
+        ] })
+      ] }),
+      activeTab === "historical" && !loadingHistorical && /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: hTotalTokens === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+        background: "rgba(255, 255, 255, 0.02)",
+        border: "1px solid rgba(255, 255, 255, 0.05)",
+        borderRadius: "12px",
+        padding: "40px 32px",
+        textAlign: "center",
+        backdropFilter: "blur(10px)"
+      }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { color: "#fff", marginBottom: "8px", fontWeight: 500 }, children: "No Historical Logs Found" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "13px", maxWidth: "500px", margin: "0 auto", lineHeight: 1.5 }, children: "No historical sessions or backup files exist on this machine yet. Cumulative statistics will appear once backups are generated or chats are performed across directories." })
+      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", marginBottom: "48px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "All-Time Tokens Consumed" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#4ec9b0" }, children: formatTokens(hTotalTokens) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-trend", style: { display: "flex", alignItems: "center", gap: "4px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 11 }),
+              " Deduplicated Time Machine archives"
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "All-Time Estimated Value" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#007acc" }, children: hFormattedCost }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-trend", children: "Standard commercial equivalents" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Workspace Folder Count" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("value", { style: { color: "#ce9178" }, children: projectsList.length }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "stat-trend", children: "Different projects registered" })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "36px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "usage-section", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "section-title", style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Folder, { size: 16, style: { color: "#007acc" } }),
+              "Token Footprint by Project Folder"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "20px" }, children: projectsList.map((proj) => {
+              const projectPercent = hTotalTokens > 0 ? Math.round(proj.tokens / hTotalTokens * 100) : 0;
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+                background: "rgba(255,255,255,0.01)",
+                border: "1px solid rgba(255,255,255,0.03)",
+                borderRadius: "8px",
+                padding: "16px 20px",
+                transition: "all 0.2s",
+                boxShadow: "0 2px 10px rgba(0,0,0,0.15)"
+              }, className: "project-card-hover", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "10px" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, margin: "0 0 4px 0", display: "flex", alignItems: "center", gap: "8px" }, children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Folder, { size: 14, style: { color: "#dcdcaa" } }),
+                      proj.name
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { fontSize: "11px", color: "#666", fontFamily: "monospace" }, children: proj.path })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "right" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: "15px", color: "#4ec9b0", fontWeight: "bold" }, children: [
+                      proj.tokens.toLocaleString(),
+                      " tokens"
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "11px", color: "#888", marginTop: "2px" }, children: [
+                      proj.sessionsCount,
+                      " session",
+                      proj.sessionsCount === 1 ? "" : "s"
+                    ] })
+                  ] })
+                ] }),
+                proj.models.size > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px" }, children: Array.from(proj.models).map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                  fontSize: "10px",
+                  background: "rgba(0,122,204,0.1)",
+                  color: "#4fc1ff",
+                  border: "1px solid rgba(0,122,204,0.2)",
+                  padding: "2px 8px",
+                  borderRadius: "4px"
+                }, children: m2 }, m2)) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-wrapper", style: { height: "5px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-fill", style: { width: projectPercent + "%", backgroundColor: "#007acc" } }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "10px", color: "#555", marginTop: "6px", textAlign: "right" }, children: [
+                  "Represents ",
+                  projectPercent,
+                  "% of all-time usage"
+                ] })
+              ] }, proj.path);
+            }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "32px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "usage-section", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "section-title", children: "All-Time Cumulative Models" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "usage-list", children: hModelStats.map((m2, index2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-item", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "usage-info", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "usage-name", children: m2.name }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "usage-value", children: [
+                    m2.tokens.toLocaleString(),
+                    " tkns (",
+                    m2.percentage,
+                    "%)"
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-wrapper", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bar-fill", style: { width: (m2.percentage || 0) + "%", backgroundColor: colors[index2 % colors.length] } }) })
+              ] }, m2.name)) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "usage-section", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "section-title", style: { display: "flex", alignItems: "center", gap: "8px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 16 }),
+                "Historical Sessions Log"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "12px", maxHeight: "350px", overflowY: "auto", paddingRight: "6px" }, children: [
+                historicalSessions.slice(0, 30).map((s15) => {
+                  let sTokens = 0;
+                  s15.messages.forEach((msg) => {
+                    if (msg.role === "assistant") {
+                      sTokens += (msg.promptTokens || 0) + (msg.responseTokens || 0);
+                    }
+                  });
+                  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    background: "rgba(255,255,255,0.01)",
+                    border: "1px solid rgba(255,255,255,0.03)",
+                    padding: "10px 14px",
+                    borderRadius: "6px",
+                    fontSize: "12px"
+                  }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontWeight: 600, color: s15.isDeleted ? "#888" : "#eee", display: "flex", alignItems: "center", gap: "6px" }, children: [
+                        s15.name,
+                        s15.isDeleted && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "9px", background: "rgba(244,71,71,0.1)", color: "#f44747", border: "1px solid rgba(244,71,71,0.2)", padding: "1px 4px", borderRadius: "3px" }, children: "Deleted" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "10px", color: "#555", marginTop: "2px" }, children: [
+                        s15.workspace ? s15.workspace.split(/[\\/]/).pop() : "No Project",
+                        " • ",
+                        new Date(s15.lastActive || Date.now()).toLocaleDateString()
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontFamily: "monospace", color: "#4ec9b0" }, children: [
+                      sTokens.toLocaleString(),
+                      " tkns"
+                    ] })
+                  ] }, s15.id);
+                }),
+                historicalSessions.length > 30 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center", fontSize: "11px", color: "#555", padding: "8px" }, children: [
+                  "...and ",
+                  historicalSessions.length - 30,
+                  " more historical sessions"
+                ] })
+              ] })
+            ] })
+          ] })
+        ] })
+      ] }) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { dangerouslySetInnerHTML: { __html: `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .stat-card {
+          background: rgba(37, 37, 38, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(10px);
+          border-radius: 12px;
+          padding: 24px;
+          transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s;
+        }
+        .stat-card:hover {
+          border-color: rgba(0, 122, 204, 0.3);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+        .stat-card label {
+          display: block;
+          font-size: 11px;
+          text-transform: uppercase;
+          color: #777;
+          letter-spacing: 1px;
+          font-weight: 600;
+          margin-bottom: 12px;
+        }
+        .stat-card value {
+          display: block;
+          font-size: 32px;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+        .stat-trend {
+          font-size: 11px;
+          color: #555;
+        }
+        .usage-section {
+          background: rgba(30, 30, 30, 0.3);
+          border: 1px solid rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          padding: 32px;
+        }
+        .section-title {
+          font-size: 14px;
+          color: #eee;
+          font-weight: 600;
+          margin-bottom: 24px;
+        }
+        .usage-list {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+        .usage-info {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          margin-bottom: 8px;
+        }
+        .usage-name { color: #ccc; }
+        .usage-value { color: #888; font-family: monospace; }
+        .bar-wrapper {
+          height: 4px;
+          width: 100%;
+          position: relative;
+          background: rgba(255,255,255,0.03);
+          border-radius: 2px;
+        }
+        .bar-fill {
+          height: 100%;
+          border-radius: 2px;
+          box-shadow: 0 0 12px rgba(0,0,0,0.4);
+          transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .project-card-hover:hover {
+          background: rgba(255,255,255,0.02) !important;
+          border-color: rgba(0, 122, 204, 0.2) !important;
+          transform: translateX(4px);
+        }
+      ` } })
+  ] });
+}
 function getBreadcrumbs(path) {
   return path.split("/").slice(-3);
 }
 function App() {
   const [rootPath, setRootPath] = reactExports.useState(null);
+  const [sessions, setSessions] = reactExports.useState([]);
+  const [activeId, setActiveId] = reactExports.useState("");
   const [tree, setTree] = reactExports.useState([]);
   const [openDirs, setOpenDirs] = reactExports.useState(/* @__PURE__ */ new Set());
   const [openFile, setOpenFile] = reactExports.useState(null);
@@ -17399,6 +19058,7 @@ function App() {
   const [quickQuery, setQuickQuery] = reactExports.useState("");
   const [allFiles, setAllFiles] = reactExports.useState([]);
   const quickRef = reactExports.useRef(null);
+  const lastRestoredSessionIdRef = reactExports.useRef("");
   reactExports.useEffect(() => {
     fetch("http://localhost:11434/api/tags").then((r2) => r2.json()).then((data) => {
       const names = (data.models || []).map((m2) => m2.name);
@@ -17406,9 +19066,9 @@ function App() {
       if (names.length > 0) setModel(names[0]);
     }).catch(() => {
     });
-    window.api.loadSessions().then((sessions) => {
-      if (sessions && sessions.user) {
-        setUser(sessions.user);
+    window.api.loadSessions().then((sessions2) => {
+      if (sessions2 && sessions2.user) {
+        setUser(sessions2.user);
       }
     });
   }, []);
@@ -17437,6 +19097,41 @@ function App() {
   reactExports.useEffect(() => {
     if (quickOpen) setTimeout(() => quickRef.current?.focus(), 50);
   }, [quickOpen]);
+  reactExports.useEffect(() => {
+    if (activeId && sessions.length > 0) {
+      if (lastRestoredSessionIdRef.current === activeId) {
+        return;
+      }
+      const activeSession = sessions.find((s15) => s15.id === activeId);
+      if (activeSession) {
+        lastRestoredSessionIdRef.current = activeId;
+        const savedTabs = activeSession.tabs || [];
+        const savedOpenFile = activeSession.openFile || null;
+        const savedWorkspace = activeSession.workspace || null;
+        if (savedWorkspace && savedWorkspace !== rootPath) {
+          setRootPath(savedWorkspace);
+          window.api.readDir(savedWorkspace).then((t2) => setTree(t2)).catch(console.error);
+          setOpenDirs(/* @__PURE__ */ new Set());
+          window.api.listFiles(savedWorkspace).then((files) => setAllFiles(files)).catch(console.error);
+        }
+        if (JSON.stringify(tabs) !== JSON.stringify(savedTabs)) {
+          setTabs(savedTabs);
+        }
+        if (openFile !== savedOpenFile) {
+          setOpenFile(savedOpenFile);
+          if (savedOpenFile) {
+            window.api.readFile(savedOpenFile).then((content) => {
+              setFileContent(content);
+            }).catch(() => {
+              setFileContent("");
+            });
+          } else {
+            setFileContent("");
+          }
+        }
+      }
+    }
+  }, [activeId, sessions]);
   async function openFolder() {
     const p2 = await window.api.openFolder();
     if (!p2) return;
@@ -17580,17 +19275,43 @@ function App() {
     });
   }
   const filteredFiles = quickQuery ? allFiles.filter((f2) => f2.toLowerCase().includes(quickQuery.toLowerCase())).slice(0, 12) : allFiles.slice(0, 12);
+  function getFileIcon(filePath) {
+    const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
+    const icons = {
+      ts: "󰛦",
+      tsx: "󰜈",
+      js: "󰌞",
+      jsx: "󰜈",
+      json: "󰘦",
+      md: "󰍔",
+      css: "󰌜",
+      html: "󰌝",
+      py: "󰌠",
+      rs: "󱘗",
+      go: "󰟓",
+      sh: "󰆍",
+      svg: "󰜡",
+      png: "󰋩",
+      jpg: "󰋩",
+      gif: "󰋩",
+      lock: "󰌾",
+      yml: "󰬴",
+      yaml: "󰬴",
+      env: "󰒓"
+    };
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontFamily: "monospace", fontSize: "11px", opacity: 0.7 }, children: icons[ext] ?? "󰈙" });
+  }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "topbar", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "topbar-nav", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "nav-btn", onClick: goBack, disabled: historyIdx <= 0, title: "Go Back", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11 2L5 8l6 6", stroke: "currentColor", strokeWidth: "1.5", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "nav-btn", onClick: goForward, disabled: historyIdx >= history.length - 1, title: "Go Forward", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 2l6 6-6 6", stroke: "currentColor", strokeWidth: "1.5", fill: "none", strokeLinecap: "round", strokeLinejoin: "round" }) }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "nav-btn", onClick: goBack, disabled: historyIdx <= 0, title: "Go Back", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronLeft, { size: 16, strokeWidth: 1.8 }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "nav-btn", onClick: goForward, disabled: historyIdx >= history.length - 1, title: "Go Forward", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { size: 16, strokeWidth: 1.8 }) })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "topbar-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "quick-open-trigger", onClick: () => {
         setQuickOpen(true);
         setQuickQuery("");
       }, children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "13", height: "13", viewBox: "0 0 16 16", fill: "currentColor", style: { opacity: 0.5 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { size: 13, strokeWidth: 1.8, style: { opacity: 0.5, flexShrink: 0 } }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "quick-open-label", children: openFile ? getBreadcrumbs(openFile).join(" › ") : "Open file... (⌘P)" })
       ] }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "topbar-right", children: [
@@ -17600,10 +19321,7 @@ function App() {
             className: `nav-btn${terminalOpen ? " nav-btn--active" : ""}`,
             onClick: () => setTerminalOpen((o2) => !o2),
             title: "Toggle Terminal",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 9a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 6 9zM3.854 4.146a.5.5 0 1 0-.708.708L4.793 6.5 3.146 8.146a.5.5 0 1 0 .708.708l2-2a.5.5 0 0 0 0-.708l-2-2z" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm12 1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h12z" })
-            ] })
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(SquareTerminal, { size: 16, strokeWidth: 1.8 })
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "topbar-model", children: model })
@@ -17611,7 +19329,7 @@ function App() {
     ] }),
     quickOpen && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "quick-overlay", onClick: () => setQuickOpen(false), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "quick-panel", onClick: (e) => e.stopPropagation(), children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "quick-input-wrap", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", style: { opacity: 0.5, flexShrink: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { size: 14, strokeWidth: 1.8, style: { opacity: 0.5, flexShrink: 0 } }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "input",
           {
@@ -17637,179 +19355,209 @@ function App() {
         ] }, f2);
       }) })
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "main-layout", style: { "--sidebar-width": sidebarOpen ? "220px" : "0px" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `activity-btn ${activeSidebar === "explorer" && sidebarOpen ? "activity-btn--active" : ""}`,
-            onClick: () => {
-              if (activeSidebar === "explorer") setSidebarOpen(!sidebarOpen);
-              else {
-                setActiveSidebar("explorer");
-                setSidebarOpen(true);
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "main-layout",
+        style: {
+          gridTemplateColumns: sidebarOpen && activeSidebar !== "dashboard" ? "48px 220px 1fr 400px" : "48px 1fr 400px"
+        },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `activity-btn ${activeSidebar === "explorer" && sidebarOpen ? "activity-btn--active" : ""}`,
+                onClick: () => {
+                  if (activeSidebar === "explorer") setSidebarOpen(!sidebarOpen);
+                  else {
+                    setActiveSidebar("explorer");
+                    setSidebarOpen(true);
+                  }
+                },
+                title: "Explorer",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Files, { size: 22, strokeWidth: 1.6 })
               }
-            },
-            title: "Explorer",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8.187 1.01l.445.511L13.19 6.2a.5.5 0 0 1 .127.324V14.5a.5.5 0 0 1-.5.5H3.18a.5.5 0 0 1-.5-.5V6.524a.5.5 0 0 1 .127-.323l4.558-4.678.446-.512a.25.25 0 0 1 .376 0zM3.68 7.037V14h9.133V7.037L8.187 2.25 3.68 7.037z" }) })
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "button",
-          {
-            className: `activity-btn ${activeSidebar === "git" && sidebarOpen ? "activity-btn--active" : ""}`,
-            onClick: () => {
-              if (activeSidebar === "git") setSidebarOpen(!sidebarOpen);
-              else {
-                setActiveSidebar("git");
-                setSidebarOpen(true);
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `activity-btn ${activeSidebar === "git" && sidebarOpen ? "activity-btn--active" : ""}`,
+                onClick: () => {
+                  if (activeSidebar === "git") setSidebarOpen(!sidebarOpen);
+                  else {
+                    setActiveSidebar("git");
+                    setSidebarOpen(true);
+                  }
+                },
+                title: "Source Control",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(GitBranch, { size: 22, strokeWidth: 1.6 })
               }
-            },
-            title: "Source Control",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15.55 8.12l-6.8-6.8a1 1 0 0 0-1.41 0l-.88.88 1.6 1.6a1.5 1.5 0 1 1-1 1l-1.6-1.6-3.8 3.8a1 1 0 0 0 0 1.41l6.8 6.8a1 1 0 0 0 1.41 0l6.8-6.8a1 1 0 0 0 0-1.41zM8.5 11.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1.5-5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" }) })
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar-bottom", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: `activity-btn ${activeSidebar === "account" && sidebarOpen ? "activity-btn--active" : ""}`,
-              onClick: () => {
-                if (activeSidebar === "account") setSidebarOpen(!sidebarOpen);
-                else {
-                  setActiveSidebar("account");
-                  setSidebarOpen(true);
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "activity-bar-bottom", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: `activity-btn ${activeSidebar === "account" && sidebarOpen ? "activity-btn--active" : ""}`,
+                  onClick: () => {
+                    if (activeSidebar === "account") setSidebarOpen(!sidebarOpen);
+                    else {
+                      setActiveSidebar("account");
+                      setSidebarOpen(true);
+                    }
+                  },
+                  title: "Accounts",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(User, { size: 22, strokeWidth: 1.6 })
                 }
-              },
-              title: "Accounts",
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" }) })
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "activity-btn", title: "Settings", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "24", height: "24", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9.1 1.9L9 0H7l-.1 1.9c-.3.1-.6.2-.9.4L3.3.9l-1.4 1.4 1.4 1.7c-.2.3-.3.6-.4.9L1 5v2l1.9.1c.1.3.2.6.4.9l-1.4 1.7 1.4 1.4 1.7-1.4c.3.2.6.3.9.4L7 12h2l.1-1.9c.3-.1.6-.2.9-.4l1.7 1.4 1.4-1.4-1.4-1.7c.2-.3.3-.6.4-.9l1.9-.1V5l-1.9-.1c-.1-.3-.2-.6-.4-.9l1.4-1.7-1.4-1.4-1.7 1.4c-.3-.2-.6-.3-.9-.4zM8 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" }) }) })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar", style: { display: sidebarOpen ? "flex" : "none" }, children: activeSidebar === "explorer" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sidebar-header", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sidebar-btn", onClick: openFolder, children: "Open Folder" }),
-          rootPath && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sidebar-root", children: rootPath.split("/").pop() })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: tree, onSelect: selectFile, openDirs, onToggleDir: toggleDir, onContextMenu: handleContextMenu })
-      ] }) : activeSidebar === "git" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-        SourceControl,
-        {
-          rootPath,
-          model,
-          onSelectFile: selectFile,
-          onSelectDiff: handleSelectDiff
-        }
-      ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "account-view", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Account" }),
-        !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "account-info", children: "Sign in to your GitHub account to access your repositories and sync your settings." }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "button",
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: `activity-btn ${activeSidebar === "dashboard" ? "activity-btn--active" : ""}`,
+                  onClick: () => setActiveSidebar("dashboard"),
+                  title: "Dashboard",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(LayoutDashboard, { size: 22, strokeWidth: 1.6 })
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "activity-btn", title: "Settings", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Settings2, { size: 22, strokeWidth: 1.6 }) })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar", style: { display: sidebarOpen && activeSidebar !== "dashboard" ? "flex" : "none" }, children: activeSidebar === "explorer" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sidebar-header", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sidebar-btn", onClick: openFolder, children: "Open Folder" }),
+              rootPath && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sidebar-root", children: rootPath.split("/").pop() })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(FileTree, { nodes: tree, onSelect: selectFile, openDirs, onToggleDir: toggleDir, onContextMenu: handleContextMenu })
+          ] }) : activeSidebar === "git" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            SourceControl,
             {
-              className: "github-login-btn",
-              onClick: handleLogin,
-              disabled: loginLoading,
-              children: [
-                loginLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" }) }),
-                loginLoading ? "Signing in..." : "Sign in with GitHub"
-              ]
+              rootPath,
+              model,
+              onSelectFile: selectFile,
+              onSelectDiff: handleSelectDiff
             }
-          )
-        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "user-profile", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-card", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.avatar, alt: "Avatar", className: "profile-avatar" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-details", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-name", children: user.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "profile-login", children: [
-                "@",
-                user.login
+          ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "account-view", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Account" }),
+            !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "account-info", children: "Sign in to your GitHub account to access your repositories and sync your settings." }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  className: "github-login-btn",
+                  onClick: handleLogin,
+                  disabled: loginLoading,
+                  children: [
+                    loginLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" }) }),
+                    loginLoading ? "Signing in..." : "Sign in with GitHub"
+                  ]
+                }
+              )
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "user-profile", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-card", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.avatar, alt: "Avatar", className: "profile-avatar" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-details", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "profile-name", children: user.name }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "profile-login", children: [
+                    "@",
+                    user.login
+                  ] })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-stats", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "12" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Repos" })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "158" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Stars" })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-actions", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "profile-btn profile-btn--primary", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { size: 13, strokeWidth: 2 }),
+                  "Sync Settings"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "profile-btn", onClick: handleLogout, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LogOut, { size: 13, strokeWidth: 2 }),
+                  "Sign Out"
+                ] })
               ] })
             ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-stats", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "12" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Repos" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "center-column", children: activeSidebar === "dashboard" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Dashboard, { models, sessions, rootPath }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab-container", children: [
+              tabs.map((t2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  className: `tab ${openFile === t2 ? "tab--active" : ""}`,
+                  onClick: () => selectFile(t2, true),
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: getFileIcon(t2) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-label", children: t2.split(/[\\/]/).pop() }),
+                    dirtyTabs.has(t2) && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-dirty", children: "●" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: (e) => closeTab(t2, e), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
+                  ]
+                },
+                t2
+              )),
+              diffInfo && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab tab--active tab--diff", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeftRight, { size: 12, strokeWidth: 2 }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "tab-label", children: [
+                  diffInfo.filename,
+                  " (Diff)"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: () => setDiffInfo(null), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
+              ] })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "158" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Stars" })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-actions", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "profile-btn profile-btn--primary", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 3.5a.5.5 0 0 0-1 0V7H3.5a.5.5 0 0 0 0 1H7v3.5a.5.5 0 0 0 1 0V8h3.5a.5.5 0 0 0 0-1H8V3.5z" }) }),
-              "Sync Settings"
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "profile-btn", onClick: handleLogout, children: "Sign Out" })
-          ] })
-        ] })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "center-column", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab-container", children: [
-          tabs.map((t2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "div",
-            {
-              className: `tab ${openFile === t2 ? "tab--active" : ""}`,
-              onClick: () => selectFile(t2, true),
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: t2.endsWith(".js") || t2.endsWith(".ts") ? "📄" : "📝" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-label", children: t2.split(/[\\/]/).pop() }),
-                dirtyTabs.has(t2) && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#fff", fontSize: "10px", marginLeft: "4px" }, children: "●" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: (e) => closeTab(t2, e), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z" }) }) })
-              ]
-            },
-            t2
-          )),
-          diffInfo && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "tab tab--active tab--diff", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tab-icon", children: "↔" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "tab-label", children: [
-              diffInfo.filename,
-              " (Diff)"
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "tab-close", onClick: () => setDiffInfo(null), children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M1.146 1.146a.5.5 0 0 1 .708 0L8 7.293l6.146-6.147a.5.5 0 0 1 .708.708L8.707 8l6.147 6.146a.5.5 0 0 1-.708.708L8 8.707l-6.146 6.147a.5.5 0 0 1-.708-.708L7.293 8 1.146 1.854a.5.5 0 0 1 0-.708z" }) }) })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-area", children: diffInfo ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-          DiffView,
-          {
-            filename: diffInfo.filename,
-            original: diffInfo.original,
-            current: diffInfo.current
-          }
-        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Editor,
-          {
-            path: openFile,
-            content: fileContent,
-            onChange: (val) => {
-              setFileContent(val);
-              if (openFile) {
-                setDirtyTabs((prev) => new Set(prev).add(openFile));
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-area", children: diffInfo ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+              DiffView,
+              {
+                filename: diffInfo.filename,
+                original: diffInfo.original,
+                current: diffInfo.current
               }
-            },
-            onSave: saveFile
-          }
-        ) }),
-        terminalOpen && /* @__PURE__ */ jsxRuntimeExports.jsx(TerminalPanel, { cwd: rootPath })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        ChatPanel,
-        {
-          model,
-          models,
-          onModelChange: setModel,
-          rootPath,
-          openFile,
-          fileContent,
-          onWriteFile: saveFile,
-          onRefreshTree: refreshTree
-        }
-      )
-    ] })
+            ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Editor,
+              {
+                path: openFile,
+                content: fileContent,
+                onChange: (val) => {
+                  setFileContent(val);
+                  if (openFile) {
+                    setDirtyTabs((prev) => new Set(prev).add(openFile));
+                  }
+                },
+                onSave: saveFile,
+                sessions,
+                onRestoreSession: setActiveId,
+                onOpenFolder: openFolder
+              }
+            ) }),
+            terminalOpen && activeSidebar !== "dashboard" && /* @__PURE__ */ jsxRuntimeExports.jsx(TerminalPanel, { cwd: rootPath }, rootPath || "empty")
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ChatPanel,
+            {
+              model,
+              models,
+              onModelChange: setModel,
+              rootPath,
+              openFile,
+              fileContent,
+              onWriteFile: saveFile,
+              onRefreshTree: refreshTree,
+              onOpenFile: (path) => selectFile(path, true),
+              onSessionsChange: setSessions,
+              activeId,
+              onActiveIdChange: setActiveId,
+              openFiles: tabs,
+              activeFile: openFile
+            }
+          )
+        ]
+      }
+    )
   ] });
 }
 client.createRoot(document.getElementById("root")).render(/* @__PURE__ */ jsxRuntimeExports.jsx(App, {}));

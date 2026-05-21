@@ -299,7 +299,57 @@ ipcMain.handle('list-backups', async () => {
     const backupDir = path.join(app.getPath('userData'), 'backups')
     if (!fs.existsSync(backupDir)) return []
     const files = await fs.promises.readdir(backupDir)
-    return files.filter(f => f.startsWith('sessions.')).sort().reverse()
+    const backupFiles = files.filter(f => f.startsWith('sessions.')).sort().reverse()
+    
+    const backupsWithDetails = await Promise.all(backupFiles.map(async file => {
+      try {
+        const filePath = path.join(backupDir, file)
+        const content = await fs.promises.readFile(filePath, 'utf-8')
+        const sessions = JSON.parse(content)
+        const workspaces = new Set<string>()
+        let summary = 'No active chats'
+        
+        if (Array.isArray(sessions)) {
+          sessions.forEach((s: any) => {
+            if (s.workspace) {
+              const name = s.workspace.split(/[\\/]/).pop()
+              if (name) workspaces.add(name)
+            }
+          })
+          
+          if (sessions.length > 0) {
+            // Find the most recently active session
+            const activeSess = [...sessions].sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0))[0]
+            if (activeSess) {
+              if (activeSess.messages && activeSess.messages.length > 0) {
+                const userMsgs = activeSess.messages.filter((m: any) => m.role === 'user')
+                const lastUserMsg = userMsgs[userMsgs.length - 1]
+                if (lastUserMsg && lastUserMsg.content) {
+                  const text = lastUserMsg.content.trim().replace(/\s+/g, ' ')
+                  const preview = text.length > 30 ? text.slice(0, 30) + '...' : text
+                  summary = `Prompt: "${preview}"`
+                } else {
+                  const lastMsg = activeSess.messages[activeSess.messages.length - 1]
+                  const text = (lastMsg.content || '').trim().replace(/\s+/g, ' ')
+                  const preview = text.length > 30 ? text.slice(0, 30) + '...' : text
+                  summary = `Msg: "${preview}"`
+                }
+              } else {
+                summary = `Created "${activeSess.name}"`
+              }
+            }
+          }
+        }
+        return {
+          filename: file,
+          workspaces: Array.from(workspaces),
+          summary
+        }
+      } catch {
+        return { filename: file, workspaces: [], summary: 'Corrupted backup file' }
+      }
+    }))
+    return backupsWithDetails
   } catch { return [] }
 })
 
@@ -331,7 +381,11 @@ ipcMain.handle('save-sessions', async (_e, data: string) => {
         .reverse()
       if (backups.length > 10) {
         for (const old of backups.slice(10)) {
-          await fs.promises.unlink(path.join(backupDir, old))
+          try {
+            await fs.promises.unlink(path.join(backupDir, old))
+          } catch (err: any) {
+            if (err.code !== 'ENOENT') console.error('Failed to unlink backup:', err)
+          }
         }
       }
     }
@@ -379,4 +433,61 @@ ipcMain.handle('terminal-resize', (_e, id: string, cols: number, rows: number) =
 ipcMain.handle('terminal-kill', (_e, id: string) => {
   terminals.get(id)?.kill()
   terminals.delete(id)
+})
+
+ipcMain.handle('get-historical-sessions', async () => {
+  const sessionMap = new Map<string, any>()
+  
+  // 1. Read current active/deleted sessions
+  try {
+    if (fs.existsSync(sessionsPath)) {
+      const data = await fs.promises.readFile(sessionsPath, 'utf-8')
+      const current = JSON.parse(data)
+      if (Array.isArray(current)) {
+        current.forEach(s => {
+          if (s && s.id) {
+            sessionMap.set(s.id, s)
+          }
+        })
+      } else if (current && typeof current === 'object' && Array.isArray((current as any).sessions)) {
+        // Handle case if saved as wrapper object
+        (current as any).sessions.forEach((s: any) => {
+          if (s && s.id) sessionMap.set(s.id, s)
+        })
+      }
+    }
+  } catch (err) {
+    console.error('Error reading current sessions:', err)
+  }
+
+  // 2. Read backups
+  try {
+    const backupDir = path.join(app.getPath('userData'), 'backups')
+    if (fs.existsSync(backupDir)) {
+      const files = await fs.promises.readdir(backupDir)
+      const backupFiles = files.filter(f => f.startsWith('sessions.') && f.endsWith('.json'))
+      
+      await Promise.all(backupFiles.map(async file => {
+        try {
+          const filePath = path.join(backupDir, file)
+          const data = await fs.promises.readFile(filePath, 'utf-8')
+          const sessions = JSON.parse(data)
+          if (Array.isArray(sessions)) {
+            sessions.forEach(s => {
+              if (s && s.id) {
+                const existing = sessionMap.get(s.id)
+                if (!existing || (s.lastActive > existing.lastActive)) {
+                  sessionMap.set(s.id, s)
+                }
+              }
+            })
+          }
+        } catch {}
+      }))
+    }
+  } catch (err) {
+    console.error('Error reading backup sessions:', err)
+  }
+
+  return Array.from(sessionMap.values())
 })

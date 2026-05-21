@@ -315,7 +315,53 @@ electron.ipcMain.handle("list-backups", async () => {
     const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
     if (!fs__namespace.existsSync(backupDir)) return [];
     const files = await fs__namespace.promises.readdir(backupDir);
-    return files.filter((f) => f.startsWith("sessions.")).sort().reverse();
+    const backupFiles = files.filter((f) => f.startsWith("sessions.")).sort().reverse();
+    const backupsWithDetails = await Promise.all(backupFiles.map(async (file) => {
+      try {
+        const filePath = path__namespace.join(backupDir, file);
+        const content = await fs__namespace.promises.readFile(filePath, "utf-8");
+        const sessions = JSON.parse(content);
+        const workspaces = /* @__PURE__ */ new Set();
+        let summary = "No active chats";
+        if (Array.isArray(sessions)) {
+          sessions.forEach((s) => {
+            if (s.workspace) {
+              const name = s.workspace.split(/[\\/]/).pop();
+              if (name) workspaces.add(name);
+            }
+          });
+          if (sessions.length > 0) {
+            const activeSess = [...sessions].sort((a, b) => (b.lastActive || 0) - (a.lastActive || 0))[0];
+            if (activeSess) {
+              if (activeSess.messages && activeSess.messages.length > 0) {
+                const userMsgs = activeSess.messages.filter((m) => m.role === "user");
+                const lastUserMsg = userMsgs[userMsgs.length - 1];
+                if (lastUserMsg && lastUserMsg.content) {
+                  const text = lastUserMsg.content.trim().replace(/\s+/g, " ");
+                  const preview = text.length > 30 ? text.slice(0, 30) + "..." : text;
+                  summary = `Prompt: "${preview}"`;
+                } else {
+                  const lastMsg = activeSess.messages[activeSess.messages.length - 1];
+                  const text = (lastMsg.content || "").trim().replace(/\s+/g, " ");
+                  const preview = text.length > 30 ? text.slice(0, 30) + "..." : text;
+                  summary = `Msg: "${preview}"`;
+                }
+              } else {
+                summary = `Created "${activeSess.name}"`;
+              }
+            }
+          }
+        }
+        return {
+          filename: file,
+          workspaces: Array.from(workspaces),
+          summary
+        };
+      } catch {
+        return { filename: file, workspaces: [], summary: "Corrupted backup file" };
+      }
+    }));
+    return backupsWithDetails;
   } catch {
     return [];
   }
@@ -342,7 +388,11 @@ electron.ipcMain.handle("save-sessions", async (_e, data) => {
       const backups = (await fs__namespace.promises.readdir(backupDir)).filter((f) => f.startsWith("sessions.")).sort().reverse();
       if (backups.length > 10) {
         for (const old of backups.slice(10)) {
-          await fs__namespace.promises.unlink(path__namespace.join(backupDir, old));
+          try {
+            await fs__namespace.promises.unlink(path__namespace.join(backupDir, old));
+          } catch (err) {
+            if (err.code !== "ENOENT") console.error("Failed to unlink backup:", err);
+          }
         }
       }
     }
@@ -381,4 +431,54 @@ electron.ipcMain.handle("terminal-resize", (_e, id, cols, rows) => {
 electron.ipcMain.handle("terminal-kill", (_e, id) => {
   terminals.get(id)?.kill();
   terminals.delete(id);
+});
+electron.ipcMain.handle("get-historical-sessions", async () => {
+  const sessionMap = /* @__PURE__ */ new Map();
+  try {
+    if (fs__namespace.existsSync(sessionsPath)) {
+      const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
+      const current = JSON.parse(data);
+      if (Array.isArray(current)) {
+        current.forEach((s) => {
+          if (s && s.id) {
+            sessionMap.set(s.id, s);
+          }
+        });
+      } else if (current && typeof current === "object" && Array.isArray(current.sessions)) {
+        current.sessions.forEach((s) => {
+          if (s && s.id) sessionMap.set(s.id, s);
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error reading current sessions:", err);
+  }
+  try {
+    const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+    if (fs__namespace.existsSync(backupDir)) {
+      const files = await fs__namespace.promises.readdir(backupDir);
+      const backupFiles = files.filter((f) => f.startsWith("sessions.") && f.endsWith(".json"));
+      await Promise.all(backupFiles.map(async (file) => {
+        try {
+          const filePath = path__namespace.join(backupDir, file);
+          const data = await fs__namespace.promises.readFile(filePath, "utf-8");
+          const sessions = JSON.parse(data);
+          if (Array.isArray(sessions)) {
+            sessions.forEach((s) => {
+              if (s && s.id) {
+                const existing = sessionMap.get(s.id);
+                if (!existing || s.lastActive > existing.lastActive) {
+                  sessionMap.set(s.id, s);
+                }
+              }
+            });
+          }
+        } catch {
+        }
+      }));
+    }
+  } catch (err) {
+    console.error("Error reading backup sessions:", err);
+  }
+  return Array.from(sessionMap.values());
 });

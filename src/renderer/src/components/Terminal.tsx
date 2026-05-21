@@ -106,8 +106,19 @@ export default function TerminalPanel({ cwd }: Props) {
     }
   }, [activeId, tabs])
 
-  // Create first tab on mount
-  useEffect(() => { createTab() }, [])
+  // Create first tab on mount and cleanup on unmount
+  useEffect(() => {
+    tabCounter = 1
+    createTab()
+    return () => {
+      instances.current.forEach((value, id) => {
+        window.api.terminalKill(id)
+        window.api.offTerminalData(id)
+        value.xterm.dispose()
+      })
+      instances.current.clear()
+    }
+  }, [])
 
   return (
     <div className="terminal-panel">

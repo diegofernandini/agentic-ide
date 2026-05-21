@@ -6,6 +6,10 @@ interface Message {
   content: string
   writes?: WriteAction[]
   elapsed?: number
+  promptTokens?: number
+  responseTokens?: number
+  model?: string
+  images?: string[]
 }
 
 interface WriteAction {
@@ -24,6 +28,9 @@ interface Session {
   createdAt: number
   lastActive: number
   isDeleted?: boolean
+  workspace?: string | null
+  tabs?: string[]
+  openFile?: string | null
 }
 
 const AGENT_MODES = ['agent', 'plan', 'debug', 'multitask', 'ask'] as const
@@ -39,6 +46,7 @@ declare global {
       saveSessions: (data: string) => Promise<void>
       listBackups: () => Promise<string[]>
       restoreBackup: (name: string) => Promise<Session[] | null>
+      getHistoricalSessions: () => Promise<Session[]>
     }
   }
 }
@@ -53,9 +61,14 @@ interface Props {
   onWriteFile: (content: string) => void
   onRefreshTree: () => void
   onOpenFile?: (path: string) => void
+  onSessionsChange?: (sessions: Session[]) => void
+  activeId?: string
+  onActiveIdChange?: (id: string) => void
+  openFiles?: string[]
+  activeFile?: string | null
 }
 
-function newSession(count: number, mode: AgentMode = 'agent'): Session {
+function newSession(count: number, mode: AgentMode = 'agent', workspace: string | null = null): Session {
   const now = Date.now()
   const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15)
   return { 
@@ -64,7 +77,8 @@ function newSession(count: number, mode: AgentMode = 'agent'): Session {
     messages: [], 
     mode,
     createdAt: now,
-    lastActive: now
+    lastActive: now,
+    workspace
   }
 }
 
@@ -108,14 +122,37 @@ function Markdown({ text }: { text: string }) {
     } else if (mode === 'list') {
       parts.push(<ul key={key} className="md-list">{currentBlock.map((li, idx) => <li key={idx}>{parseInline(li)}</li>)}</ul>)
     } else {
-      // Paragraphs and headers
+      // Group consecutive text lines into paragraphs; blank lines and headings split groups
+      const paraLines: string[] = []
+      const flushPara = (k: string) => {
+        if (paraLines.length === 0) return
+        const nodes: React.ReactNode[] = []
+        paraLines.forEach((l, li) => {
+          if (li > 0) nodes.push(<br key={`br-${li}`} />)
+          nodes.push(...(parseInline(l) as React.ReactNode[]))
+        })
+        parts.push(<p key={k} className="md-p">{nodes}</p>)
+        paraLines.length = 0
+      }
+
       currentBlock.forEach((line, idx) => {
-        if (line.startsWith('### ')) parts.push(<h3 key={`${key}-${idx}`} className="md-h3">{parseInline(line.slice(4))}</h3>)
-        else if (line.startsWith('## ')) parts.push(<h2 key={`${key}-${idx}`} className="md-h2">{parseInline(line.slice(3))}</h2>)
-        else if (line.startsWith('# ')) parts.push(<h1 key={`${key}-${idx}`} className="md-h1">{parseInline(line.slice(2))}</h1>)
-        else if (line.trim() === '') parts.push(<div key={`${key}-${idx}`} className="md-spacer" />)
-        else parts.push(<p key={`${key}-${idx}`} className="md-p">{parseInline(line)}</p>)
+        if (line.startsWith('### ')) {
+          flushPara(`${key}-para-${idx}`)
+          parts.push(<h3 key={`${key}-${idx}`} className="md-h3">{parseInline(line.slice(4))}</h3>)
+        } else if (line.startsWith('## ')) {
+          flushPara(`${key}-para-${idx}`)
+          parts.push(<h2 key={`${key}-${idx}`} className="md-h2">{parseInline(line.slice(3))}</h2>)
+        } else if (line.startsWith('# ')) {
+          flushPara(`${key}-para-${idx}`)
+          parts.push(<h1 key={`${key}-${idx}`} className="md-h1">{parseInline(line.slice(2))}</h1>)
+        } else if (line.trim() === '') {
+          flushPara(`${key}-para-${idx}`)
+          parts.push(<div key={`${key}-${idx}`} className="md-spacer" />)
+        } else {
+          paraLines.push(line)
+        }
       })
+      flushPara(`${key}-para-end`)
     }
     currentBlock = []
   }
@@ -223,7 +260,7 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
   onAccept: (path: string) => void
   onRevert: (path: string) => void
 }) {
-  const blockRe = /```(write|replace):([^\n]+)\n([\s\S]*?)```/g
+  const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
   const parts: React.ReactNode[] = []
   let last = 0
   let match
@@ -233,7 +270,7 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
       parts.push(<Markdown key={`text-${last}`} text={content.slice(last, match.index)} />)
     }
     const type = match[1]
-    const filePath = match[2].trim()
+    const filePath = decodeURIComponent(match[2].trim())
     const blockContent = match[3]
     const write = writes?.find(w => w.path.endsWith(filePath) || w.path === filePath)
     const fileName = filePath.split('/').pop()
@@ -285,12 +322,58 @@ function ModeIcon({ mode }: { mode: AgentMode }) {
 export default function ChatPanel({
   model, models, onModelChange,
   rootPath, openFile, fileContent,
-  onWriteFile, onRefreshTree, onOpenFile
+  onWriteFile, onRefreshTree, onOpenFile,
+  onSessionsChange,
+  activeId: activeIdProp, onActiveIdChange, openFiles, activeFile
 }: Props) {
-  const [sessions, setSessions] = useState<Session[]>([newSession(1)])
+  const [sessions, setSessions] = useState<Session[]>(() => [newSession(1, 'agent', rootPath)])
   const [activeId, setActiveId] = useState<string>(sessions[0].id)
+
+  // Bi-directional sync for activeId
+  useEffect(() => {
+    if (activeId && onActiveIdChange) {
+      onActiveIdChange(activeId);
+    }
+  }, [activeId, onActiveIdChange]);
+
+  useEffect(() => {
+    if (activeIdProp && activeIdProp !== activeId) {
+      setActiveId(activeIdProp);
+    }
+  }, [activeIdProp]);
+
+  // Save open tabs and active file dynamically into the active session
+  useEffect(() => {
+    if (activeId && (openFiles || activeFile)) {
+      setSessions(prev => {
+        const current = prev.find(s => s.id === activeId);
+        if (!current) return prev;
+        
+        const isTabsEqual = JSON.stringify(current.tabs || []) === JSON.stringify(openFiles || []);
+        const isFileEqual = current.openFile === activeFile;
+        
+        if (isTabsEqual && isFileEqual) return prev;
+        
+        return prev.map(s => s.id === activeId ? { ...s, tabs: openFiles, openFile: activeFile } : s);
+      });
+    }
+  }, [openFiles, activeFile, activeId]);
+
+  // Keep active session's workspace in sync with rootPath changes
+  useEffect(() => {
+    if (activeId && rootPath) {
+      setSessions(prev => {
+        const current = prev.find(s => s.id === activeId);
+        if (current && current.workspace !== rootPath) {
+          return prev.map(s => s.id === activeId ? { ...s, workspace: rootPath } : s);
+        }
+        return prev;
+      });
+    }
+  }, [rootPath, activeId]);
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [statusText, setStatusText] = useState('Generando ideas...')
   const [showHistory, setShowHistory] = useState(false)
   const [autopilot, setAutopilot] = useState(true)
   const autopilotRef = useRef(true)
@@ -302,9 +385,12 @@ export default function ChatPanel({
   const [showDeleted, setShowDeleted] = useState(false)
   const [showForensics, setShowForensics] = useState(false)
   const [showModeMenu, setShowModeMenu] = useState(false)
-  const [backups, setBackups] = useState<string[]>([])
+  const [backups, setBackups] = useState<any[]>([])
+  const [attachments, setAttachments] = useState<{ name: string; base64: string; type: string }[]>([])
+  const [isDragging, setIsDragging] = useState(false)
   const hasLoadedRef = useRef(false)
   const startTimeRef = useRef<number>(0)
+
 
   useEffect(() => {
     window.api.loadSessions().then(saved => {
@@ -316,6 +402,7 @@ export default function ChatPanel({
         }))
         setSessions(migrated)
         setActiveId(migrated[0].id) 
+        if (onSessionsChange) onSessionsChange(migrated)
       }
       hasLoadedRef.current = true
     })
@@ -324,11 +411,48 @@ export default function ChatPanel({
   useEffect(() => { 
     if (hasLoadedRef.current) {
       window.api.saveSessions(JSON.stringify(sessions)) 
+      if (onSessionsChange) onSessionsChange(sessions)
     }
   }, [sessions])
 
+  useEffect(() => {
+    if (rootPath && sessions.length > 0) {
+      const hasEmptyWorkspace = sessions.some(s => !s.workspace);
+      if (hasEmptyWorkspace) {
+        setSessions(prev => prev.map(s => s.workspace ? s : { ...s, workspace: rootPath }));
+      }
+    }
+  }, [rootPath, sessions.length]);
+
+  useEffect(() => {
+    const STATUS_MESSAGES = [
+      'Generando ideas...',
+      'Pensando...',
+      'Uniendo conceptos...',
+      'Analizando contexto...',
+      'Estructurando respuesta...',
+      'Refinando detalles...'
+    ];
+    let intervalId: NodeJS.Timeout | null = null;
+    if (loading) {
+      let index = 0;
+      setStatusText(STATUS_MESSAGES[0]);
+      intervalId = setInterval(() => {
+        index = (index + 1) % STATUS_MESSAGES.length;
+        setStatusText(STATUS_MESSAGES[index]);
+      }, 3000);
+    } else {
+      setStatusText(STATUS_MESSAGES[0]);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [loading]);
+
   const activeSession = sessions.find(s => s.id === activeId) ?? sessions[0]
   const messages = activeSession.messages
+  const lastMsg = messages[messages.length - 1]
+  const isWaitingFirstToken = lastMsg && lastMsg.role === 'assistant' && !lastMsg.content
 
   useEffect(() => {
     setSessions(prev => prev.map(s => s.id === activeId ? { ...s, lastActive: Date.now() } : s))
@@ -347,7 +471,7 @@ export default function ChatPanel({
 
   function addSession() {
     const nextNum = sessions.length + 1
-    const s = newSession(nextNum); 
+    const s = newSession(nextNum, 'agent', rootPath); 
     setSessions(prev => [...prev, s]); 
     setActiveId(s.id); 
     setInput('')
@@ -510,21 +634,40 @@ Rules:
 
   async function send() {
     if (!input.trim() || loading || !model) return
-    const userMsg: Message = { role: 'user', content: input.trim() }
+    const userMsg: Message = { 
+      role: 'user', 
+      content: input.trim(),
+      images: attachments.length > 0 ? attachments.map(a => a.base64) : undefined
+    }
     const history: Message[] = [...messages, userMsg]
     setMessages(() => history)
     setInput('')
+    setAttachments([])
     setLoading(true)
+    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, workspace: s.workspace || rootPath } : s))
     startTimeRef.current = Date.now()
 
     try {
       const systemPrompt = await buildSystemPrompt()
+      const chatMessages = [
+        { role: 'system', content: systemPrompt },
+        ...history.map(msg => {
+          if (msg.role === 'user' && msg.images) {
+            return {
+              role: msg.role,
+              content: msg.content,
+              images: msg.images.map(img => img.includes(',') ? img.split(',')[1] : img)
+            }
+          }
+          return { role: msg.role, content: msg.content }
+        })
+      ]
       const res = await fetch('http://localhost:11434/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model, stream: true,
-          messages: [{ role: 'system', content: systemPrompt }, ...history]
+          messages: chatMessages
         })
       })
       if (!res.ok) throw new Error(`Ollama error: ${res.status}`)
@@ -535,6 +678,8 @@ Rules:
       const activeIdAtSend = activeId
       let processedUpTo = 0
       const streamWrites: WriteAction[] = []
+      let promptTokens = 0
+      let responseTokens = 0
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
       while (true) {
@@ -544,6 +689,12 @@ Rules:
           if (!line.trim()) continue
           try {
             const json = JSON.parse(line)
+            if (json.prompt_eval_count) {
+              promptTokens = json.prompt_eval_count
+            }
+            if (json.eval_count) {
+              responseTokens = json.eval_count
+            }
             if (json.message?.content) {
               assistantText += json.message.content
               setSessions(prev => prev.map(s => {
@@ -570,7 +721,7 @@ Rules:
                 // Also block replace blocks in plan mode entirely
                 if (isPlanMode && type === 'replace') continue
 
-                const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath, filePath)
+                const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ''))
                 let prevContent: string | undefined
                 try { prevContent = await window.api.readFile(abs) } catch {}
                 
@@ -578,9 +729,18 @@ Rules:
                 if (type === 'replace' && prevContent) {
                   const parts = blockContent.split('====')
                   if (parts.length === 2) {
-                    const target = parts[0].replace('<<<<\n', '').trimEnd()
-                    const replacement = parts[1].replace('\n>>>>', '').replace('>>>>', '').trimStart()
-                    finalContent = prevContent.replace(target, replacement)
+                    const target = parts[0].replace('<<<<\n', '').replace('<<<<\r\n', '').trimEnd()
+                    const replacement = parts[1].replace('\n>>>>', '').replace('\r\n>>>>', '').replace('>>>>', '').trimStart()
+                    
+                    const normalizedPrev = prevContent.replace(/\r\n/g, '\n')
+                    const normalizedTarget = target.replace(/\r\n/g, '\n')
+                    const normalizedReplacement = replacement.replace(/\r\n/g, '\n')
+                    
+                    if (normalizedPrev.includes(normalizedTarget)) {
+                      finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement)
+                    } else {
+                      finalContent = prevContent.replace(target, replacement)
+                    }
                   }
                 }
 
@@ -604,7 +764,14 @@ Rules:
       const writes = streamWrites.length > 0 ? streamWrites : await processWrites(assistantText)
       setMessages(prev => {
         const updated = [...prev]
-        updated[updated.length - 1] = { ...updated[updated.length - 1], writes, elapsed }
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          writes,
+          elapsed,
+          promptTokens,
+          responseTokens,
+          model
+        }
         return updated
       })
 
@@ -672,7 +839,7 @@ Rules:
       if (isPlanMode && !isPlanFile) continue
       if (isPlanMode && type === 'replace') continue
 
-      const abs = filePath.startsWith('/') ? filePath : joinPath(rootPath, filePath)
+      const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ''))
       let prevContent: string | undefined
       try { prevContent = await window.api.readFile(abs) } catch {}
       
@@ -680,9 +847,18 @@ Rules:
       if (type === 'replace' && prevContent) {
         const parts = blockContent.split('====')
         if (parts.length === 2) {
-          const target = parts[0].replace('<<<<\n', '').trimEnd()
-          const replacement = parts[1].replace('\n>>>>', '').replace('>>>>', '').trimStart()
-          finalContent = prevContent.replace(target, replacement)
+          const target = parts[0].replace('<<<<\n', '').replace('<<<<\r\n', '').trimEnd()
+          const replacement = parts[1].replace('\n>>>>', '').replace('\r\n>>>>', '').replace('>>>>', '').trimStart()
+          
+          const normalizedPrev = prevContent.replace(/\r\n/g, '\n')
+          const normalizedTarget = target.replace(/\r\n/g, '\n')
+          const normalizedReplacement = replacement.replace(/\r\n/g, '\n')
+          
+          if (normalizedPrev.includes(normalizedTarget)) {
+            finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement)
+          } else {
+            finalContent = prevContent.replace(target, replacement)
+          }
         }
       }
 
@@ -721,23 +897,102 @@ Rules:
     } : m))
   }
 
+  function processFile(file: File) {
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = ev => {
+        const base64 = ev.target?.result as string
+        setAttachments(prev => [...prev, { name: file.name, base64, type: file.type }])
+      }
+      reader.readAsDataURL(file)
+    } else {
+      const reader = new FileReader()
+      reader.onload = ev => {
+        setInput(prev => prev + `\n\`\`\`${file.name}\n${ev.target?.result as string}\n\`\`\``)
+      }
+      reader.readAsText(file)
+    }
+  }
+
   function handleFileAttach(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = ev => {
-      setInput(prev => prev + `\n\`\`\`${file.name}\n${ev.target?.result as string}\n\`\`\``)
-    }
-    reader.readAsText(file)
+    processFile(file)
     e.target.value = ''
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  function handleDragLeave() {
+    setIsDragging(false)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        processFile(files[i])
+      }
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const items = e.clipboardData.items
+    for (const item of items) {
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile()
+        if (file) {
+          processFile(file)
+        }
+      }
+    }
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments(prev => prev.filter((_, i) => i !== index))
   }
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
+  function isModelMultimodal(name: string): boolean {
+    if (!name) return false
+    const n = name.toLowerCase()
+    return n.includes('llava') || 
+           n.includes('vision') || 
+           n.includes('vl') || 
+           n.includes('moondream') || 
+           n.includes('minicpm')
+  }
+
   return (
-    <div className="chat-panel">
+    <div 
+      className="chat-panel"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="chat-dropzone-overlay">
+          <div className="chat-dropzone-box">
+            <Paperclip size={32} className="chat-dropzone-icon" />
+            <span className="chat-dropzone-text">
+              Drop images or text files here
+              {!isModelMultimodal(model) && (
+                <div style={{ color: '#ffd685', marginTop: '6px', fontSize: '11px', fontWeight: 'normal' }}>
+                  ⚠️ Model {model} may not support images
+                </div>
+              )}
+            </span>
+          </div>
+        </div>
+      )}
       <div className="session-bar">
         <div className="session-tabs">
           {sessions.filter(s => !s.isDeleted).map(s => (
@@ -795,6 +1050,13 @@ Rules:
                 onAccept={p => handleAccept(i, p)}
                 onRevert={p => handleRevert(i, p)}
               />
+              {m.images && m.images.length > 0 && (
+                <div className="chat-msg-images">
+                  {m.images.map((img, idx) => (
+                    <img key={idx} src={img} className="chat-msg-image" alt="attachment" onClick={() => window.open(img)} />
+                  ))}
+                </div>
+              )}
               {(m.writes || m.elapsed) && (
                 <div className="msg-meta">
                   {m.writes && <span className="msg-writes">{m.writes.length} patches</span>}
@@ -809,6 +1071,11 @@ Rules:
             <div className="chat-msg-header">
               <span className="chat-role">AGENT</span>
               <div className="toolbar-spinner" style={{ marginLeft: 8 }} />
+              {isWaitingFirstToken && (
+                <span className="agent-loading-status" style={{ fontSize: '11px', color: '#888', fontStyle: 'italic', marginLeft: '12px', opacity: 0.8 }}>
+                  {statusText}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -817,12 +1084,31 @@ Rules:
 
       <div className="chat-input-container">
         <div className="chat-input-wrapper">
+          {attachments.length > 0 && (
+            <div className="chat-attachments-preview">
+              {attachments.map((att, idx) => (
+                <div key={idx} className="chat-attachment-card">
+                  <img src={att.base64} alt={att.name} className="chat-attachment-thumbnail" />
+                  <span className="chat-attachment-name" title={att.name}>{att.name}</span>
+                  <button className="chat-attachment-remove" onClick={() => removeAttachment(idx)}>
+                    <X size={10} strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+              {!isModelMultimodal(model) && (
+                <div className="chat-attachment-warning">
+                  <span>⚠️ Model {model} may not support images</span>
+                </div>
+              )}
+            </div>
+          )}
           <textarea
             className="chat-input"
             placeholder="Ask anything, @ to mention..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
+            onPaste={handlePaste}
             rows={Math.min(10, input.split('\n').length || 1)}
             style={{ height: 'auto' }}
           />
@@ -894,6 +1180,23 @@ Rules:
                     <span className="history-name">{s.name}</span>
                     <span className="history-path">{new Date(s.lastActive).toLocaleString()}</span>
                   </div>
+                  <span style={{ 
+                    fontSize: '10px', 
+                    color: '#888', 
+                    marginLeft: 'auto',
+                    marginRight: '8px',
+                    fontFamily: 'monospace',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '120px'
+                  }} title={s.workspace || 'No Project'}>
+                    {s.workspace ? s.workspace.split(/[\\/]/).pop() : 'No Project'}
+                  </span>
                   {s.isDeleted && (
                     <div className="history-item-status">
                       <span className="history-tag">Deleted</span>
@@ -933,14 +1236,30 @@ Rules:
             </div>
             <div className="history-list">
               {backups.map((b, index) => {
-                const cleanName = b.replace('sessions.', '').replace('.json', '');
+                const isObj = b && typeof b === 'object';
+                const filename = isObj ? b.filename : b;
+                const workspaces = isObj ? b.workspaces : [];
+                const summary = isObj ? b.summary : 'Project snapshot';
+                
+                const cleanName = filename ? filename.replace('sessions.', '').replace('.json', '') : '';
+                const activeProject = rootPath ? rootPath.split(/[\\/]/).pop() : '';
+                const pathText = workspaces && workspaces.length > 0
+                  ? `${workspaces.join(', ')} • ${summary}`
+                  : (activeProject ? `${activeProject} • ${summary}` : summary);
+
                 return (
-                  <div key={b} className="history-item" onClick={() => applyBackup(b)}>
+                  <div key={filename} className="history-item" onClick={() => applyBackup(filename)}>
                     <div className="history-item-left">
                       <span className="history-name">{cleanName}</span>
-                      <span className="history-path">Project snapshot</span>
+                      <span className="history-path" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '280px' }} title={pathText}>
+                        {pathText}
+                      </span>
                     </div>
-                    {index === 0 && <span className="history-tag" style={{ background: '#0e639c', color: '#fff' }}>Latest</span>}
+                    {index === 0 && (
+                      <span className="history-tag" style={{ background: '#0e639c', color: '#fff', marginLeft: 'auto' }}>
+                        Latest
+                      </span>
+                    )}
                   </div>
                 );
               })}

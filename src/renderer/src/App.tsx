@@ -12,10 +12,27 @@ import SourceControl from './components/SourceControl'
 import DiffView from './components/DiffView'
 import Dashboard from './components/Dashboard'
 
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  writes?: any[]
+  elapsed?: number
+  promptTokens?: number
+  responseTokens?: number
+  model?: string
+}
+
 interface Session {
   id: string
   name: string
-  messages: { role: 'user' | 'assistant'; content: string }[]
+  messages: Message[]
+  mode?: 'agent' | 'plan' | 'debug' | 'multitask' | 'ask'
+  createdAt?: number
+  lastActive?: number
+  isDeleted?: boolean
+  workspace?: string | null
+  tabs?: string[]
+  openFile?: string | null
 }
 
 interface User {
@@ -48,6 +65,7 @@ declare global {
       showContextMenu: (p: string, isDir: boolean) => Promise<string | null>
       loadSessions: () => Promise<Session[] | null>
       saveSessions: (data: string) => Promise<void>
+      getHistoricalSessions: () => Promise<Session[]>
       getGitStatus: (p: string) => Promise<{ branch: string; ahead: number; behind: number; changes: { status: string; path: string }[] }>
       gitCommit: (p: string, msg: string) => Promise<{ success: boolean; error?: string }>
       gitGetStagedDiff: (p: string) => Promise<string>
@@ -67,6 +85,8 @@ declare global {
 
 export default function App() {
   const [rootPath, setRootPath] = useState<string | null>(null)
+  const [sessions, setSessions] = useState<Session[]>([])
+  const [activeId, setActiveId] = useState<string>('')
   const [tree, setTree] = useState<FileNode[]>([])
   const [openDirs, setOpenDirs] = useState<Set<string>>(new Set())
   const [openFile, setOpenFile] = useState<string | null>(null)
@@ -93,6 +113,7 @@ export default function App() {
   const [quickQuery, setQuickQuery] = useState('')
   const [allFiles, setAllFiles] = useState<string[]>([])
   const quickRef = useRef<HTMLInputElement>(null)
+  const lastRestoredSessionIdRef = useRef<string>('')
 
   useEffect(() => {
     // Load models
@@ -141,6 +162,44 @@ export default function App() {
   useEffect(() => {
     if (quickOpen) setTimeout(() => quickRef.current?.focus(), 50)
   }, [quickOpen])
+
+  useEffect(() => {
+    if (activeId && sessions.length > 0) {
+      if (lastRestoredSessionIdRef.current === activeId) {
+        return;
+      }
+      const activeSession = sessions.find(s => s.id === activeId);
+      if (activeSession) {
+        lastRestoredSessionIdRef.current = activeId;
+        const savedTabs = activeSession.tabs || [];
+        const savedOpenFile = activeSession.openFile || null;
+        const savedWorkspace = activeSession.workspace || null;
+        
+        if (savedWorkspace && savedWorkspace !== rootPath) {
+          setRootPath(savedWorkspace);
+          window.api.readDir(savedWorkspace).then(t => setTree(t)).catch(console.error);
+          setOpenDirs(new Set());
+          window.api.listFiles(savedWorkspace).then(files => setAllFiles(files)).catch(console.error);
+        }
+
+        if (JSON.stringify(tabs) !== JSON.stringify(savedTabs)) {
+          setTabs(savedTabs);
+        }
+        if (openFile !== savedOpenFile) {
+          setOpenFile(savedOpenFile);
+          if (savedOpenFile) {
+            window.api.readFile(savedOpenFile).then(content => {
+              setFileContent(content);
+            }).catch(() => {
+              setFileContent('');
+            });
+          } else {
+            setFileContent('');
+          }
+        }
+      }
+    }
+  }, [activeId, sessions]);
 
   async function openFolder() {
     const p = await window.api.openFolder()
@@ -517,7 +576,7 @@ export default function App() {
         </div>
         <div className="center-column">
           {activeSidebar === 'dashboard' ? (
-            <Dashboard models={models} />
+            <Dashboard models={models} sessions={sessions} rootPath={rootPath} />
           ) : (
             <>
               <div className="tab-container">
@@ -563,11 +622,14 @@ export default function App() {
                   }
                 }}
                 onSave={saveFile}
+                sessions={sessions}
+                onRestoreSession={setActiveId}
+                onOpenFolder={openFolder}
               />
             )}
           </div>
           {terminalOpen && activeSidebar !== 'dashboard' && (
-            <TerminalPanel cwd={rootPath} />
+            <TerminalPanel key={rootPath || 'empty'} cwd={rootPath} />
           )}
             </>
           )}
@@ -582,6 +644,11 @@ export default function App() {
           onWriteFile={saveFile}
           onRefreshTree={refreshTree}
           onOpenFile={(path) => selectFile(path, true)}
+          onSessionsChange={setSessions}
+          activeId={activeId}
+          onActiveIdChange={setActiveId}
+          openFiles={tabs}
+          activeFile={openFile}
         />
       </div>
     </div>

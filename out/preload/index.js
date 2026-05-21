@@ -28,6 +28,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   terminalWrite: (id, data) => electron.ipcRenderer.invoke("terminal-write", id, data),
   terminalResize: (id, cols, rows) => electron.ipcRenderer.invoke("terminal-resize", id, cols, rows),
   terminalKill: (id) => electron.ipcRenderer.invoke("terminal-kill", id),
+  getHistoricalSessions: () => electron.ipcRenderer.invoke("get-historical-sessions"),
   onTerminalData: (id, cb) => {
     electron.ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data));
   },
