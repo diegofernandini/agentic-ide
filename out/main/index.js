@@ -127,6 +127,26 @@ electron.ipcMain.handle("read-file", async (_e, filePath) => {
     return "";
   }
 });
+electron.ipcMain.handle("save-dialog", async (_e, defaultPath, content) => {
+  const result = await electron.dialog.showSaveDialog({
+    defaultPath,
+    filters: [
+      { name: "All Files", extensions: ["*"] },
+      { name: "TypeScript", extensions: ["ts", "tsx"] },
+      { name: "JavaScript", extensions: ["js", "jsx"] },
+      { name: "Python", extensions: ["py"] },
+      { name: "Markdown", extensions: ["md"] },
+      { name: "JSON", extensions: ["json"] },
+      { name: "CSS", extensions: ["css"] },
+      { name: "HTML", extensions: ["html"] }
+    ]
+  });
+  if (result.canceled || !result.filePath) return null;
+  await fs__namespace.promises.mkdir(path__namespace.dirname(result.filePath), { recursive: true });
+  await fs__namespace.promises.writeFile(result.filePath, content, "utf-8");
+  await logActivity("file-save-as", { path: result.filePath, length: content.length });
+  return result.filePath;
+});
 electron.ipcMain.handle("write-file", async (_e, filePath, content) => {
   await fs__namespace.promises.mkdir(path__namespace.dirname(filePath), { recursive: true });
   await fs__namespace.promises.writeFile(filePath, content, "utf-8");

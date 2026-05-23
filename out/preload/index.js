@@ -5,6 +5,7 @@ electron.contextBridge.exposeInMainWorld("api", {
   readDir: (p) => electron.ipcRenderer.invoke("read-dir", p),
   readFile: (p) => electron.ipcRenderer.invoke("read-file", p),
   writeFile: (p, content) => electron.ipcRenderer.invoke("write-file", p, content),
+  saveDialog: (defaultPath, content) => electron.ipcRenderer.invoke("save-dialog", defaultPath, content),
   listFiles: (p) => electron.ipcRenderer.invoke("list-files", p),
   deleteFile: (p) => electron.ipcRenderer.invoke("delete-file", p),
   renameFile: (oldP, newP) => electron.ipcRenderer.invoke("rename-file", oldP, newP),

@@ -59,6 +59,7 @@ declare global {
       readDir: (p: string) => Promise<FileNode[]>
       readFile: (p: string) => Promise<string>
       writeFile: (p: string, content: string) => Promise<boolean>
+      saveDialog: (defaultPath: string, content: string) => Promise<string | null>
       listFiles: (p: string) => Promise<string[]>
       deleteFile: (p: string) => Promise<boolean>
       renameFile: (oldP: string, newP: string) => Promise<boolean>
@@ -79,6 +80,8 @@ declare global {
       githubLogin: () => Promise<boolean>
       onFileChanged: (cb: (data: { event: string; path: string }) => void) => void
       offFileChanged: () => void
+      ollamaTags: () => Promise<string[]>
+      ollamaChat: (payload: object) => Promise<string>
     }
   }
 }
@@ -116,15 +119,28 @@ export default function App() {
   const lastRestoredSessionIdRef = useRef<string>('')
 
   useEffect(() => {
-    // Load models
-    fetch('http://localhost:11434/api/tags')
-      .then(r => r.json())
-      .then(data => {
+    // Try fetching models directly; fall back to IPC proxy if that fails
+    // (IPC proxy is needed when webSecurity blocks localhost from file:// context)
+    const loadModels = async () => {
+      try {
+        const r = await fetch('http://127.0.0.1:11434/api/tags')
+        if (!r.ok) throw new Error('bad status')
+        const data = await r.json()
         const names: string[] = (data.models || []).map((m: { name: string }) => m.name)
+        if (names.length > 0) {
+          setModels(names)
+          setModel(names[0])
+          return
+        }
+      } catch {}
+      // Fallback: go through main process
+      try {
+        const names = await window.api.ollamaTags()
         setModels(names)
         if (names.length > 0) setModel(names[0])
-      })
-      .catch(() => {})
+      } catch {}
+    }
+    loadModels()
 
     // Load user session
     window.api.loadSessions().then(sessions => {
@@ -171,10 +187,29 @@ export default function App() {
       const activeSession = sessions.find(s => s.id === activeId);
       if (activeSession) {
         lastRestoredSessionIdRef.current = activeId;
-        const savedTabs = activeSession.tabs || [];
-        const savedOpenFile = activeSession.openFile || null;
+
+        // Only restore state for sessions that have previously saved state.
+        // A brand-new session has no tabs and no openFile — don't clobber the
+        // current editor state with empty values in that case.
+        const savedTabs = activeSession.tabs;
+        const savedOpenFile = activeSession.openFile;
         const savedWorkspace = activeSession.workspace || null;
-        
+        const hasPersistedState = savedTabs !== undefined || savedOpenFile !== undefined;
+
+        if (!hasPersistedState) {
+          // New session: just switch workspace if it differs, leave editor as-is.
+          if (savedWorkspace && savedWorkspace !== rootPath) {
+            setRootPath(savedWorkspace);
+            window.api.readDir(savedWorkspace).then(t => setTree(t)).catch(console.error);
+            setOpenDirs(new Set());
+            window.api.listFiles(savedWorkspace).then(files => setAllFiles(files)).catch(console.error);
+          }
+          return;
+        }
+
+        const resolvedTabs = savedTabs || [];
+        const resolvedOpenFile = savedOpenFile || null;
+
         if (savedWorkspace && savedWorkspace !== rootPath) {
           setRootPath(savedWorkspace);
           window.api.readDir(savedWorkspace).then(t => setTree(t)).catch(console.error);
@@ -182,13 +217,13 @@ export default function App() {
           window.api.listFiles(savedWorkspace).then(files => setAllFiles(files)).catch(console.error);
         }
 
-        if (JSON.stringify(tabs) !== JSON.stringify(savedTabs)) {
-          setTabs(savedTabs);
+        if (JSON.stringify(tabs) !== JSON.stringify(resolvedTabs)) {
+          setTabs(resolvedTabs);
         }
-        if (openFile !== savedOpenFile) {
-          setOpenFile(savedOpenFile);
-          if (savedOpenFile) {
-            window.api.readFile(savedOpenFile).then(content => {
+        if (openFile !== resolvedOpenFile) {
+          setOpenFile(resolvedOpenFile);
+          if (resolvedOpenFile) {
+            window.api.readFile(resolvedOpenFile).then(content => {
               setFileContent(content);
             }).catch(() => {
               setFileContent('');
@@ -283,7 +318,11 @@ export default function App() {
   }
 
   async function saveFile(content: string) {
-    if (!openFile) return
+    if (!openFile) {
+      // No path yet — open Save As dialog
+      await saveFileAs(content)
+      return
+    }
     await window.api.writeFile(openFile, content)
     setFileContent(content)
     setDirtyTabs(prev => {
@@ -291,6 +330,24 @@ export default function App() {
       next.delete(openFile)
       return next
     })
+  }
+
+  async function saveFileAs(content: string) {
+    const defaultPath = rootPath ? rootPath + '/untitled' : 'untitled'
+    const savedPath = await window.api.saveDialog(defaultPath, content)
+    if (!savedPath) return
+    // Open the newly saved file as a tab
+    if (!tabs.includes(savedPath)) {
+      setTabs(prev => [...prev, savedPath])
+    }
+    setOpenFile(savedPath)
+    setFileContent(content)
+    setDirtyTabs(prev => {
+      const next = new Set(prev)
+      next.delete(savedPath)
+      return next
+    })
+    await refreshTree()
   }
 
   async function refreshTree() {
@@ -622,6 +679,7 @@ export default function App() {
                   }
                 }}
                 onSave={saveFile}
+                onSaveAs={saveFileAs}
                 sessions={sessions}
                 onRestoreSession={setActiveId}
                 onOpenFolder={openFolder}
@@ -644,6 +702,10 @@ export default function App() {
           onWriteFile={saveFile}
           onRefreshTree={refreshTree}
           onOpenFile={(path) => selectFile(path, true)}
+          onOpenDiff={(filename, original, current) => {
+            setDiffInfo({ filename, original, current })
+            setOpenFile(null)
+          }}
           onSessionsChange={setSessions}
           activeId={activeId}
           onActiveIdChange={setActiveId}

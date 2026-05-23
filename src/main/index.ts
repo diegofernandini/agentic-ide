@@ -4,6 +4,7 @@ import * as path from 'path'
 import { join } from 'path'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
+import * as http from 'http'
 import type { FSWatcher } from 'chokidar'
 
 const execFileAsync = promisify(execFile)
@@ -24,7 +25,8 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      webSecurity: false  // allow renderer to fetch localhost (Ollama) from file:// context
     }
   })
 
@@ -95,6 +97,27 @@ ipcMain.handle('read-file', async (_e, filePath: string) => {
   } catch {
     return ''
   }
+})
+
+ipcMain.handle('save-dialog', async (_e, defaultPath: string, content: string) => {
+  const result = await dialog.showSaveDialog({
+    defaultPath,
+    filters: [
+      { name: 'All Files', extensions: ['*'] },
+      { name: 'TypeScript', extensions: ['ts', 'tsx'] },
+      { name: 'JavaScript', extensions: ['js', 'jsx'] },
+      { name: 'Python', extensions: ['py'] },
+      { name: 'Markdown', extensions: ['md'] },
+      { name: 'JSON', extensions: ['json'] },
+      { name: 'CSS', extensions: ['css'] },
+      { name: 'HTML', extensions: ['html'] },
+    ]
+  })
+  if (result.canceled || !result.filePath) return null
+  await fs.promises.mkdir(path.dirname(result.filePath), { recursive: true })
+  await fs.promises.writeFile(result.filePath, content, 'utf-8')
+  await logActivity('file-save-as', { path: result.filePath, length: content.length })
+  return result.filePath
 })
 
 ipcMain.handle('write-file', async (_e, filePath: string, content: string) => {
@@ -285,6 +308,53 @@ ipcMain.handle('github-login', async () => {
 
 // Sessions persistence
 const sessionsPath = path.join(app.getPath('userData'), 'sessions.json')
+
+// Ollama proxy — runs in main process (Node.js) to avoid renderer CORS/security restrictions
+ipcMain.handle('ollama-tags', async () => {
+  return new Promise<string[]>((resolve) => {
+    const req = http.get('http://127.0.0.1:11434/api/tags', { timeout: 5000 }, (res) => {
+      let body = ''
+      res.on('data', chunk => { body += chunk })
+      res.on('end', () => {
+        try {
+          const data = JSON.parse(body)
+          const names: string[] = (data.models || []).map((m: { name: string }) => m.name)
+          resolve(names)
+        } catch {
+          resolve([])
+        }
+      })
+    })
+    req.on('error', () => resolve([]))
+    req.on('timeout', () => { req.destroy(); resolve([]) })
+  })
+})
+
+ipcMain.handle('ollama-chat', async (_e, payload: object) => {
+  return new Promise<string>((resolve, reject) => {
+    const body = JSON.stringify(payload)
+    const options = {
+      hostname: '127.0.0.1',
+      port: 11434,
+      path: '/api/chat',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      },
+      timeout: 120000
+    }
+    const req = http.request(options, (res) => {
+      let data = ''
+      res.on('data', chunk => { data += chunk })
+      res.on('end', () => resolve(data))
+    })
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('Ollama request timed out')) })
+    req.write(body)
+    req.end()
+  })
+})
 
 ipcMain.handle('load-sessions', async () => {
   try {

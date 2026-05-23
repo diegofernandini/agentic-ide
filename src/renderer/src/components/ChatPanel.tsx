@@ -47,6 +47,8 @@ declare global {
       listBackups: () => Promise<string[]>
       restoreBackup: (name: string) => Promise<Session[] | null>
       getHistoricalSessions: () => Promise<Session[]>
+      ollamaTags: () => Promise<string[]>
+      ollamaChat: (payload: object) => Promise<string>
     }
   }
 }
@@ -61,6 +63,7 @@ interface Props {
   onWriteFile: (content: string) => void
   onRefreshTree: () => void
   onOpenFile?: (path: string) => void
+  onOpenDiff?: (filename: string, original: string, current: string) => void
   onSessionsChange?: (sessions: Session[]) => void
   activeId?: string
   onActiveIdChange?: (id: string) => void
@@ -254,11 +257,12 @@ function Markdown({ text }: { text: string }) {
   return <div className="markdown-body">{parts}</div>
 }
 
-function MessageContent({ content, writes, onAccept, onRevert }: {
+function MessageContent({ content, writes, onAccept, onRevert, onOpenDiff }: {
   content: string
   writes?: WriteAction[]
   onAccept: (path: string) => void
   onRevert: (path: string) => void
+  onOpenDiff?: (filename: string, original: string, current: string) => void
 }) {
   const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
   const parts: React.ReactNode[] = []
@@ -275,12 +279,28 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
     const write = writes?.find(w => w.path.endsWith(filePath) || w.path === filePath)
     const fileName = filePath.split('/').pop()
 
+    function handleFileClick() {
+      if (type === 'replace' && write) {
+        // Open diff: original vs proposed
+        onOpenDiff?.(filePath, write.prevContent ?? '', write.content)
+      } else if (type === 'write' && write) {
+        // Open proposed new file as diff with empty original
+        onOpenDiff?.(filePath, '', write.content)
+      }
+    }
+
     parts.push(
       <div key={match.index} className="write-block">
         <div className="write-block-header">
           <div className="write-block-info">
             <span className="write-block-icon">{type === 'replace' ? <FileDiff size={13} strokeWidth={2} /> : <FilePlus size={13} strokeWidth={2} />}</span>
-            <span className="write-block-file">{fileName}</span>
+            <button
+              className="write-block-file write-block-file--clickable"
+              onClick={handleFileClick}
+              title={type === 'replace' ? 'View diff' : 'Preview file'}
+            >
+              {fileName}
+            </button>
             <span className="write-block-type">{type === 'replace' ? 'patch' : 'write'}</span>
           </div>
           <div className="write-block-actions">
@@ -294,9 +314,6 @@ function MessageContent({ content, writes, onAccept, onRevert }: {
                 <button className="write-btn write-btn--accept" onClick={() => onAccept(filePath)}>Apply</button>
               </div>
             )}
-            <button className="write-icon-btn" onClick={() => navigator.clipboard.writeText(blockContent)} title="Copy">
-              <Copy size={12} strokeWidth={1.8} />
-            </button>
           </div>
         </div>
       </div>
@@ -323,6 +340,7 @@ export default function ChatPanel({
   model, models, onModelChange,
   rootPath, openFile, fileContent,
   onWriteFile, onRefreshTree, onOpenFile,
+  onOpenDiff,
   onSessionsChange,
   activeId: activeIdProp, onActiveIdChange, openFiles, activeFile
 }: Props) {
@@ -342,13 +360,20 @@ export default function ChatPanel({
     }
   }, [activeIdProp]);
 
-  // Save open tabs and active file dynamically into the active session
+  // Save open tabs and active file dynamically into the active session.
+  // Only sync into sessions that already have messages — a brand-new session
+  // should start clean and not inherit the previous session's editor state.
   useEffect(() => {
     if (activeId && (openFiles || activeFile)) {
       setSessions(prev => {
         const current = prev.find(s => s.id === activeId);
         if (!current) return prev;
-        
+
+        // Don't overwrite a fresh session with the previous session's editor state
+        if (current.messages.length === 0 && current.tabs === undefined && current.openFile === undefined) {
+          return prev;
+        }
+
         const isTabsEqual = JSON.stringify(current.tabs || []) === JSON.stringify(openFiles || []);
         const isFileEqual = current.openFile === activeFile;
         
@@ -1049,6 +1074,7 @@ Rules:
                 writes={m.writes}
                 onAccept={p => handleAccept(i, p)}
                 onRevert={p => handleRevert(i, p)}
+                onOpenDiff={onOpenDiff}
               />
               {m.images && m.images.length > 0 && (
                 <div className="chat-msg-images">

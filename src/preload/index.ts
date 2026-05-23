@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   readDir: (p: string) => ipcRenderer.invoke('read-dir', p),
   readFile: (p: string) => ipcRenderer.invoke('read-file', p),
   writeFile: (p: string, content: string) => ipcRenderer.invoke('write-file', p, content),
+  saveDialog: (defaultPath: string, content: string) => ipcRenderer.invoke('save-dialog', defaultPath, content),
   listFiles: (p: string) => ipcRenderer.invoke('list-files', p),
   deleteFile: (p: string) => ipcRenderer.invoke('delete-file', p),
   renameFile: (oldP: string, newP: string) => ipcRenderer.invoke('rename-file', oldP, newP),
@@ -29,6 +30,8 @@ contextBridge.exposeInMainWorld('api', {
   terminalResize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('terminal-resize', id, cols, rows),
   terminalKill: (id: string) => ipcRenderer.invoke('terminal-kill', id),
   getHistoricalSessions: () => ipcRenderer.invoke('get-historical-sessions'),
+  ollamaTags: () => ipcRenderer.invoke('ollama-tags'),
+  ollamaChat: (payload: object) => ipcRenderer.invoke('ollama-chat', payload),
   onTerminalData: (id: string, cb: (data: string) => void) => {
     ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data))
   },
