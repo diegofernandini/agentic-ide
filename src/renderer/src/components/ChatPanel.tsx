@@ -1,15 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Plus, History, Trash2, Paperclip, Send, Zap, Copy, FilePlus, FileDiff, CheckCircle2, RotateCcw, X, Bot, ClipboardList, Bug, Layers, MessageCircleQuestion } from 'lucide-react'
 
+interface ExecuteAction {
+  command: string
+  status: 'pending' | 'running' | 'completed' | 'error'
+  output?: string
+  error?: string
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
   writes?: WriteAction[]
+  executes?: ExecuteAction[]
   elapsed?: number
   promptTokens?: number
   responseTokens?: number
   model?: string
   images?: string[]
+  isToolOutput?: boolean
 }
 
 interface WriteAction {
@@ -49,6 +58,7 @@ declare global {
       getHistoricalSessions: () => Promise<Session[]>
       ollamaTags: () => Promise<string[]>
       ollamaChat: (payload: object) => Promise<string>
+      execCommand: (cwd: string, command: string) => Promise<{ success: boolean; stdout?: string; stderr?: string; error?: string }>
     }
   }
 }
@@ -257,14 +267,17 @@ function Markdown({ text }: { text: string }) {
   return <div className="markdown-body">{parts}</div>
 }
 
-function MessageContent({ content, writes, onAccept, onRevert, onOpenDiff }: {
+function MessageContent({ content, writes, executes, onAccept, onRevert, onOpenDiff, onExecuteAllow, onExecuteAlwaysAllow, onExecuteCancel }: {
   content: string
   writes?: WriteAction[]
+  executes?: ExecuteAction[]
   onAccept: (path: string) => void
   onRevert: (path: string) => void
   onOpenDiff?: (filename: string, original: string, current: string) => void
+  onExecuteAllow?: (command: string, always: boolean) => void
+  onExecuteCancel?: (command: string) => void
 }) {
-  const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
+  const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g
   const parts: React.ReactNode[] = []
   let last = 0
   let match
@@ -274,7 +287,7 @@ function MessageContent({ content, writes, onAccept, onRevert, onOpenDiff }: {
       parts.push(<Markdown key={`text-${last}`} text={content.slice(last, match.index)} />)
     }
     const type = match[1]
-    const filePath = decodeURIComponent(match[2].trim())
+    const filePath = match[2] ? decodeURIComponent(match[2].trim()) : ''
     const blockContent = match[3]
     const write = writes?.find(w => w.path.endsWith(filePath) || w.path === filePath)
     const fileName = filePath.split('/').pop()
@@ -287,6 +300,45 @@ function MessageContent({ content, writes, onAccept, onRevert, onOpenDiff }: {
         // Open proposed new file as diff with empty original
         onOpenDiff?.(filePath, '', write.content)
       }
+    }
+
+    if (type === 'execute') {
+      const command = blockContent.trim()
+      const exec = executes?.find(e => e.command === command)
+      
+      if (exec && exec.status !== 'pending') {
+        parts.push(
+          <div key={match.index} style={{ margin: '8px 0', fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {exec.status === 'completed' ? <CheckCircle2 size={12} color="#10b981" /> : 
+             exec.status === 'error' ? <RotateCcw size={12} color="#ef4444" /> : 
+             <div className="toolbar-spinner" style={{width: 10, height: 10, borderBottomColor: 'transparent'}} />}
+            <span>{exec.status === 'completed' ? 'Executed:' : exec.status === 'error' ? 'Failed:' : 'Running:'} <code style={{background: 'transparent', padding: 0}}>{command}</code></span>
+          </div>
+        )
+        last = blockRe.lastIndex
+        continue
+      }
+
+      parts.push(
+        <div key={match.index} className="write-block">
+          <div className="write-block-header">
+            <div className="write-block-info">
+              <span className="write-block-icon"><Zap size={13} strokeWidth={2} /></span>
+              <span className="write-block-file">{command}</span>
+              <span className="write-block-type">execute</span>
+            </div>
+            <div className="write-block-actions">
+              <div className="write-pending-actions">
+                <button className="write-btn write-btn--revert" onClick={() => onExecuteCancel?.(command)}>Cancel</button>
+                <button className="write-btn write-btn--accept" onClick={() => onExecuteAllow?.(command, false)}>Allow</button>
+                <button className="write-btn write-btn--accept" onClick={() => onExecuteAllow?.(command, true)}>Always</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+      last = blockRe.lastIndex
+      continue
     }
 
     parts.push(
@@ -415,7 +467,17 @@ export default function ChatPanel({
   const [isDragging, setIsDragging] = useState(false)
   const hasLoadedRef = useRef(false)
   const startTimeRef = useRef<number>(0)
+  const [alwaysAllowedCommands, setAlwaysAllowedCommands] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('alwaysAllowedCommands')
+      if (stored) return new Set(JSON.parse(stored))
+    } catch {}
+    return new Set()
+  })
 
+  useEffect(() => {
+    localStorage.setItem('alwaysAllowedCommands', JSON.stringify(Array.from(alwaysAllowedCommands)))
+  }, [alwaysAllowedCommands])
 
   useEffect(() => {
     window.api.loadSessions().then(saved => {
@@ -608,27 +670,65 @@ Write the complete plan to a single markdown file using this exact format:
 
 After writing the plan file, briefly summarize what you've planned in 1-2 sentences. The user can then review PLAN.md and switch to Agent mode to implement it.`
     } else {
-      sys += ` You have direct write access to the user's project files.
+      sys += ` You have DIRECT WRITE ACCESS to the user's project files. You are NOT a chatbot — you are an autonomous coding agent that writes files.
 
-When you need to modify existing files, you MUST use this exact format:
-\`\`\`replace:relative/path/to/file.ext
+⚠️ CRITICAL OUTPUT RULES — YOU MUST FOLLOW THESE EXACTLY:
+
+1. NEVER use standard markdown code blocks like \`\`\`python or \`\`\`js to show code. Those do NOTHING.
+2. To CREATE a new file, you MUST use this EXACT format (the file will be written to disk automatically):
+
+\`\`\`write:path/to/file.py
+# full file content here
+\`\`\`
+
+3. To EDIT an existing file, you MUST use this EXACT format:
+
+\`\`\`replace:path/to/file.py
 <<<<
-existing code to replace
+exact lines to remove
 ====
-new code to insert
+new lines to insert
 >>>>
 \`\`\`
 
-When you need to create NEW files, use:
-\`\`\`write:relative/path/to/file.ext
-full content
+EXAMPLE — if asked to create app.py:
+\`\`\`write:app.py
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello World'
+\`\`\`
+
+EXAMPLE — if asked to add a route to existing app.py:
+\`\`\`replace:app.py
+<<<<
+@app.route('/')
+def hello():
+    return 'Hello World'
+====
+@app.route('/')
+def hello():
+    return 'Hello World'
+
+@app.route('/health')
+def health():
+    return 'OK'
+>>>>
+\`\`\`
+
+4. To EXECUTE a background terminal command, use this EXACT format:
+
+\`\`\`execute
+npm install
 \`\`\`
 
 Rules:
-- ALWAYS use replace blocks for edits.
-- The <<<< section must match exactly.
-- ALWAYS use relative paths.
-- Write ALL necessary files immediately.`
+- Use RELATIVE paths from the project root.
+- Write ALL files immediately — do not ask for permission.
+- The <<<< section must match the existing file content EXACTLY.
+- After writing files, briefly explain what you did.`
     }
 
     if (sessionMode === 'debug') {
@@ -642,7 +742,9 @@ Rules:
       return sys
     }
 
-    sys += `\n\nProject root: ${rootPath}`
+    sys += `\n\n⚠️ PROJECT ROOT (all file paths MUST be relative to this directory): ${rootPath}`
+    sys += `\n✅ CORRECT: \`\`\`write:src/app.py  — resolves to ${rootPath}/src/app.py`
+    sys += `\n❌ WRONG: absolute paths, paths starting with /tmp, or paths outside the project root`
     try {
       const IGNORE = ['node_modules', '.git', 'dist', 'out', '.next', '__pycache__', '.venv', 'venv']
       const files = await window.api.listFiles(rootPath)
@@ -657,17 +759,54 @@ Rules:
     return sys
   }
 
-  async function send() {
-    if (!input.trim() || loading || !model) return
-    const userMsg: Message = { 
-      role: 'user', 
-      content: input.trim(),
-      images: attachments.length > 0 ? attachments.map(a => a.base64) : undefined
+  async function executeAndReply(command: string, getMsgIdx: (msgs: Message[]) => number, execIdx: number) {
+    if (!rootPath) return
+    const res = await window.api.execCommand(rootPath, command)
+    
+    setMessages(prev => {
+      const idx = getMsgIdx(prev)
+      let updatedMsgs = prev
+      if (idx !== -1) {
+        updatedMsgs = prev.map((m, i) => i === idx ? {
+          ...m, executes: m.executes?.map((ex, j) => j === execIdx ? { 
+            ...ex, 
+            status: res.success ? 'completed' : 'error', 
+            output: res.stdout,
+            error: res.error || res.stderr 
+          } : ex)
+        } : m)
+      }
+
+      const outputText = res.success 
+        ? (res.stdout?.trim() 
+          ? `Command \`${command}\` executed successfully.\n\nOutput:\n\`\`\`\n${res.stdout.trim()}\n\`\`\``
+          : `Command \`${command}\` executed successfully without output.`)
+        : `Command \`${command}\` failed.\n\nError: ${res.error}\n\nStderr:\n\`\`\`\n${res.stderr?.trim() || '(no output)'}\n\`\`\``
+
+      const newHistory = [...updatedMsgs, { role: 'user', content: outputText, isToolOutput: true } as Message]
+      setTimeout(() => send(newHistory), 0)
+      return updatedMsgs
+    })
+  }
+
+  async function send(overrideHistory?: Message[]) {
+    if (!overrideHistory && (!input.trim() || loading || !model)) return
+    
+    let history: Message[]
+    if (overrideHistory) {
+      history = overrideHistory
+      setMessages(() => history)
+    } else {
+      const userMsg: Message = { 
+        role: 'user', 
+        content: input.trim(),
+        images: attachments.length > 0 ? attachments.map(a => a.base64) : undefined
+      }
+      history = [...messages, userMsg]
+      setMessages(() => history)
+      setInput('')
+      setAttachments([])
     }
-    const history: Message[] = [...messages, userMsg]
-    setMessages(() => history)
-    setInput('')
-    setAttachments([])
     setLoading(true)
     setSessions(prev => prev.map(s => s.id === activeId ? { ...s, workspace: s.workspace || rootPath } : s))
     startTimeRef.current = Date.now()
@@ -703,6 +842,7 @@ Rules:
       const activeIdAtSend = activeId
       let processedUpTo = 0
       const streamWrites: WriteAction[] = []
+      const streamExecutes: ExecuteAction[] = []
       let promptTokens = 0
       let responseTokens = 0
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
@@ -729,15 +869,28 @@ Rules:
                 return { ...s, messages: msgs }
               }))
 
-              const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
+              const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g
               blockRe.lastIndex = processedUpTo
               let m
               while ((m = blockRe.exec(assistantText)) !== null) {
                 processedUpTo = m.index + m[0].length
                 const type = m[1]
-                const filePath = decodeURIComponent(m[2].trim())
+                const filePath = m[2] ? decodeURIComponent(m[2].trim()) : ''
                 const blockContent = m[3]
                 if (!rootPath) continue
+
+                if (type === 'execute') {
+                  const command = blockContent.trim()
+                  if (command && rootPath) {
+                    let status: 'pending' | 'running' | 'completed' | 'error' = 'pending'
+                    if (alwaysAllowedCommands.has(command)) status = 'running'
+                    streamExecutes.push({ command, status })
+                  }
+                  continue
+                }
+
+                // In ask mode, block all writes completely
+                if (activeSession.mode === 'ask') continue
 
                 // In plan mode, ONLY allow writing .md plan files — block all source code writes
                 const isPlanMode = activeSession.mode === 'plan'
@@ -786,18 +939,29 @@ Rules:
       }
 
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000)
-      const writes = streamWrites.length > 0 ? streamWrites : await processWrites(assistantText)
+      const blocks = (streamWrites.length > 0 || streamExecutes.length > 0) 
+        ? { writes: streamWrites, executes: streamExecutes } 
+        : await processBlocks(assistantText)
+
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = {
           ...updated[updated.length - 1],
-          writes,
+          writes: blocks.writes,
+          executes: blocks.executes,
           elapsed,
           promptTokens,
           responseTokens,
           model
         }
         return updated
+      })
+
+      // Auto-reply logic for auto-executed commands
+      blocks.executes.forEach((ex, idx) => {
+        if (ex.status === 'running' && rootPath) {
+          executeAndReply(ex.command, updated => updated.length - 1, idx)
+        }
       })
 
       if (activeSession.name.startsWith('Session ') && history.length >= 1) {
@@ -848,16 +1012,31 @@ Rules:
     return base.replace(/\/$/, '') + '/' + rel.replace(/^\//, '')
   }
 
-  async function processWrites(text: string): Promise<WriteAction[]> {
-    const re = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g
+  async function processBlocks(text: string): Promise<{ writes: WriteAction[]; executes: ExecuteAction[] }> {
+    const re = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g
     let match
-    const actions: WriteAction[] = []
+    const writes: WriteAction[] = []
+    const executes: ExecuteAction[] = []
     const isPlanMode = activeSession.mode === 'plan'
     while ((match = re.exec(text)) !== null) {
       const type = match[1]
-      const filePath = decodeURIComponent(match[2].trim())
+      const filePath = match[2] ? decodeURIComponent(match[2].trim()) : ''
       const blockContent = match[3]
+
+      if (type === 'execute') {
+        const command = blockContent.trim()
+        if (command && rootPath) {
+          let status: 'pending' | 'running' | 'completed' | 'error' = 'pending'
+          if (alwaysAllowedCommands.has(command)) status = 'running'
+          executes.push({ command, status })
+        }
+        continue
+      }
+
       if (!rootPath) continue
+
+      // In ask mode, block all writes completely
+      if (activeSession.mode === 'ask') continue
 
       // Plan mode: only allow .md plan files, block replace blocks
       const isPlanFile = filePath.endsWith('.md') && (filePath.startsWith('plans/') || filePath.includes('PLAN'))
@@ -892,10 +1071,10 @@ Rules:
         if (openFile && abs === openFile) onWriteFile(finalContent)
         if (isPlanMode && isPlanFile && onOpenFile) onOpenFile(abs)
       }
-      actions.push({ path: abs, content: finalContent, accepted: null, prevContent })
+      writes.push({ path: abs, content: finalContent, accepted: null, prevContent })
     }
-    if (actions.length > 0) onRefreshTree()
-    return actions
+    if (writes.length > 0) onRefreshTree()
+    return { writes, executes }
   }
 
   async function handleAccept(msgIdx: number, filePath: string) {
@@ -919,6 +1098,26 @@ Rules:
     onRefreshTree()
     setMessages(prev => prev.map((m, i) => i === msgIdx ? {
       ...m, writes: m.writes?.map(w => w.path === write.path ? { ...w, accepted: false } : w)
+    } : m))
+  }
+
+  function handleExecuteAllow(msgIdx: number, execIdx: number, command: string, always: boolean) {
+    if (always) {
+      setAlwaysAllowedCommands(prev => new Set([...prev, command]))
+    }
+    
+    // Set status to running
+    setMessages(prev => prev.map((m, i) => i === msgIdx ? {
+      ...m, executes: m.executes?.map((ex, j) => j === execIdx ? { ...ex, status: 'running' } : ex)
+    } : m))
+    
+    // Then call executeAndReply
+    executeAndReply(command, msgs => msgIdx, execIdx)
+  }
+
+  function handleExecuteCancel(msgIdx: number, execIdx: number) {
+    setMessages(prev => prev.map((m, i) => i === msgIdx ? {
+      ...m, executes: m.executes?.map((ex, j) => j === execIdx ? { ...ex, status: 'error', error: 'Cancelled by user' } : ex)
     } : m))
   }
 
@@ -1063,18 +1262,21 @@ Rules:
       {/* Messages Area */}
       <div className="chat-messages">
         {messages.map((m, i) => (
-          <div key={i} className={`chat-msg chat-msg--${m.role}`}>
+          <div key={i} className={`chat-msg chat-msg--${m.role} ${m.isToolOutput ? 'chat-msg--tool-output' : ''}`}>
             <div className="chat-msg-header">
-              <span className="chat-role">{m.role.toUpperCase()}</span>
+              <span className="chat-role" style={m.isToolOutput ? { color: '#a8a29e' } : {}}>{m.isToolOutput ? 'TERMINAL' : m.role.toUpperCase()}</span>
               <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
-            <div className="chat-msg-bubble">
+            <div className="chat-msg-bubble" style={m.isToolOutput ? { backgroundColor: '#2d2d2d', border: '1px solid #444', color: '#ccc' } : {}}>
               <MessageContent 
                 content={m.content} 
                 writes={m.writes}
+                executes={m.executes}
                 onAccept={p => handleAccept(i, p)}
                 onRevert={p => handleRevert(i, p)}
                 onOpenDiff={onOpenDiff}
+                onExecuteAllow={(cmd, always) => handleExecuteAllow(i, m.executes?.findIndex(e => e.command === cmd) ?? -1, cmd, always)}
+                onExecuteCancel={(cmd) => handleExecuteCancel(i, m.executes?.findIndex(e => e.command === cmd) ?? -1)}
               />
               {m.images && m.images.length > 0 && (
                 <div className="chat-msg-images">
@@ -1109,6 +1311,19 @@ Rules:
       </div>
 
       <div className="chat-input-container">
+        {rootPath && (
+          <div className="chat-workspace-indicator">
+            <span className="chat-workspace-dot" />
+            <span className="chat-workspace-path" title={rootPath}>
+              {rootPath.split('/').pop()}
+            </span>
+          </div>
+        )}
+        {!rootPath && (
+          <div className="chat-workspace-indicator chat-workspace-indicator--none">
+            <span>⚠️ No project folder open — files will not be written</span>
+          </div>
+        )}
         <div className="chat-input-wrapper">
           {attachments.length > 0 && (
             <div className="chat-attachments-preview">

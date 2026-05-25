@@ -2,12 +2,13 @@ import { app, BrowserWindow, ipcMain, dialog, Menu, MenuItemConstructorOptions }
 import * as fs from 'fs'
 import * as path from 'path'
 import { join } from 'path'
-import { execFile } from 'child_process'
+import { execFile, exec } from 'child_process'
 import { promisify } from 'util'
 import * as http from 'http'
 import type { FSWatcher } from 'chokidar'
 
 const execFileAsync = promisify(execFile)
+const execAsync = promisify(exec)
 let currentWatcher: FSWatcher | null = null
 
 const forensicsLogPath = path.join(app.getPath('userData'), 'forensics.log')
@@ -295,6 +296,15 @@ ipcMain.handle('git-log', async (_e, dirPath: string) => {
     })
   } catch (e) {
     return []
+  }
+})
+
+ipcMain.handle('exec-command', async (_e, dirPath: string, command: string) => {
+  try {
+    const { stdout, stderr } = await execAsync(command, { cwd: dirPath, encoding: 'utf-8', timeout: 60000 })
+    return { success: true, stdout, stderr }
+  } catch (e: any) {
+    return { success: false, error: e.message, stdout: e.stdout, stderr: e.stderr }
   }
 })
 

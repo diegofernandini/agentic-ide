@@ -1951,6 +1951,40 @@ body {
   gap: 8px;
 }
 
+.chat-workspace-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(78, 201, 176, 0.06);
+  border: 1px solid rgba(78, 201, 176, 0.15);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #4ec9b0;
+}
+
+.chat-workspace-indicator--none {
+  background: rgba(244, 71, 71, 0.06);
+  border-color: rgba(244, 71, 71, 0.2);
+  color: #f44747;
+}
+
+.chat-workspace-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ec9b0;
+  flex-shrink: 0;
+}
+
+.chat-workspace-path {
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
 .chat-input-wrapper {
   background: #1e1e1e;
   border: 1px solid #3c3c3c;

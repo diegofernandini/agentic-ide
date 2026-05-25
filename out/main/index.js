@@ -26,6 +26,7 @@ const fs = require("fs");
 const path = require("path");
 const child_process = require("child_process");
 const util = require("util");
+const http = require("http");
 const pty = require("node-pty");
 const os = require("os");
 function _interopNamespaceDefault(e) {
@@ -46,9 +47,11 @@ function _interopNamespaceDefault(e) {
 }
 const fs__namespace = /* @__PURE__ */ _interopNamespaceDefault(fs);
 const path__namespace = /* @__PURE__ */ _interopNamespaceDefault(path);
+const http__namespace = /* @__PURE__ */ _interopNamespaceDefault(http);
 const pty__namespace = /* @__PURE__ */ _interopNamespaceDefault(pty);
 const os__namespace = /* @__PURE__ */ _interopNamespaceDefault(os);
 const execFileAsync = util.promisify(child_process.execFile);
+const execAsync = util.promisify(child_process.exec);
 let currentWatcher = null;
 const forensicsLogPath = path__namespace.join(electron.app.getPath("userData"), "forensics.log");
 async function logActivity(type, details) {
@@ -67,7 +70,9 @@ function createWindow() {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      webSecurity: false
+      // allow renderer to fetch localhost (Ollama) from file:// context
     }
   });
   if (process.env["ELECTRON_RENDERER_URL"]) {
@@ -314,6 +319,14 @@ electron.ipcMain.handle("git-log", async (_e, dirPath) => {
     return [];
   }
 });
+electron.ipcMain.handle("exec-command", async (_e, dirPath, command) => {
+  try {
+    const { stdout, stderr } = await execAsync(command, { cwd: dirPath, encoding: "utf-8", timeout: 6e4 });
+    return { success: true, stdout, stderr };
+  } catch (e) {
+    return { success: false, error: e.message, stdout: e.stdout, stderr: e.stderr };
+  }
+});
 electron.ipcMain.handle("github-login", async () => {
   const { shell } = require("electron");
   const CLIENT_ID = "your_client_id_here";
@@ -322,6 +335,60 @@ electron.ipcMain.handle("github-login", async () => {
   return true;
 });
 const sessionsPath = path__namespace.join(electron.app.getPath("userData"), "sessions.json");
+electron.ipcMain.handle("ollama-tags", async () => {
+  return new Promise((resolve) => {
+    const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
+      let body = "";
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const data = JSON.parse(body);
+          const names = (data.models || []).map((m) => m.name);
+          resolve(names);
+        } catch {
+          resolve([]);
+        }
+      });
+    });
+    req.on("error", () => resolve([]));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve([]);
+    });
+  });
+});
+electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const options = {
+      hostname: "127.0.0.1",
+      port: 11434,
+      path: "/api/chat",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body)
+      },
+      timeout: 12e4
+    };
+    const req = http__namespace.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => resolve(data));
+    });
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Ollama request timed out"));
+    });
+    req.write(body);
+    req.end();
+  });
+});
 electron.ipcMain.handle("load-sessions", async () => {
   try {
     const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");

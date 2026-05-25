@@ -25,11 +25,14 @@ electron.contextBridge.exposeInMainWorld("api", {
   saveSessions: (data) => electron.ipcRenderer.invoke("save-sessions", data),
   listBackups: () => electron.ipcRenderer.invoke("list-backups"),
   restoreBackup: (name) => electron.ipcRenderer.invoke("restore-backup", name),
+  execCommand: (cwd, command) => electron.ipcRenderer.invoke("exec-command", cwd, command),
   terminalCreate: (id, cwd) => electron.ipcRenderer.invoke("terminal-create", id, cwd),
   terminalWrite: (id, data) => electron.ipcRenderer.invoke("terminal-write", id, data),
   terminalResize: (id, cols, rows) => electron.ipcRenderer.invoke("terminal-resize", id, cols, rows),
   terminalKill: (id) => electron.ipcRenderer.invoke("terminal-kill", id),
   getHistoricalSessions: () => electron.ipcRenderer.invoke("get-historical-sessions"),
+  ollamaTags: () => electron.ipcRenderer.invoke("ollama-tags"),
+  ollamaChat: (payload) => electron.ipcRenderer.invoke("ollama-chat", payload),
   onTerminalData: (id, cb) => {
     electron.ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data));
   },

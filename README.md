@@ -7,7 +7,7 @@ A minimal VS Code-like IDE with an agentic chat panel powered by Ollama.
 - Node.js 18+¬
 - [Ollama](https://ollama.ai) running locally (`ollama serve`)
 - At least one model pulled, e.g. `ollama pull llama3`
-
+/?
 ## Setup
 
 ```bash

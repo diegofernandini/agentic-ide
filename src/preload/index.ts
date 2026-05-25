@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('api', {
   saveSessions: (data: string) => ipcRenderer.invoke('save-sessions', data),
   listBackups: () => ipcRenderer.invoke('list-backups'),
   restoreBackup: (name: string) => ipcRenderer.invoke('restore-backup', name),
+  execCommand: (cwd: string, command: string) => ipcRenderer.invoke('exec-command', cwd, command),
   terminalCreate: (id: string, cwd: string) => ipcRenderer.invoke('terminal-create', id, cwd),
   terminalWrite: (id: string, data: string) => ipcRenderer.invoke('terminal-write', id, data),
   terminalResize: (id: string, cols: number, rows: number) => ipcRenderer.invoke('terminal-resize', id, cols, rows),
