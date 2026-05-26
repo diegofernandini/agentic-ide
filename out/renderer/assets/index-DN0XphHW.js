@@ -7093,48 +7093,37 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$s = [
+const __iconNode$r = [
   ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
   ["path", { d: "M4 7h16", key: "6tx8e3" }],
   ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
   ["path", { d: "M20 17H4", key: "h6l3hr" }]
 ];
-const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$s);
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$r);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$r = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$r);
+const __iconNode$q = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$q);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$q = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$q);
+const __iconNode$p = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$p);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$p = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$p);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$o = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
-];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
+const __iconNode$o = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$o);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7142,6 +7131,17 @@ const CircleCheck = createLucideIcon("circle-check", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
+];
+const CircleCheck = createLucideIcon("circle-check", __iconNode$n);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$m = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -7155,18 +7155,7 @@ const __iconNode$n = [
   ["path", { d: "M8 11h.01", key: "1dfujw" }],
   ["path", { d: "M8 16h.01", key: "18s6g9" }]
 ];
-const ClipboardList = createLucideIcon("clipboard-list", __iconNode$n);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$m = [
-  ["rect", { width: "14", height: "14", x: "8", y: "8", rx: "2", ry: "2", key: "17jyea" }],
-  ["path", { d: "M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2", key: "zix9uf" }]
-];
-const Copy = createLucideIcon("copy", __iconNode$m);
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$m);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -8214,13 +8203,16 @@ function getLanguage(path) {
   };
   return map[ext] || "plaintext";
 }
-function Editor({ path, content, onChange, onSave, sessions, onRestoreSession, onOpenFolder }) {
+function Editor({ path, content, onChange, onSave, onSaveAs, sessions, onRestoreSession, onOpenFolder }) {
   const editorRef = reactExports.useRef(null);
   const [wordWrap, setWordWrap] = reactExports.useState("on");
   function handleMount(ed2, monaco) {
     editorRef.current = ed2;
     ed2.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       onSave(ed2.getValue());
+    });
+    ed2.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
+      onSaveAs?.(ed2.getValue());
     });
     ed2.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
       ed2.getAction("actions.find")?.run();
@@ -8253,22 +8245,33 @@ function Editor({ path, content, onChange, onSave, sessions, onRestoreSession, o
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-container", children: path ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-breadcrumb", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "breadcrumb-actions", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find (⌘F)", onClick: triggerFind, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find & Replace (⌘H)", onClick: triggerReplace, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find (⌘F)", onClick: triggerFind, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find & Replace (⌘H)", onClick: triggerReplace, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Format Document", onClick: formatDocument, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h8v1.5H2V6zm0 4h10v1.5H2V10zm0 4h6v1.5H2V14z" }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Format Document", onClick: formatDocument, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h8v1.5H2V6zm0 4h10v1.5H2V10zm0 4h6v1.5H2V14z" }) }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",
         {
           title: `Word Wrap: ${wordWrap === "on" ? "On" : "Off"}`,
           onClick: toggleWordWrap,
           className: `bc-btn ${wordWrap === "on" ? "bc-btn--active" : ""}`,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h9.5v1.5H2V6zm9.5 0h1a2 2 0 0 1 0 4h-1v1.5l-2-2.25L11.5 7V8.5h1a.5.5 0 0 0 0-1h-1V6zM2 10h6v1.5H2V10zm0 4h8v1.5H2V14z" }) })
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h9.5v1.5H2V6zm9.5 0h1a2 2 0 0 1 0 4h-1v1.5l-2-2.25L11.5 7V8.5h1a.5.5 0 0 0 0-1h-1V6zM2 10h6v1.5H2V10zm0 4h8v1.5H2V14z" }) })
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Save (⌘S)", onClick: () => onSave(editorRef.current?.getValue() || content), className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z" }) }) })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bc-divider" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { title: "Save (⌘S)", onClick: () => onSave(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z" }) }),
+        "Save"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { title: "Save As (⌘⇧S)", onClick: () => onSaveAs?.(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save-as", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12.5 9.5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2a.5.5 0 0 1 .5-.5z" })
+        ] }),
+        "Save As"
+      ] })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       Ft,
@@ -8469,7 +8472,7 @@ function Markdown({ text }) {
         }) }, idx)) }, key)
       );
     } else if (mode === "list") {
-      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2) }, idx)) }, key));
+      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2) }, `${key}-li-${idx}`)) }, key));
     } else {
       const paraLines = [];
       const flushPara = (k2) => {
@@ -8549,11 +8552,12 @@ function Markdown({ text }) {
   function parseInline(t2) {
     const tokens = [];
     let i = 0;
+    let tokenIndex = 0;
     while (i < t2.length) {
       if (t2.startsWith("**", i)) {
         const end = t2.indexOf("**", i + 2);
         if (end !== -1) {
-          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, i));
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, `bold-${tokenIndex++}`));
           i = end + 2;
           continue;
         } else {
@@ -8565,7 +8569,7 @@ function Markdown({ text }) {
       if (t2[i] === "`") {
         const end = t2.indexOf("`", i + 1);
         if (end !== -1) {
-          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, i));
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, `code-${tokenIndex++}`));
           i = end + 1;
           continue;
         } else {
@@ -8591,40 +8595,104 @@ function Markdown({ text }) {
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "markdown-body", children: parts });
 }
-function MessageContent({ content, writes, onAccept, onRevert }) {
-  const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
+function MessageContent({ content, writes, executes, onAccept, onRevert, onOpenDiff, onExecuteAllow, onExecuteAlwaysAllow, onExecuteCancel }) {
+  const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g;
   const parts = [];
   let last = 0;
   let match;
   while ((match = blockRe.exec(content)) !== null) {
+    let handleFileClick = function() {
+      if (type === "replace" && write) {
+        onOpenDiff?.(filePath, write.prevContent ?? "", write.content);
+      } else if (type === "write" && write) {
+        onOpenDiff?.(filePath, "", write.content);
+      }
+    };
     if (match.index > last) {
       parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx(Markdown, { text: content.slice(last, match.index) }, `text-${last}`));
     }
     const type = match[1];
-    const filePath = decodeURIComponent(match[2].trim());
+    const filePath = match[2] ? decodeURIComponent(match[2].trim()) : "";
     const blockContent = match[3];
     const write = writes?.find((w2) => w2.path.endsWith(filePath) || w2.path === filePath);
     const fileName = filePath.split("/").pop();
+    if (type === "execute") {
+      const command = blockContent.trim();
+      const exec = executes?.find((e) => e.command === command);
+      if (!exec) {
+        parts.push(
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { margin: "8px 0", padding: "10px 12px", background: "rgba(255,255,255,0.04)", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", fontSize: "12px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", color: "#a8a29e" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 12, strokeWidth: 2 }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Suggested command:" })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { background: "rgba(0,0,0,0.3)", padding: "2px 6px", borderRadius: "3px", fontSize: "11px" }, children: command }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: "6px", fontSize: "11px", color: "#888" }, children: [
+              "Switch to ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { style: { color: "#60a5fa" }, children: "Agent" }),
+              " mode to execute this command."
+            ] })
+          ] }, match.index)
+        );
+        last = blockRe.lastIndex;
+        continue;
+      }
+      if (exec.status !== "pending") {
+        parts.push(
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { margin: "8px 0", fontSize: "11px", color: "#888", display: "flex", alignItems: "center", gap: "6px" }, children: [
+            exec.status === "completed" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { size: 12, color: "#10b981" }) : exec.status === "error" ? /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 12, color: "#ef4444" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner", style: { width: 10, height: 10, borderBottomColor: "transparent" } }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              exec.status === "completed" ? "Executed:" : exec.status === "error" ? "Failed:" : "Running:",
+              " ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { background: "transparent", padding: 0 }, children: command })
+            ] })
+          ] }, match.index)
+        );
+        last = blockRe.lastIndex;
+        continue;
+      }
+      parts.push(
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-header", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-info", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-icon", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 13, strokeWidth: 2 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-file", children: command }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-type", children: "execute" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--revert", onClick: () => onExecuteCancel?.(command), children: "Cancel" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onExecuteAllow?.(command, false), children: "Allow" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onExecuteAllow?.(command, true), children: "Always" })
+          ] }) })
+        ] }) }, match.index)
+      );
+      last = blockRe.lastIndex;
+      continue;
+    }
     parts.push(
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-header", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-info", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-icon", children: type === "replace" ? /* @__PURE__ */ jsxRuntimeExports.jsx(FileDiff, { size: 13, strokeWidth: 2 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(FilePlus, { size: 13, strokeWidth: 2 }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-file", children: fileName }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: "write-block-file write-block-file--clickable",
+              onClick: handleFileClick,
+              title: type === "replace" ? "View diff" : "Preview file",
+              children: fileName
+            }
+          ),
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "write-block-type", children: type === "replace" ? "patch" : "write" })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-block-actions", children: [
-          write && write.accepted !== null ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `write-status-pill ${write.accepted ? "pill--accepted" : "pill--reverted"}`, children: write.accepted ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { size: 10, strokeWidth: 2.5 }),
-            " Accepted"
-          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 10, strokeWidth: 2.5 }),
-            " Reverted"
-          ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--revert", onClick: () => onRevert(filePath), children: "Discard" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onAccept(filePath), children: "Apply" })
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-icon-btn", onClick: () => navigator.clipboard.writeText(blockContent), title: "Copy", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { size: 12, strokeWidth: 1.8 }) })
-        ] })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "write-block-actions", children: write && write.accepted !== null ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `write-status-pill ${write.accepted ? "pill--accepted" : "pill--reverted"}`, children: write.accepted ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { size: 10, strokeWidth: 2.5 }),
+          " Accepted"
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { size: 10, strokeWidth: 2.5 }),
+          " Reverted"
+        ] }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "write-pending-actions", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--revert", onClick: () => onRevert(filePath), children: "Discard" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "write-btn write-btn--accept", onClick: () => onAccept(filePath), children: "Apply" })
+        ] }) })
       ] }) }, match.index)
     );
     last = blockRe.lastIndex;
@@ -8644,6 +8712,7 @@ function ChatPanel({
   onWriteFile,
   onRefreshTree,
   onOpenFile,
+  onOpenDiff,
   onSessionsChange,
   activeId: activeIdProp,
   onActiveIdChange,
@@ -8661,12 +8730,15 @@ function ChatPanel({
     if (activeIdProp && activeIdProp !== activeId) {
       setActiveId(activeIdProp);
     }
-  }, [activeIdProp]);
+  }, [activeIdProp, activeId]);
   reactExports.useEffect(() => {
     if (activeId && (openFiles || activeFile)) {
       setSessions((prev) => {
         const current = prev.find((s15) => s15.id === activeId);
         if (!current) return prev;
+        if (current.messages.length === 0 && current.tabs === void 0 && current.openFile === void 0) {
+          return prev;
+        }
         const isTabsEqual = JSON.stringify(current.tabs || []) === JSON.stringify(openFiles || []);
         const isFileEqual = current.openFile === activeFile;
         if (isTabsEqual && isFileEqual) return prev;
@@ -8704,6 +8776,17 @@ function ChatPanel({
   const [isDragging, setIsDragging] = reactExports.useState(false);
   const hasLoadedRef = reactExports.useRef(false);
   const startTimeRef = reactExports.useRef(0);
+  const [alwaysAllowedCommands, setAlwaysAllowedCommands] = reactExports.useState(() => {
+    try {
+      const stored = localStorage.getItem("alwaysAllowedCommands");
+      if (stored) return new Set(JSON.parse(stored));
+    } catch {
+    }
+    return /* @__PURE__ */ new Set();
+  });
+  reactExports.useEffect(() => {
+    localStorage.setItem("alwaysAllowedCommands", JSON.stringify(Array.from(alwaysAllowedCommands)));
+  }, [alwaysAllowedCommands]);
   reactExports.useEffect(() => {
     window.api.loadSessions().then((saved) => {
       if (saved && saved.length > 0) {
@@ -8831,7 +8914,18 @@ function ChatPanel({
       sys += `
 
 [MODE: ASK]
-You are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code. DO NOT output any file modifications. If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:' or 'replace:' prefixes. If you detect a possible improvement or a code change that should be applied, explicitly prompt the user to switch to 'Agent' mode so you can implement it for them, or offer related subjects to clear up any doubts.`;
+You are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code.
+
+⛔ STRICTLY FORBIDDEN in ASK mode:
+- Do NOT output any file modifications (no write: or replace: blocks)
+- Do NOT execute any commands (no execute blocks)
+- Do NOT perform any actions on the project
+
+If you detect that the user's request involves making changes, running commands, or performing tasks:
+1. Explain what would need to be done conceptually
+2. Explicitly suggest: "Switch to **Agent** mode to implement these changes" or "Switch to **Plan** mode to create a detailed plan first"
+
+If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:', 'replace:', or 'execute' prefixes.`;
     } else if (sessionMode === "plan") {
       const planFile = `plans/PLAN-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.md`;
       sys += ` You are in PLANNING mode. Your ONLY output must be a structured requirements and implementation plan written to a markdown file.
@@ -8839,6 +8933,7 @@ You are in Q&A mode. Your goal is to explain concepts, answer questions, and hel
 ⛔ STRICTLY FORBIDDEN:
 - Do NOT write, modify, or replace ANY source code files (.ts, .tsx, .js, .py, .css, etc.)
 - Do NOT use replace: blocks under any circumstance
+- Do NOT execute any commands (no execute blocks)
 - Do NOT suggest the user manually make changes
 - Do NOT implement anything
 
@@ -8875,27 +8970,71 @@ Write the complete plan to a single markdown file using this exact format:
 
 After writing the plan file, briefly summarize what you've planned in 1-2 sentences. The user can then review PLAN.md and switch to Agent mode to implement it.`;
     } else {
-      sys += ` You have direct write access to the user's project files.
+      sys += ` You have DIRECT WRITE ACCESS to the user's project files. You are NOT a chatbot — you are an autonomous coding agent that writes files.
 
-When you need to modify existing files, you MUST use this exact format:
-\`\`\`replace:relative/path/to/file.ext
+⚠️ CRITICAL OUTPUT RULES — YOU MUST FOLLOW THESE EXACTLY:
+
+1. NEVER use standard markdown code blocks like \`\`\`python or \`\`\`js to show code. Those do NOTHING.
+2. To CREATE a new file, you MUST use this EXACT format (the file will be written to disk automatically):
+
+\`\`\`write:path/to/file.py
+# full file content here
+\`\`\`
+
+3. To EDIT an existing file, you MUST use this EXACT format:
+
+\`\`\`replace:path/to/file.py
 <<<<
-existing code to replace
+exact lines to remove
 ====
-new code to insert
+new lines to insert
 >>>>
 \`\`\`
 
-When you need to create NEW files, use:
-\`\`\`write:relative/path/to/file.ext
-full content
+EXAMPLE — if asked to create app.py:
+\`\`\`write:app.py
+from flask import Flask
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return 'Hello World'
 \`\`\`
 
+EXAMPLE — if asked to add a route to existing app.py:
+\`\`\`replace:app.py
+<<<<
+@app.route('/')
+def hello():
+    return 'Hello World'
+====
+@app.route('/')
+def hello():
+    return 'Hello World'
+
+@app.route('/health')
+def health():
+    return 'OK'
+>>>>
+\`\`\`
+
+4. To EXECUTE a background terminal command, use this EXACT format:
+
+\`\`\`execute
+npm install
+\`\`\`
+
+⚠️ CRITICAL EXECUTION RULES:
+- You may only emit ONE execute block per response. After emitting it, STOP and wait for the result.
+- Do NOT list multiple execute blocks in the same message.
+- After receiving the command result, you may then emit the next execute block if needed.
+- This is a sequential workflow: propose one action → wait for approval/result → propose the next.
+
 Rules:
-- ALWAYS use replace blocks for edits.
-- The <<<< section must match exactly.
-- ALWAYS use relative paths.
-- Write ALL necessary files immediately.`;
+- Use RELATIVE paths from the project root.
+- Write ALL files immediately — do not ask for permission.
+- The <<<< section must match the existing file content EXACTLY.
+- After writing files, briefly explain what you did.`;
     }
     if (sessionMode === "debug") {
       sys += `
@@ -8917,7 +9056,11 @@ ${fileContent.slice(0, 4e3)}
     }
     sys += `
 
-Project root: ${rootPath}`;
+⚠️ PROJECT ROOT (all file paths MUST be relative to this directory): ${rootPath}`;
+    sys += `
+✅ CORRECT: \`\`\`write:src/app.py  — resolves to ${rootPath}/src/app.py`;
+    sys += `
+❌ WRONG: absolute paths, paths starting with /tmp, or paths outside the project root`;
     try {
       const IGNORE = ["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv"];
       const files = await window.api.listFiles(rootPath);
@@ -8939,17 +9082,58 @@ ${fileContent.slice(0, 3e3)}
     }
     return sys;
   }
-  async function send() {
-    if (!input.trim() || loading || !model) return;
-    const userMsg = {
-      role: "user",
-      content: input.trim(),
-      images: attachments.length > 0 ? attachments.map((a) => a.base64) : void 0
-    };
-    const history = [...messages, userMsg];
-    setMessages(() => history);
-    setInput("");
-    setAttachments([]);
+  async function executeAndReply(command, getMsgIdx, execIdx) {
+    if (!rootPath) return;
+    const res = await window.api.execCommand(rootPath, command);
+    setMessages((prev) => {
+      const idx = getMsgIdx(prev);
+      let updatedMsgs = prev;
+      if (idx !== -1) {
+        updatedMsgs = prev.map((m2, i) => i === idx ? {
+          ...m2,
+          executes: m2.executes?.map((ex, j2) => j2 === execIdx ? {
+            ...ex,
+            status: res.success ? "completed" : "error",
+            output: res.stdout,
+            error: res.error || res.stderr
+          } : ex)
+        } : m2);
+      }
+      const outputText = res.success ? res.stdout?.trim() ? `Command \`${command}\` executed successfully.
+
+Output:
+\`\`\`
+${res.stdout.trim()}
+\`\`\`` : `Command \`${command}\` executed successfully without output.` : `Command \`${command}\` failed.
+
+Error: ${res.error}
+
+Stderr:
+\`\`\`
+${res.stderr?.trim() || "(no output)"}
+\`\`\``;
+      const newHistory = [...updatedMsgs, { role: "user", content: outputText, isToolOutput: true }];
+      setTimeout(() => send(newHistory), 0);
+      return updatedMsgs;
+    });
+  }
+  async function send(overrideHistory) {
+    if (!overrideHistory && (!input.trim() || loading || !model)) return;
+    let history;
+    if (overrideHistory) {
+      history = overrideHistory;
+      setMessages(() => history);
+    } else {
+      const userMsg = {
+        role: "user",
+        content: input.trim(),
+        images: attachments.length > 0 ? attachments.map((a) => a.base64) : void 0
+      };
+      history = [...messages, userMsg];
+      setMessages(() => history);
+      setInput("");
+      setAttachments([]);
+    }
     setLoading(true);
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, workspace: s15.workspace || rootPath } : s15));
     startTimeRef.current = Date.now();
@@ -8984,6 +9168,7 @@ ${fileContent.slice(0, 3e3)}
       const activeIdAtSend = activeId;
       let processedUpTo = 0;
       const streamWrites = [];
+      const streamExecutes = [];
       let promptTokens = 0;
       let responseTokens = 0;
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
@@ -9008,15 +9193,27 @@ ${fileContent.slice(0, 3e3)}
                 msgs[msgs.length - 1] = { role: "assistant", content: assistantText };
                 return { ...s15, messages: msgs };
               }));
-              const blockRe = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
+              const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g;
               blockRe.lastIndex = processedUpTo;
               let m2;
               while ((m2 = blockRe.exec(assistantText)) !== null) {
                 processedUpTo = m2.index + m2[0].length;
                 const type = m2[1];
-                const filePath = decodeURIComponent(m2[2].trim());
+                const filePath = m2[2] ? decodeURIComponent(m2[2].trim()) : "";
                 const blockContent = m2[3];
                 if (!rootPath) continue;
+                if (type === "execute") {
+                  if (activeSession.mode === "ask" || activeSession.mode === "plan") continue;
+                  if (streamExecutes.length > 0) continue;
+                  const command = blockContent.trim();
+                  if (command && rootPath) {
+                    let status = "pending";
+                    if (alwaysAllowedCommands.has(command)) status = "running";
+                    streamExecutes.push({ command, status });
+                  }
+                  continue;
+                }
+                if (activeSession.mode === "ask") continue;
                 const isPlanMode = activeSession.mode === "plan";
                 const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
                 if (isPlanMode && !isPlanFile) continue;
@@ -9059,18 +9256,24 @@ ${fileContent.slice(0, 3e3)}
         }
       }
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1e3);
-      const writes = streamWrites.length > 0 ? streamWrites : await processWrites(assistantText);
+      const blocks = streamWrites.length > 0 || streamExecutes.length > 0 ? { writes: streamWrites, executes: streamExecutes } : await processBlocks(assistantText);
       setMessages((prev) => {
         const updated = [...prev];
         updated[updated.length - 1] = {
           ...updated[updated.length - 1],
-          writes,
+          writes: blocks.writes,
+          executes: blocks.executes,
           elapsed,
           promptTokens,
           responseTokens,
           model
         };
         return updated;
+      });
+      blocks.executes.forEach((ex, idx) => {
+        if (ex.status === "running" && rootPath) {
+          executeAndReply(ex.command, (updated) => updated.length - 1, idx);
+        }
       });
       if (activeSession.name.startsWith("Session ") && history.length >= 1) {
         generateSessionTitle(activeIdAtSend, [...history, { role: "assistant", content: assistantText }]);
@@ -9116,16 +9319,29 @@ ${fileContent.slice(0, 3e3)}
   function joinPath(base, rel) {
     return base.replace(/\/$/, "") + "/" + rel.replace(/^\//, "");
   }
-  async function processWrites(text) {
-    const re2 = /```(write|replace):\s*([^\n]+?)\s*\n([\s\S]*?)```/g;
+  async function processBlocks(text) {
+    const re2 = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g;
     let match;
-    const actions = [];
+    const writes = [];
+    const executes = [];
     const isPlanMode = activeSession.mode === "plan";
     while ((match = re2.exec(text)) !== null) {
       const type = match[1];
-      const filePath = decodeURIComponent(match[2].trim());
+      const filePath = match[2] ? decodeURIComponent(match[2].trim()) : "";
       const blockContent = match[3];
+      if (type === "execute") {
+        if (activeSession.mode === "ask" || activeSession.mode === "plan") continue;
+        if (executes.length > 0) continue;
+        const command = blockContent.trim();
+        if (command && rootPath) {
+          let status = "pending";
+          if (alwaysAllowedCommands.has(command)) status = "running";
+          executes.push({ command, status });
+        }
+        continue;
+      }
       if (!rootPath) continue;
+      if (activeSession.mode === "ask") continue;
       const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
       if (isPlanMode && !isPlanFile) continue;
       if (isPlanMode && type === "replace") continue;
@@ -9156,10 +9372,10 @@ ${fileContent.slice(0, 3e3)}
         if (openFile && abs === openFile) onWriteFile(finalContent);
         if (isPlanMode && isPlanFile && onOpenFile) onOpenFile(abs);
       }
-      actions.push({ path: abs, content: finalContent, accepted: null, prevContent });
+      writes.push({ path: abs, content: finalContent, accepted: null, prevContent });
     }
-    if (actions.length > 0) onRefreshTree();
-    return actions;
+    if (writes.length > 0) onRefreshTree();
+    return { writes, executes };
   }
   async function handleAccept(msgIdx, filePath) {
     const write = messages[msgIdx].writes?.find((w2) => w2.path.endsWith(filePath) || w2.path === filePath);
@@ -9183,6 +9399,22 @@ ${fileContent.slice(0, 3e3)}
     setMessages((prev) => prev.map((m2, i) => i === msgIdx ? {
       ...m2,
       writes: m2.writes?.map((w2) => w2.path === write.path ? { ...w2, accepted: false } : w2)
+    } : m2));
+  }
+  function handleExecuteAllow(msgIdx, execIdx, command, always) {
+    if (always) {
+      setAlwaysAllowedCommands((prev) => /* @__PURE__ */ new Set([...prev, command]));
+    }
+    setMessages((prev) => prev.map((m2, i) => i === msgIdx ? {
+      ...m2,
+      executes: m2.executes?.map((ex, j2) => j2 === execIdx ? { ...ex, status: "running" } : ex)
+    } : m2));
+    executeAndReply(command, (msgs) => msgIdx, execIdx);
+  }
+  function handleExecuteCancel(msgIdx, execIdx) {
+    setMessages((prev) => prev.map((m2, i) => i === msgIdx ? {
+      ...m2,
+      executes: m2.executes?.map((ex, j2) => j2 === execIdx ? { ...ex, status: "error", error: "Cancelled by user" } : ex)
     } : m2));
   }
   function processFile(file) {
@@ -9304,19 +9536,23 @@ ${ev.target?.result}
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
-          messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role}`, children: [
+          messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role} ${m2.isToolOutput ? "chat-msg--tool-output" : ""}`, children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: m2.role.toUpperCase() }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", style: m2.isToolOutput ? { color: "#a8a29e" } : {}, children: m2.isToolOutput ? "TERMINAL" : m2.role.toUpperCase() }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", style: m2.isToolOutput ? { backgroundColor: "#2d2d2d", border: "1px solid #444", color: "#ccc" } : {}, children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 MessageContent,
                 {
                   content: m2.content,
                   writes: m2.writes,
+                  executes: m2.executes,
                   onAccept: (p2) => handleAccept(i, p2),
-                  onRevert: (p2) => handleRevert(i, p2)
+                  onRevert: (p2) => handleRevert(i, p2),
+                  onOpenDiff,
+                  onExecuteAllow: (cmd, always) => handleExecuteAllow(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1, cmd, always),
+                  onExecuteCancel: (cmd) => handleExecuteCancel(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1)
                 }
               ),
               m2.images && m2.images.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg-images", children: m2.images.map((img, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: img, className: "chat-msg-image", alt: "attachment", onClick: () => window.open(img) }, idx)) }),
@@ -9331,7 +9567,7 @@ ${ev.target?.result}
                 ] })
               ] })
             ] })
-          ] }, i)),
+          ] }, `msg-${activeId}-${i}`)),
           loading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg chat-msg--assistant", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: "AGENT" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner", style: { marginLeft: 8 } }),
@@ -9339,72 +9575,79 @@ ${ev.target?.result}
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-input-container", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
-          attachments.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachments-preview", children: [
-            attachments.map((att, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachment-card", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: att.base64, alt: att.name, className: "chat-attachment-thumbnail" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-attachment-name", title: att.name, children: att.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-attachment-remove", onClick: () => removeAttachment(idx), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
-            ] }, idx)),
-            !isModelMultimodal(model) && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-attachment-warning", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-              "⚠️ Model ",
-              model,
-              " may not support images"
-            ] }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-container", children: [
+          rootPath && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-workspace-indicator", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-workspace-dot" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-workspace-path", title: rootPath, children: rootPath.split("/").pop() })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "textarea",
-            {
-              className: "chat-input",
-              placeholder: "Ask anything, @ to mention...",
-              value: input,
-              onChange: (e) => setInput(e.target.value),
-              onKeyDown: handleKey,
-              onPaste: handlePaste,
-              rows: Math.min(10, input.split("\n").length || 1),
-              style: { height: "auto" }
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach }),
+          !rootPath && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-workspace-indicator chat-workspace-indicator--none", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "⚠️ No project folder open — files will not be written" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-wrapper", children: [
+            attachments.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachments-preview", children: [
+              attachments.map((att, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-attachment-card", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: att.base64, alt: att.name, className: "chat-attachment-thumbnail" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-attachment-name", title: att.name, children: att.name }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-attachment-remove", onClick: () => removeAttachment(idx), children: /* @__PURE__ */ jsxRuntimeExports.jsx(X$1, { size: 10, strokeWidth: 2.5 }) })
+              ] }, idx)),
+              !isModelMultimodal(model) && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-attachment-warning", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                "⚠️ Model ",
+                model,
+                " may not support images"
+              ] }) })
+            ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "select",
+              "textarea",
               {
-                className: "chat-select chat-select--mode",
-                value: activeSession.mode,
-                onChange: (e) => setMode(e.target.value),
-                children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2.toUpperCase() }, m2))
+                className: "chat-input",
+                placeholder: "Ask anything, @ to mention...",
+                value: input,
+                onChange: (e) => setInput(e.target.value),
+                onKeyDown: handleKey,
+                onPaste: handlePaste,
+                rows: Math.min(10, input.split("\n").length || 1),
+                style: { height: "auto" }
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "select",
-              {
-                className: "chat-select chat-select--model",
-                value: model,
-                onChange: (e) => onModelChange(e.target.value),
-                children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "button",
-              {
-                className: `chat-action-btn ${autopilot ? "active" : ""}`,
-                onClick: () => {
-                  const next = !autopilot;
-                  setAutopilot(next);
-                  autopilotRef.current = next;
-                },
-                title: autopilot ? "Autopilot ON" : "Autopilot OFF",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 14, strokeWidth: 1.8 })
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim(), children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { size: 13, strokeWidth: 2 }),
-              "Send"
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "select",
+                {
+                  className: "chat-select chat-select--mode",
+                  value: activeSession.mode,
+                  onChange: (e) => setMode(e.target.value),
+                  children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2.toUpperCase() }, m2))
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "select",
+                {
+                  className: "chat-select chat-select--model",
+                  value: model,
+                  onChange: (e) => onModelChange(e.target.value),
+                  children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: `chat-action-btn ${autopilot ? "active" : ""}`,
+                  onClick: () => {
+                    const next = !autopilot;
+                    setAutopilot(next);
+                    autopilotRef.current = next;
+                  },
+                  title: autopilot ? "Autopilot ON" : "Autopilot OFF",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 14, strokeWidth: 1.8 })
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "send-btn", onClick: send, disabled: loading || !input.trim() || !model, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { size: 13, strokeWidth: 2 }),
+                "Send"
+              ] })
             ] })
           ] })
-        ] }) }),
+        ] }),
         showHistory && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "session-history-overlay", onClick: () => setShowHistory(false), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history", onClick: (e) => e.stopPropagation(), children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-history-header", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -19060,12 +19303,27 @@ function App() {
   const quickRef = reactExports.useRef(null);
   const lastRestoredSessionIdRef = reactExports.useRef("");
   reactExports.useEffect(() => {
-    fetch("http://localhost:11434/api/tags").then((r2) => r2.json()).then((data) => {
-      const names = (data.models || []).map((m2) => m2.name);
-      setModels(names);
-      if (names.length > 0) setModel(names[0]);
-    }).catch(() => {
-    });
+    const loadModels = async () => {
+      try {
+        const r2 = await fetch("http://127.0.0.1:11434/api/tags");
+        if (!r2.ok) throw new Error("bad status");
+        const data = await r2.json();
+        const names = (data.models || []).map((m2) => m2.name);
+        if (names.length > 0) {
+          setModels(names);
+          setModel(names[0]);
+          return;
+        }
+      } catch {
+      }
+      try {
+        const names = await window.api.ollamaTags();
+        setModels(names);
+        if (names.length > 0) setModel(names[0]);
+      } catch {
+      }
+    };
+    loadModels();
     window.api.loadSessions().then((sessions2) => {
       if (sessions2 && sessions2.user) {
         setUser(sessions2.user);
@@ -19105,22 +19363,34 @@ function App() {
       const activeSession = sessions.find((s15) => s15.id === activeId);
       if (activeSession) {
         lastRestoredSessionIdRef.current = activeId;
-        const savedTabs = activeSession.tabs || [];
-        const savedOpenFile = activeSession.openFile || null;
+        const savedTabs = activeSession.tabs;
+        const savedOpenFile = activeSession.openFile;
         const savedWorkspace = activeSession.workspace || null;
+        const hasPersistedState = savedTabs !== void 0 || savedOpenFile !== void 0;
+        if (!hasPersistedState) {
+          if (savedWorkspace && savedWorkspace !== rootPath) {
+            setRootPath(savedWorkspace);
+            window.api.readDir(savedWorkspace).then((t2) => setTree(t2)).catch(console.error);
+            setOpenDirs(/* @__PURE__ */ new Set());
+            window.api.listFiles(savedWorkspace).then((files) => setAllFiles(files)).catch(console.error);
+          }
+          return;
+        }
+        const resolvedTabs = savedTabs || [];
+        const resolvedOpenFile = savedOpenFile || null;
         if (savedWorkspace && savedWorkspace !== rootPath) {
           setRootPath(savedWorkspace);
           window.api.readDir(savedWorkspace).then((t2) => setTree(t2)).catch(console.error);
           setOpenDirs(/* @__PURE__ */ new Set());
           window.api.listFiles(savedWorkspace).then((files) => setAllFiles(files)).catch(console.error);
         }
-        if (JSON.stringify(tabs) !== JSON.stringify(savedTabs)) {
-          setTabs(savedTabs);
+        if (JSON.stringify(tabs) !== JSON.stringify(resolvedTabs)) {
+          setTabs(resolvedTabs);
         }
-        if (openFile !== savedOpenFile) {
-          setOpenFile(savedOpenFile);
-          if (savedOpenFile) {
-            window.api.readFile(savedOpenFile).then((content) => {
+        if (openFile !== resolvedOpenFile) {
+          setOpenFile(resolvedOpenFile);
+          if (resolvedOpenFile) {
+            window.api.readFile(resolvedOpenFile).then((content) => {
               setFileContent(content);
             }).catch(() => {
               setFileContent("");
@@ -19204,7 +19474,10 @@ function App() {
     }
   }
   async function saveFile(content) {
-    if (!openFile) return;
+    if (!openFile) {
+      await saveFileAs(content);
+      return;
+    }
     await window.api.writeFile(openFile, content);
     setFileContent(content);
     setDirtyTabs((prev) => {
@@ -19212,6 +19485,22 @@ function App() {
       next.delete(openFile);
       return next;
     });
+  }
+  async function saveFileAs(content) {
+    const defaultPath = rootPath ? rootPath + "/untitled" : "untitled";
+    const savedPath = await window.api.saveDialog(defaultPath, content);
+    if (!savedPath) return;
+    if (!tabs.includes(savedPath)) {
+      setTabs((prev) => [...prev, savedPath]);
+    }
+    setOpenFile(savedPath);
+    setFileContent(content);
+    setDirtyTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(savedPath);
+      return next;
+    });
+    await refreshTree();
   }
   async function refreshTree() {
     if (rootPath) setTree(await window.api.readDir(rootPath));
@@ -19529,6 +19818,7 @@ function App() {
                   }
                 },
                 onSave: saveFile,
+                onSaveAs: saveFileAs,
                 sessions,
                 onRestoreSession: setActiveId,
                 onOpenFolder: openFolder
@@ -19548,6 +19838,10 @@ function App() {
               onWriteFile: saveFile,
               onRefreshTree: refreshTree,
               onOpenFile: (path) => selectFile(path, true),
+              onOpenDiff: (filename, original, current) => {
+                setDiffInfo({ filename, original, current });
+                setOpenFile(null);
+              },
               onSessionsChange: setSessions,
               activeId,
               onActiveIdChange: setActiveId,

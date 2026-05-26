@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   ChevronLeft, ChevronRight, Search, TerminalSquare,
   Files, GitBranch, User, LayoutDashboard, Settings2,
@@ -100,6 +100,30 @@ export default function App() {
   const [model, setModel] = useState('')
   const [models, setModels] = useState<string[]>([])
 
+  // Wrapper to avoid re-applying identical sessions objects and causing update loops
+  const handleSessionsChange = useCallback((next: Session[]) => {
+    try {
+      // Strip ephemeral metadata (like lastActive) before comparing
+      const normalize = (s: Session) => {
+        const { lastActive, ...rest } = s as any
+        return rest
+      }
+      const normalized = next.map(normalize)
+      const json = JSON.stringify(normalized)
+      if ((App as any)._lastSessionsJson !== json) {
+        setSessions(next)
+        ;(App as any)._lastSessionsJson = json
+      }
+    } catch (e) {
+      setSessions(next)
+    }
+  }, [])
+
+  const handleActiveIdChange = useCallback((id: string) => {
+    if (!id) return
+    setActiveId(prev => prev === id ? prev : id)
+  }, [])
+
   const [terminalOpen, setTerminalOpen] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [loginLoading, setLoginLoading] = useState(false)
@@ -142,11 +166,19 @@ export default function App() {
     }
     loadModels()
 
-    // Load user session
-    window.api.loadSessions().then(sessions => {
-      if (sessions && (sessions as any).user) {
-        setUser((sessions as any).user)
-      }
+    // Load saved sessions and optional user info
+    window.api.loadSessions().then(data => {
+      try {
+        if (!data) return
+        if ((data as any).user) setUser((data as any).user)
+        if (Array.isArray(data)) {
+          setSessions(data as any)
+          if ((data as any).length > 0) setActiveId((data as any)[0].id)
+        } else if ((data as any).sessions && Array.isArray((data as any).sessions)) {
+          setSessions((data as any).sessions)
+          if ((data as any).sessions.length > 0) setActiveId((data as any).sessions[0].id)
+        }
+      } catch (e) {}
     })
   }, [])
 
@@ -247,11 +279,11 @@ export default function App() {
     setAllFiles(files)
   }
 
-  async function selectFile(path: string, fromHistory = false) {
+  const selectFile = useCallback(async (path: string, fromHistory = false) => {
     if (!tabs.includes(path)) {
       setTabs(prev => [...prev, path])
     }
-    
+
     const content = await window.api.readFile(path)
     setOpenFile(path)
     setFileContent(content)
@@ -265,7 +297,7 @@ export default function App() {
         return next
       })
     }
-  }
+  }, [tabs, historyIdx])
 
   function closeTab(path: string, e?: React.MouseEvent) {
     if (e) e.stopPropagation()
@@ -317,22 +349,11 @@ export default function App() {
     }
   }
 
-  async function saveFile(content: string) {
-    if (!openFile) {
-      // No path yet — open Save As dialog
-      await saveFileAs(content)
-      return
-    }
-    await window.api.writeFile(openFile, content)
-    setFileContent(content)
-    setDirtyTabs(prev => {
-      const next = new Set(prev)
-      next.delete(openFile)
-      return next
-    })
-  }
+  const refreshTree = useCallback(async () => {
+    if (rootPath) setTree(await window.api.readDir(rootPath))
+  }, [rootPath])
 
-  async function saveFileAs(content: string) {
+  const saveFileAs = useCallback(async (content: string) => {
     const defaultPath = rootPath ? rootPath + '/untitled' : 'untitled'
     const savedPath = await window.api.saveDialog(defaultPath, content)
     if (!savedPath) return
@@ -348,11 +369,22 @@ export default function App() {
       return next
     })
     await refreshTree()
-  }
+  }, [rootPath, tabs, refreshTree])
 
-  async function refreshTree() {
-    if (rootPath) setTree(await window.api.readDir(rootPath))
-  }
+  const saveFile = useCallback(async (content: string) => {
+    if (!openFile) {
+      // No path yet — open Save As dialog
+      await saveFileAs(content)
+      return
+    }
+    await window.api.writeFile(openFile, content)
+    setFileContent(content)
+    setDirtyTabs(prev => {
+      const next = new Set(prev)
+      next.delete(openFile)
+      return next
+    })
+  }, [openFile, saveFileAs])
 
   async function handleContextMenu(path: string, isDir: boolean) {
     const action = await window.api.showContextMenu(path, isDir)
@@ -419,6 +451,13 @@ export default function App() {
       return next
     })
   }
+
+  const handleOpenFile = useCallback((path: string) => selectFile(path, true), [selectFile])
+
+  const handleOpenDiff = useCallback((filename: string, original: string, current: string) => {
+    setDiffInfo({ filename, original, current })
+    setOpenFile(null)
+  }, [])
 
   const filteredFiles = quickQuery
     ? allFiles.filter(f => f.toLowerCase().includes(quickQuery.toLowerCase())).slice(0, 12)
@@ -701,14 +740,11 @@ export default function App() {
           fileContent={fileContent}
           onWriteFile={saveFile}
           onRefreshTree={refreshTree}
-          onOpenFile={(path) => selectFile(path, true)}
-          onOpenDiff={(filename, original, current) => {
-            setDiffInfo({ filename, original, current })
-            setOpenFile(null)
-          }}
-          onSessionsChange={setSessions}
+          onOpenFile={handleOpenFile}
+          onOpenDiff={handleOpenDiff}
+          onSessionsChange={handleSessionsChange}
           activeId={activeId}
-          onActiveIdChange={setActiveId}
+          onActiveIdChange={handleActiveIdChange}
           openFiles={tabs}
           activeFile={openFile}
         />

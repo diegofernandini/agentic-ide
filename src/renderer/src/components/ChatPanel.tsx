@@ -133,16 +133,16 @@ function Markdown({ text }: { text: string }) {
         </div>
       )
     } else if (mode === 'list') {
-      parts.push(<ul key={key} className="md-list">{currentBlock.map((li, idx) => <li key={idx}>{parseInline(li)}</li>)}</ul>)
+      parts.push(<ul key={key} className="md-list">{currentBlock.map((li, idx) => <li key={`${key}-li-${idx}`}>{parseInline(li, `${key}-li-${idx}`)}</li>)}</ul>)
     } else {
       // Group consecutive text lines into paragraphs; blank lines and headings split groups
       const paraLines: string[] = []
       const flushPara = (k: string) => {
         if (paraLines.length === 0) return
         const nodes: React.ReactNode[] = []
-        paraLines.forEach((l, li) => {
-          if (li > 0) nodes.push(<br key={`br-${li}`} />)
-          nodes.push(...(parseInline(l) as React.ReactNode[]))
+          paraLines.forEach((l, li) => {
+            if (li > 0) nodes.push(<br key={`br-${li}`} />)
+            nodes.push(...(parseInline(l, `${k}-line-${li}`) as React.ReactNode[]))
         })
         parts.push(<p key={k} className="md-p">{nodes}</p>)
         paraLines.length = 0
@@ -215,15 +215,16 @@ function Markdown({ text }: { text: string }) {
 
   flush(9999)
 
-  function parseInline(t: string) {
+  function parseInline(t: string, keyPrefix?: string) {
     const tokens: React.ReactNode[] = []
     let i = 0
+    let tokenIndex = 0
     while (i < t.length) {
       // Bold **
       if (t.startsWith('**', i)) {
         const end = t.indexOf('**', i + 2)
         if (end !== -1) {
-          tokens.push(<b key={i}>{t.slice(i + 2, end)}</b>)
+          tokens.push(<b key={`${keyPrefix ?? 'tok'}-bold-${tokenIndex++}`}>{t.slice(i + 2, end)}</b>)
           i = end + 2
           continue
         } else {
@@ -236,7 +237,7 @@ function Markdown({ text }: { text: string }) {
       if (t[i] === '`') {
         const end = t.indexOf('`', i + 1)
         if (end !== -1) {
-          tokens.push(<code key={i} className="md-inline-code">{t.slice(i + 1, end)}</code>)
+          tokens.push(<code key={`${keyPrefix ?? 'tok'}-code-${tokenIndex++}`} className="md-inline-code">{t.slice(i + 1, end)}</code>)
           i = end + 1
           continue
         } else {
@@ -306,7 +307,25 @@ function MessageContent({ content, writes, executes, onAccept, onRevert, onOpenD
       const command = blockContent.trim()
       const exec = executes?.find(e => e.command === command)
       
-      if (exec && exec.status !== 'pending') {
+      // If no matching exec (blocked in ask/plan modes), show as a suggestion
+      if (!exec) {
+        parts.push(
+          <div key={match.index} style={{ margin: '8px 0', padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)', fontSize: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', color: '#a8a29e' }}>
+              <Zap size={12} strokeWidth={2} />
+              <span>Suggested command:</span>
+            </div>
+            <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '3px', fontSize: '11px' }}>{command}</code>
+            <div style={{ marginTop: '6px', fontSize: '11px', color: '#888' }}>
+              Switch to <strong style={{ color: '#60a5fa' }}>Agent</strong> mode to execute this command.
+            </div>
+          </div>
+        )
+        last = blockRe.lastIndex
+        continue
+      }
+
+      if (exec.status !== 'pending') {
         parts.push(
           <div key={match.index} style={{ margin: '8px 0', fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>
             {exec.status === 'completed' ? <CheckCircle2 size={12} color="#10b981" /> : 
@@ -396,26 +415,38 @@ export default function ChatPanel({
   onSessionsChange,
   activeId: activeIdProp, onActiveIdChange, openFiles, activeFile
 }: Props) {
+  const _dbg = (m: string) => console.debug && console.debug(`ChatPanel.effect: ${m}`)
   const [sessions, setSessions] = useState<Session[]>(() => [newSession(1, 'agent', rootPath)])
   const [activeId, setActiveId] = useState<string>(sessions[0].id)
 
+  const skipNextActiveSyncRef = useRef(false)
+
   // Bi-directional sync for activeId
   useEffect(() => {
+    _dbg('sync -> onActiveIdChange')
+    if (skipNextActiveSyncRef.current) {
+      skipNextActiveSyncRef.current = false
+      return
+    }
     if (activeId && onActiveIdChange) {
       onActiveIdChange(activeId);
     }
   }, [activeId, onActiveIdChange]);
 
   useEffect(() => {
+    _dbg('prop activeIdProp -> setActiveId')
     if (activeIdProp && activeIdProp !== activeId) {
+      // Mark that the next local activeId change was caused by prop sync
+      skipNextActiveSyncRef.current = true
       setActiveId(activeIdProp);
     }
-  }, [activeIdProp]);
+  }, [activeIdProp, activeId]);
 
   // Save open tabs and active file dynamically into the active session.
   // Only sync into sessions that already have messages — a brand-new session
   // should start clean and not inherit the previous session's editor state.
   useEffect(() => {
+    _dbg('sync openFiles/activeFile -> session tabs')
     if (activeId && (openFiles || activeFile)) {
       setSessions(prev => {
         const current = prev.find(s => s.id === activeId);
@@ -438,6 +469,7 @@ export default function ChatPanel({
 
   // Keep active session's workspace in sync with rootPath changes
   useEffect(() => {
+    _dbg('sync rootPath -> session.workspace')
     if (activeId && rootPath) {
       setSessions(prev => {
         const current = prev.find(s => s.id === activeId);
@@ -476,28 +508,53 @@ export default function ChatPanel({
   })
 
   useEffect(() => {
+    _dbg('alwaysAllowedCommands -> save')
     localStorage.setItem('alwaysAllowedCommands', JSON.stringify(Array.from(alwaysAllowedCommands)))
   }, [alwaysAllowedCommands])
 
   useEffect(() => {
-    window.api.loadSessions().then(saved => {
-      if (saved && saved.length > 0) { 
-        const migrated = saved.map((s: any) => ({
-          ...s,
-          createdAt: s.createdAt || Date.now(),
-          lastActive: s.lastActive || Date.now()
-        }))
-        setSessions(migrated)
-        setActiveId(migrated[0].id) 
-        if (onSessionsChange) onSessionsChange(migrated)
-      }
-      hasLoadedRef.current = true
-    })
+    // Mark that initial load is complete. App now centrally loads persisted sessions.
+    hasLoadedRef.current = true
   }, [])
 
-  useEffect(() => { 
-    if (hasLoadedRef.current) {
-      window.api.saveSessions(JSON.stringify(sessions)) 
+  useEffect(() => {
+    _dbg('sessions changed -> persistence (compare ignoring lastActive)')
+    if (!hasLoadedRef.current) return
+
+    // Helper to remove ephemeral metadata that shouldn't trigger parent syncs
+    const stripMeta = (s: Session) => {
+      const { lastActive, ...rest } = s as any
+      return rest
+    }
+
+    try {
+      const forCompare = sessions.map(stripMeta)
+      const jsonNoMeta = JSON.stringify(forCompare)
+
+      if ((ChatPanel as any)._lastSentSessionsNoMeta !== jsonNoMeta) {
+        // Persist full sessions (including lastActive) to disk
+        try {
+          window.api.saveSessions(JSON.stringify(sessions))
+        } catch (e) {
+          console.warn('Failed to save sessions:', e)
+        }
+
+        // Only notify parent when non-meta parts actually changed
+        if (onSessionsChange) {
+          try {
+            onSessionsChange(sessions)
+          } catch (e) {
+            console.warn('onSessionsChange threw:', e)
+          }
+        }
+
+        ;(ChatPanel as any)._lastSentSessionsNoMeta = jsonNoMeta
+      } else {
+        _dbg('sessions change only in meta; skipping parent update')
+      }
+    } catch (e) {
+      // Fallback: if anything goes wrong, behave conservatively and still save
+      try { window.api.saveSessions(JSON.stringify(sessions)) } catch {}
       if (onSessionsChange) onSessionsChange(sessions)
     }
   }, [sessions])
@@ -542,7 +599,15 @@ export default function ChatPanel({
   const isWaitingFirstToken = lastMsg && lastMsg.role === 'assistant' && !lastMsg.content
 
   useEffect(() => {
-    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, lastActive: Date.now() } : s))
+    _dbg('activeId -> update lastActive')
+    const now = Date.now()
+    setSessions(prev => prev.map(s => {
+      if (s.id !== activeId) return s
+      const last = s.lastActive || 0
+      // avoid updating lastActive too frequently
+      if (now - last < 2000) return s
+      return { ...s, lastActive: now }
+    }))
   }, [activeId])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
@@ -625,7 +690,18 @@ export default function ChatPanel({
     let sys = `You are an expert agentic coding assistant.`
 
     if (sessionMode === 'ask') {
-      sys += `\n\n[MODE: ASK]\nYou are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code. DO NOT output any file modifications. If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:' or 'replace:' prefixes. If you detect a possible improvement or a code change that should be applied, explicitly prompt the user to switch to 'Agent' mode so you can implement it for them, or offer related subjects to clear up any doubts.`
+      sys += `\n\n[MODE: ASK]\nYou are in Q&A mode. Your goal is to explain concepts, answer questions, and help the user understand their code.
+
+⛔ STRICTLY FORBIDDEN in ASK mode:
+- Do NOT output any file modifications (no write: or replace: blocks)
+- Do NOT execute any commands (no execute blocks)
+- Do NOT perform any actions on the project
+
+If you detect that the user's request involves making changes, running commands, or performing tasks:
+1. Explain what would need to be done conceptually
+2. Explicitly suggest: "Switch to **Agent** mode to implement these changes" or "Switch to **Plan** mode to create a detailed plan first"
+
+If you provide code examples, use standard markdown code blocks (e.g., \`\`\`js) without any 'write:', 'replace:', or 'execute' prefixes.`
     } else if (sessionMode === 'plan') {
       // Plan mode: forbid all code implementation, only allow writing the plan document
       const planFile = `plans/PLAN-${new Date().toISOString().slice(0,10)}.md`
@@ -634,6 +710,7 @@ export default function ChatPanel({
 ⛔ STRICTLY FORBIDDEN:
 - Do NOT write, modify, or replace ANY source code files (.ts, .tsx, .js, .py, .css, etc.)
 - Do NOT use replace: blocks under any circumstance
+- Do NOT execute any commands (no execute blocks)
 - Do NOT suggest the user manually make changes
 - Do NOT implement anything
 
@@ -723,6 +800,12 @@ def health():
 \`\`\`execute
 npm install
 \`\`\`
+
+⚠️ CRITICAL EXECUTION RULES:
+- You may only emit ONE execute block per response. After emitting it, STOP and wait for the result.
+- Do NOT list multiple execute blocks in the same message.
+- After receiving the command result, you may then emit the next execute block if needed.
+- This is a sequential workflow: propose one action → wait for approval/result → propose the next.
 
 Rules:
 - Use RELATIVE paths from the project root.
@@ -880,6 +963,10 @@ Rules:
                 if (!rootPath) continue
 
                 if (type === 'execute') {
+                  // Block execute in ask and plan modes
+                  if (activeSession.mode === 'ask' || activeSession.mode === 'plan') continue
+                  // In agent mode, only allow ONE execute block per response
+                  if (streamExecutes.length > 0) continue
                   const command = blockContent.trim()
                   if (command && rootPath) {
                     let status: 'pending' | 'running' | 'completed' | 'error' = 'pending'
@@ -1024,6 +1111,10 @@ Rules:
       const blockContent = match[3]
 
       if (type === 'execute') {
+        // Block execute in ask and plan modes
+        if (activeSession.mode === 'ask' || activeSession.mode === 'plan') continue
+        // In agent mode, only allow ONE execute block
+        if (executes.length > 0) continue
         const command = blockContent.trim()
         if (command && rootPath) {
           let status: 'pending' | 'running' | 'completed' | 'error' = 'pending'
@@ -1262,7 +1353,7 @@ Rules:
       {/* Messages Area */}
       <div className="chat-messages">
         {messages.map((m, i) => (
-          <div key={i} className={`chat-msg chat-msg--${m.role} ${m.isToolOutput ? 'chat-msg--tool-output' : ''}`}>
+          <div key={`msg-${activeId}-${i}`} className={`chat-msg chat-msg--${m.role} ${m.isToolOutput ? 'chat-msg--tool-output' : ''}`}>
             <div className="chat-msg-header">
               <span className="chat-role" style={m.isToolOutput ? { color: '#a8a29e' } : {}}>{m.isToolOutput ? 'TERMINAL' : m.role.toUpperCase()}</span>
               <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1385,7 +1476,7 @@ Rules:
               <Zap size={14} strokeWidth={1.8} />
             </button>
 
-            <button className="send-btn" onClick={send} disabled={loading || !input.trim()}>
+            <button className="send-btn" onClick={send} disabled={loading || !input.trim() || !model}>
               <Send size={13} strokeWidth={2} />
               Send
             </button>
