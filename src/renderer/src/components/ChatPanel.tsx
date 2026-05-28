@@ -59,6 +59,11 @@ declare global {
       ollamaTags: () => Promise<string[]>
       ollamaChat: (payload: object) => Promise<string>
       execCommand: (cwd: string, command: string) => Promise<{ success: boolean; stdout?: string; stderr?: string; error?: string }>
+      memory: {
+        store: (item: any) => Promise<any>
+        query: (q: string, scope?: string, limit?: number) => Promise<any[]>
+        all: () => Promise<any[]>
+      }
     }
   }
 }
@@ -594,8 +599,8 @@ export default function ChatPanel({
   }, [loading]);
 
   const activeSession = sessions.find(s => s.id === activeId) ?? sessions[0]
-  const messages = activeSession.messages
-  const lastMsg = messages[messages.length - 1]
+  const messages = Array.isArray(activeSession?.messages) ? activeSession.messages : []
+  const lastMsg = messages.length > 0 ? messages[messages.length - 1] : undefined
   const isWaitingFirstToken = lastMsg && lastMsg.role === 'assistant' && !lastMsg.content
 
   useEffect(() => {
@@ -613,7 +618,11 @@ export default function ChatPanel({
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   function setMessages(updater: (prev: Message[]) => Message[]) {
-    setSessions(prev => prev.map(s => s.id === activeId ? { ...s, messages: updater(s.messages), lastActive: Date.now() } : s))
+    setSessions(prev => prev.map(s => {
+      if (s.id !== activeId) return s
+      const prevMsgs = Array.isArray(s.messages) ? s.messages : []
+      return { ...s, messages: updater(prevMsgs), lastActive: Date.now() }
+    }))
   }
 
   function setMode(mode: AgentMode) {
@@ -839,6 +848,16 @@ Rules:
       const rel = openFile.replace(rootPath + '/', '')
       sys += `\n\nCurrently open file (${rel}):\n\`\`\`\n${fileContent.slice(0, 3000)}\n\`\`\``
     }
+    // Attach small local memory context (repo + user recent items)
+    try {
+      const repoMems = rootPath ? await window.api.memory.query('', 'repo', 5) : []
+      const userMems = await window.api.memory.query('', 'user', 5)
+      const merged = [...(repoMems || []), ...(userMems || [])].slice(0, 8)
+      if (merged.length > 0) {
+        const lines = merged.map((m: any) => `- ${String(m.text || m.content || '').replace(/\s+/g, ' ').slice(0,200)}`)
+        sys += `\n\n[MEMORY]\n${lines.join('\n')}`
+      }
+    } catch (e) {}
     return sys
   }
 
@@ -887,8 +906,14 @@ Rules:
       }
       history = [...messages, userMsg]
       setMessages(() => history)
+      console.debug && console.debug('ChatPanel.send: queued history', history)
       setInput('')
       setAttachments([])
+        // Store user message into local memory (repo-scoped if project open)
+        try {
+          const scope = rootPath ? 'repo' : 'user'
+          window.api.memory.store({ scope, text: userMsg.content, meta: { sessionId: activeId } }).catch(() => {})
+        } catch (e) { /* ignore */ }
     }
     setLoading(true)
     setSessions(prev => prev.map(s => s.id === activeId ? { ...s, workspace: s.workspace || rootPath } : s))

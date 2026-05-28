@@ -50,6 +50,54 @@ const path__namespace = /* @__PURE__ */ _interopNamespaceDefault(path);
 const http__namespace = /* @__PURE__ */ _interopNamespaceDefault(http);
 const pty__namespace = /* @__PURE__ */ _interopNamespaceDefault(pty);
 const os__namespace = /* @__PURE__ */ _interopNamespaceDefault(os);
+const appSupportDir$1 = path__namespace.dirname(electron.app.getPath("userData"));
+const dataDir$1 = path__namespace.join(appSupportDir$1, "agentic-ide");
+const memoryDir = path__namespace.join(dataDir$1, "memory");
+const itemsPath = path__namespace.join(memoryDir, "items.json");
+let items = [];
+function load() {
+  try {
+    if (!fs__namespace.existsSync(memoryDir)) return;
+    const raw = fs__namespace.readFileSync(itemsPath, "utf-8");
+    items = JSON.parse(raw || "[]");
+  } catch (e) {
+    items = [];
+  }
+}
+function saveToDisk() {
+  try {
+    if (!fs__namespace.existsSync(memoryDir)) fs__namespace.mkdirSync(memoryDir, { recursive: true });
+    fs__namespace.writeFileSync(itemsPath, JSON.stringify(items, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write memory items:", e);
+  }
+}
+async function store(item) {
+  const id = item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const mi = { id, scope: item.scope, text: item.text, meta: item.meta || {}, createdAt: (/* @__PURE__ */ new Date()).toISOString() };
+  items.push(mi);
+  saveToDisk();
+  return mi;
+}
+async function query(q, scope, limit = 5) {
+  const candidates = scope ? items.filter((i) => i.scope === scope) : items.slice();
+  if (!q || q.trim() === "") {
+    return candidates.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
+  }
+  const tokens = q.toLowerCase().split(/\W+/).filter(Boolean);
+  function score(text) {
+    const t = text.toLowerCase();
+    let s = 0;
+    for (const tok of tokens) if (t.includes(tok)) s += 1;
+    return s;
+  }
+  const scored = candidates.map((c) => ({ c, s: score(c.text) })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s || b.c.createdAt.localeCompare(a.c.createdAt)).slice(0, limit).map((x) => x.c);
+  return scored;
+}
+async function all() {
+  return items.slice();
+}
+load();
 const execFileAsync = util.promisify(child_process.execFile);
 const execAsync = util.promisify(child_process.exec);
 let currentWatcher = null;
@@ -334,7 +382,9 @@ electron.ipcMain.handle("github-login", async () => {
   shell.openExternal(GITHUB_AUTH_URL);
   return true;
 });
-const sessionsPath = path__namespace.join(electron.app.getPath("userData"), "sessions.json");
+const appSupportDir = path__namespace.dirname(electron.app.getPath("userData"));
+const dataDir = path__namespace.join(appSupportDir, "agentic-ide");
+const sessionsPath = path__namespace.join(dataDir, "sessions.json");
 electron.ipcMain.handle("ollama-tags", async () => {
   return new Promise((resolve) => {
     const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
@@ -389,6 +439,27 @@ electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
     req.end();
   });
 });
+electron.ipcMain.handle("memory-store", async (_e, item) => {
+  try {
+    return await store(item);
+  } catch (e) {
+    return null;
+  }
+});
+electron.ipcMain.handle("memory-query", async (_e, q, scope, limit) => {
+  try {
+    return await query(q, scope, limit || 5);
+  } catch (e) {
+    return [];
+  }
+});
+electron.ipcMain.handle("memory-all", async () => {
+  try {
+    return await all();
+  } catch (e) {
+    return [];
+  }
+});
 electron.ipcMain.handle("load-sessions", async () => {
   try {
     const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
@@ -399,7 +470,7 @@ electron.ipcMain.handle("load-sessions", async () => {
 });
 electron.ipcMain.handle("list-backups", async () => {
   try {
-    const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+    const backupDir = path__namespace.join(dataDir, "backups");
     if (!fs__namespace.existsSync(backupDir)) return [];
     const files = await fs__namespace.promises.readdir(backupDir);
     const backupFiles = files.filter((f) => f.startsWith("sessions.")).sort().reverse();
@@ -455,7 +526,7 @@ electron.ipcMain.handle("list-backups", async () => {
 });
 electron.ipcMain.handle("restore-backup", async (_e, backupFileName) => {
   try {
-    const backupPath = path__namespace.join(electron.app.getPath("userData"), "backups", backupFileName);
+    const backupPath = path__namespace.join(dataDir, "backups", backupFileName);
     await fs__namespace.promises.copyFile(backupPath, sessionsPath);
     await logActivity("snapshot-restore", { snapshot: backupFileName });
     const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
@@ -466,22 +537,13 @@ electron.ipcMain.handle("restore-backup", async (_e, backupFileName) => {
 });
 electron.ipcMain.handle("save-sessions", async (_e, data) => {
   try {
+    if (!fs__namespace.existsSync(dataDir)) fs__namespace.mkdirSync(dataDir, { recursive: true });
     if (fs__namespace.existsSync(sessionsPath)) {
-      const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+      const backupDir = path__namespace.join(dataDir, "backups");
       if (!fs__namespace.existsSync(backupDir)) fs__namespace.mkdirSync(backupDir);
       const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
       const backupPath = path__namespace.join(backupDir, `sessions.${timestamp}.json`);
       await fs__namespace.promises.copyFile(sessionsPath, backupPath);
-      const backups = (await fs__namespace.promises.readdir(backupDir)).filter((f) => f.startsWith("sessions.")).sort().reverse();
-      if (backups.length > 10) {
-        for (const old of backups.slice(10)) {
-          try {
-            await fs__namespace.promises.unlink(path__namespace.join(backupDir, old));
-          } catch (err) {
-            if (err.code !== "ENOENT") console.error("Failed to unlink backup:", err);
-          }
-        }
-      }
     }
     await fs__namespace.promises.writeFile(sessionsPath, data, "utf-8");
     await logActivity("sessions-save", { size: data.length });
@@ -541,7 +603,7 @@ electron.ipcMain.handle("get-historical-sessions", async () => {
     console.error("Error reading current sessions:", err);
   }
   try {
-    const backupDir = path__namespace.join(electron.app.getPath("userData"), "backups");
+    const backupDir = path__namespace.join(dataDir, "backups");
     if (fs__namespace.existsSync(backupDir)) {
       const files = await fs__namespace.promises.readdir(backupDir);
       const backupFiles = files.filter((f) => f.startsWith("sessions.") && f.endsWith(".json"));

@@ -33,6 +33,11 @@ electron.contextBridge.exposeInMainWorld("api", {
   getHistoricalSessions: () => electron.ipcRenderer.invoke("get-historical-sessions"),
   ollamaTags: () => electron.ipcRenderer.invoke("ollama-tags"),
   ollamaChat: (payload) => electron.ipcRenderer.invoke("ollama-chat", payload),
+  memory: {
+    store: (item) => electron.ipcRenderer.invoke("memory-store", item),
+    query: (q, scope, limit) => electron.ipcRenderer.invoke("memory-query", q, scope, limit),
+    all: () => electron.ipcRenderer.invoke("memory-all")
+  },
   onTerminalData: (id, cb) => {
     electron.ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data));
   },

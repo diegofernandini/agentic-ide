@@ -317,7 +317,12 @@ ipcMain.handle('github-login', async () => {
 })
 
 // Sessions persistence
-const sessionsPath = path.join(app.getPath('userData'), 'sessions.json')
+// Normalize storage directory to a canonical `agentic-ide` folder under
+// Application Support to avoid mixing different folder names/casing.
+// Directories are created lazily when sessions are saved (not at startup).
+const appSupportDir = path.dirname(app.getPath('userData'))
+const dataDir = path.join(appSupportDir, 'agentic-ide')
+const sessionsPath = path.join(dataDir, 'sessions.json')
 
 // Ollama proxy — runs in main process (Node.js) to avoid renderer CORS/security restrictions
 ipcMain.handle('ollama-tags', async () => {
@@ -366,6 +371,21 @@ ipcMain.handle('ollama-chat', async (_e, payload: object) => {
   })
 })
 
+// Memory service (simple file-backed)
+import * as memory from './memory'
+
+ipcMain.handle('memory-store', async (_e, item: any) => {
+  try { return await memory.store(item) } catch (e) { return null }
+})
+
+ipcMain.handle('memory-query', async (_e, q: string, scope?: string, limit?: number) => {
+  try { return await memory.query(q, scope, limit || 5) } catch (e) { return [] }
+})
+
+ipcMain.handle('memory-all', async () => {
+  try { return await memory.all() } catch (e) { return [] }
+})
+
 ipcMain.handle('load-sessions', async () => {
   try {
     const data = await fs.promises.readFile(sessionsPath, 'utf-8')
@@ -376,7 +396,7 @@ ipcMain.handle('load-sessions', async () => {
 
 ipcMain.handle('list-backups', async () => {
   try {
-    const backupDir = path.join(app.getPath('userData'), 'backups')
+    const backupDir = path.join(dataDir, 'backups')
     if (!fs.existsSync(backupDir)) return []
     const files = await fs.promises.readdir(backupDir)
     const backupFiles = files.filter(f => f.startsWith('sessions.')).sort().reverse()
@@ -435,7 +455,7 @@ ipcMain.handle('list-backups', async () => {
 
 ipcMain.handle('restore-backup', async (_e, backupFileName: string) => {
   try {
-    const backupPath = path.join(app.getPath('userData'), 'backups', backupFileName)
+    const backupPath = path.join(dataDir, 'backups', backupFileName)
     await fs.promises.copyFile(backupPath, sessionsPath)
     await logActivity('snapshot-restore', { snapshot: backupFileName })
     const data = await fs.promises.readFile(sessionsPath, 'utf-8')
@@ -445,29 +465,17 @@ ipcMain.handle('restore-backup', async (_e, backupFileName: string) => {
 
 ipcMain.handle('save-sessions', async (_e, data: string) => {
   try {
-    // Before overwriting, create a rotating backup
+    // Ensure data dir exists (create lazily when saving sessions).
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
+
+    // Before overwriting, create a timestamped backup copy (retained).
     if (fs.existsSync(sessionsPath)) {
-      const backupDir = path.join(app.getPath('userData'), 'backups')
+      const backupDir = path.join(dataDir, 'backups')
       if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir)
-      
+
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
       const backupPath = path.join(backupDir, `sessions.${timestamp}.json`)
       await fs.promises.copyFile(sessionsPath, backupPath)
-      
-      // Keep only last 10 backups
-      const backups = (await fs.promises.readdir(backupDir))
-        .filter(f => f.startsWith('sessions.'))
-        .sort()
-        .reverse()
-      if (backups.length > 10) {
-        for (const old of backups.slice(10)) {
-          try {
-            await fs.promises.unlink(path.join(backupDir, old))
-          } catch (err: any) {
-            if (err.code !== 'ENOENT') console.error('Failed to unlink backup:', err)
-          }
-        }
-      }
     }
     await fs.promises.writeFile(sessionsPath, data, 'utf-8')
     await logActivity('sessions-save', { size: data.length })
@@ -542,7 +550,7 @@ ipcMain.handle('get-historical-sessions', async () => {
 
   // 2. Read backups
   try {
-    const backupDir = path.join(app.getPath('userData'), 'backups')
+    const backupDir = path.join(dataDir, 'backups')
     if (fs.existsSync(backupDir)) {
       const files = await fs.promises.readdir(backupDir)
       const backupFiles = files.filter(f => f.startsWith('sessions.') && f.endsWith('.json'))

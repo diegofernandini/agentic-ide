@@ -33,6 +33,11 @@ contextBridge.exposeInMainWorld('api', {
   getHistoricalSessions: () => ipcRenderer.invoke('get-historical-sessions'),
   ollamaTags: () => ipcRenderer.invoke('ollama-tags'),
   ollamaChat: (payload: object) => ipcRenderer.invoke('ollama-chat', payload),
+  memory: {
+    store: (item: any) => ipcRenderer.invoke('memory-store', item),
+    query: (q: string, scope?: string, limit?: number) => ipcRenderer.invoke('memory-query', q, scope, limit),
+    all: () => ipcRenderer.invoke('memory-all')
+  },
   onTerminalData: (id: string, cb: (data: string) => void) => {
     ipcRenderer.on(`terminal-data-${id}`, (_e, data) => cb(data))
   },
