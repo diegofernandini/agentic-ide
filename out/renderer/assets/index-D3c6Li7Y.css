@@ -677,6 +677,73 @@ body {
   line-height: 1.4;
 }
 
+/* ── Login Form ── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.login-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.login-input {
+  background: #3c3c3c;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input:focus {
+  border-color: #007acc;
+  box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.25);
+}
+
+.login-input::placeholder { color: #666; }
+
+.login-hint {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.login-error {
+  font-size: 12px;
+  color: #f48771;
+  background: rgba(244, 135, 113, 0.1);
+  border: 1px solid rgba(244, 135, 113, 0.3);
+  border-radius: 5px;
+  padding: 7px 10px;
+}
+
+.login-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* ── User Profile ── */
 .user-profile {
   display: flex;
@@ -1205,6 +1272,178 @@ body {
   gap: 12px;
 }
 
+.sc-init-btn {
+  background: #0e639c;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.sc-init-btn:hover { background: #1177bb; }
+.sc-init-btn:disabled { opacity: 0.5; cursor: default; }
+
+.sc-init-hint {
+  font-size: 11px;
+  color: #666;
+  margin-top: -4px;
+}
+
+/* ── Remote badge in branch row ── */
+.sc-remote-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(78, 201, 176, 0.15);
+  color: #4ec9b0;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(78, 201, 176, 0.3);
+  margin-left: 4px;
+}
+
+/* ── Inline Publish button (when no remote) ── */
+.sc-publish-small-btn {
+  background: rgba(0, 122, 204, 0.15);
+  color: #007acc;
+  border: 1px solid rgba(0, 122, 204, 0.4);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  margin-left: auto;
+}
+.sc-publish-small-btn:hover { background: rgba(0, 122, 204, 0.3); }
+
+/* ── Status flash ── */
+.sc-status-flash {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  animation: fadeIn 0.2s ease;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-status-flash--ok  { color: #4ec9b0; background: rgba(78, 201, 176, 0.1); }
+.sc-status-flash--err { color: #f48771; background: rgba(244, 135, 113, 0.1); }
+
+/* ── Modal overlay ── */
+.sc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-modal {
+  background: #252526;
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  width: 380px;
+  max-width: 90vw;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.15s ease;
+}
+
+.sc-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid #333;
+}
+
+.sc-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.sc-modal-close {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.sc-modal-close:hover { color: #fff; background: #3a3a3a; }
+
+.sc-modal-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sc-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.sc-modal-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.sc-modal-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.sc-modal-warn {
+  font-size: 13px;
+  color: #f48771;
+  text-align: center;
+  padding: 8px;
+}
+
+.sc-publish-btn {
+  background: #0e639c;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+}
+.sc-publish-btn:hover:not(:disabled) { background: #1177bb; }
+.sc-publish-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Login link ── */
+.login-link {
+  color: #4ec9b0;
+  text-decoration: none;
+}
+.login-link:hover { text-decoration: underline; }
+
+
+
 /* ── Editor ── */
 .editor-area {
   display: flex;
@@ -1251,6 +1490,93 @@ body {
   font-size: 12px;
   font-family: inherit;
   transition: color 0.15s, background 0.15s;
+  position: relative;
+}
+
+/* Tooltip styles */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px) scale(0.95);
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.12s cubic-bezier(0.4, 0, 0.2, 1), transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10000;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Right-aligned tooltips (for buttons near the right edge to avoid clipping) */
+[data-tooltip][data-tooltip-align="right"]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(-2px) scale(0.95);
+}
+
+[data-tooltip][data-tooltip-align="right"]:hover::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Top-positioned tooltips (for footer buttons near the bottom of the screen) */
+[data-tooltip][data-tooltip-position="top"]::after {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%) translateY(2px) scale(0.95);
+}
+
+[data-tooltip][data-tooltip-position="top"]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* Combined Top + Right aligned tooltips */
+[data-tooltip][data-tooltip-position="top"][data-tooltip-align="right"]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(2px) scale(0.95);
+}
+
+[data-tooltip][data-tooltip-position="top"][data-tooltip-align="right"]:hover::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Right-positioned tooltips (for activity bar buttons on the left edge of the screen) */
+[data-tooltip][data-tooltip-position="right"]::after {
+  top: 50%;
+  left: calc(100% + 6px);
+  transform: translateY(-50%) translateX(-4px) scale(0.95);
+}
+
+[data-tooltip][data-tooltip-position="right"]:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0) scale(1);
+}
+
+[data-tooltip][data-tooltip-position="top"][data-tooltip-align="right"]:hover::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .bc-btn:hover { color: #fff; background: #2a2d2e; }

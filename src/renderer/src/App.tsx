@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   ChevronLeft, ChevronRight, Search, TerminalSquare,
   Files, GitBranch, User, LayoutDashboard, Settings2,
-  Plus, X, ArrowLeftRight, RefreshCw, LogOut
+  Plus, X, ArrowLeftRight, RefreshCw, LogOut,
+  FileCode, FileText, FileImage, FileKey, File
 } from 'lucide-react'
 import FileTree from './components/FileTree'
 import Editor from './components/Editor'
@@ -39,6 +40,7 @@ interface User {
   name: string
   login: string
   avatar: string
+  token?: string
 }
 
 function getBreadcrumbs(path: string): string[] {
@@ -78,6 +80,12 @@ declare global {
       gitFetch: (p: string) => Promise<{ success: boolean; error?: string }>
       gitLog: (p: string) => Promise<{ hash: string; message: string }[]>
       githubLogin: () => Promise<boolean>
+      gitIsRepo: (p: string) => Promise<boolean>
+      gitInit: (p: string) => Promise<{ success: boolean; error?: string }>
+      gitRemoteAdd: (p: string, name: string, url: string) => Promise<{ success: boolean; error?: string }>
+      gitGetRemote: (p: string) => Promise<string | null>
+      gitPushUpstream: (p: string, branch: string) => Promise<{ success: boolean; error?: string }>
+      githubCreateRepo: (token: string, name: string, isPrivate: boolean, desc: string) => Promise<{ success: boolean; cloneUrl?: string; error?: string }>
       onFileChanged: (cb: (data: { event: string; path: string }) => void) => void
       offFileChanged: () => void
       ollamaTags: () => Promise<string[]>
@@ -127,6 +135,11 @@ export default function App() {
   const [terminalOpen, setTerminalOpen] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [loginLoading, setLoginLoading] = useState(false)
+  const [showLoginForm, setShowLoginForm] = useState(false)
+  const [loginName, setLoginName] = useState('')
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginToken, setLoginToken] = useState('')
+  const [loginError, setLoginError] = useState('')
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeSidebar, setActiveSidebar] = useState<'explorer' | 'git' | 'account' | 'dashboard'>('explorer')
@@ -419,19 +432,31 @@ export default function App() {
   }
 
   async function handleLogin() {
+    setLoginError('')
+    const name = loginName.trim()
+    const username = loginUsername.trim()
+    const token = loginToken.trim()
+    if (!name) { setLoginError('Please enter a display name.'); return }
+    if (!username) { setLoginError('Please enter a GitHub username.'); return }
+    if (!token) { setLoginError('Please enter a GitHub Personal Access Token.'); return }
     setLoginLoading(true)
     try {
-      const mockUser = {
-        name: 'Diego Fernandini',
-        login: 'fernandini2007',
-        avatar: 'https://github.com/fernandini2007.png'
+      const newUser: User = {
+        name,
+        login: username,
+        avatar: `https://github.com/${encodeURIComponent(username)}.png`,
+        token
       }
-      // Simulate real login delay
-      await new Promise(r => setTimeout(r, 1500))
-      setUser(mockUser)
-      // Save user to session
+      await new Promise(r => setTimeout(r, 400))
+      setUser(newUser)
+      setShowLoginForm(false)
+      setLoginName('')
+      setLoginUsername('')
+      setLoginToken('')
+      // Save user (omit token from disk for security — keep only in memory)
+      const userToSave = { name: newUser.name, login: newUser.login, avatar: newUser.avatar }
       const existing = await window.api.loadSessions() || {}
-      await window.api.saveSessions(JSON.stringify({ ...existing, user: mockUser }))
+      await window.api.saveSessions(JSON.stringify({ ...existing, user: userToSave }))
     } finally {
       setLoginLoading(false)
     }
@@ -465,14 +490,34 @@ export default function App() {
 
   function getFileIcon(filePath: string) {
     const ext = filePath.split('.').pop()?.toLowerCase() ?? ''
-    const icons: Record<string, string> = {
-      ts: '󰛦', tsx: '󰜈', js: '󰌞', jsx: '󰜈',
-      json: '󰘦', md: '󰍔', css: '󰌜', html: '󰌝',
-      py: '󰌠', rs: '󱘗', go: '󰟓', sh: '󰆍',
-      svg: '󰜡', png: '󰋩', jpg: '󰋩', gif: '󰋩',
-      lock: '󰌾', yml: '󰬴', yaml: '󰬴', env: '󰒓',
+    const colors: Record<string, string> = {
+      ts: '#3178c6', tsx: '#61dafb', js: '#f1e05a', jsx: '#61dafb',
+      json: '#cbcb41', md: '#b0bec5', css: '#a06ccd', html: '#e34c26',
+      py: '#4b8bbe',  rs: '#dea584', go: '#00ADD8', sh: '#89e051',
+      svg: '#ffb13b', png: '#90a4ae', jpg: '#90a4ae', gif: '#90a4ae',
+      lock: '#777',   yml: '#cbcb41', yaml: '#cbcb41', env: '#aaa',
+      toml: '#9c4221', sql: '#e38d40', graphql: '#e535ab',
     }
-    return <span style={{ fontFamily: 'monospace', fontSize: '11px', opacity: 0.7 }}>{icons[ext] ?? '󰈙'}</span>
+    const color = colors[ext] ?? '#9cdcfe'
+
+    let IconComponent = File
+    if (['ts', 'tsx', 'js', 'jsx', 'json', 'py', 'rs', 'go', 'sh', 'html', 'css', 'yml', 'yaml', 'toml', 'sql', 'graphql'].includes(ext)) {
+      IconComponent = FileCode
+    } else if (['md', 'txt', 'log', 'env'].includes(ext)) {
+      IconComponent = FileText
+    } else if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'ico'].includes(ext)) {
+      IconComponent = FileImage
+    } else if (['lock', 'key'].includes(ext)) {
+      IconComponent = FileKey
+    }
+
+    return (
+      <IconComponent 
+        size={14} 
+        strokeWidth={1.8} 
+        style={{ color, display: 'block' }} 
+      />
+    )
   }
 
   return (
@@ -558,7 +603,8 @@ export default function App() {
               if (activeSidebar === 'explorer') setSidebarOpen(!sidebarOpen)
               else { setActiveSidebar('explorer'); setSidebarOpen(true) }
             }}
-            title="Explorer"
+            data-tooltip="Explorer"
+            data-tooltip-position="right"
           >
             <Files size={22} strokeWidth={1.6} />
           </button>
@@ -568,7 +614,8 @@ export default function App() {
               if (activeSidebar === 'git') setSidebarOpen(!sidebarOpen)
               else { setActiveSidebar('git'); setSidebarOpen(true) }
             }}
-            title="Source Control"
+            data-tooltip="Source Control"
+            data-tooltip-position="right"
           >
             <GitBranch size={22} strokeWidth={1.6} />
           </button>
@@ -580,18 +627,24 @@ export default function App() {
                 if (activeSidebar === 'account') setSidebarOpen(!sidebarOpen)
                 else { setActiveSidebar('account'); setSidebarOpen(true) }
               }}
-              title="Accounts"
+              data-tooltip="Accounts"
+              data-tooltip-position="right"
             >
               <User size={22} strokeWidth={1.6} />
             </button>
             <button 
               className={`activity-btn ${activeSidebar === 'dashboard' ? 'activity-btn--active' : ''}`}
               onClick={() => setActiveSidebar('dashboard')}
-              title="Dashboard"
+              data-tooltip="Dashboard"
+              data-tooltip-position="right"
             >
               <LayoutDashboard size={22} strokeWidth={1.6} />
             </button>
-            <button className="activity-btn" title="Settings">
+            <button 
+              className="activity-btn" 
+              data-tooltip="Settings"
+              data-tooltip-position="right"
+            >
               <Settings2 size={22} strokeWidth={1.6} />
             </button>
           </div>
@@ -611,7 +664,8 @@ export default function App() {
               rootPath={rootPath} 
               model={model} 
               onSelectFile={selectFile} 
-              onSelectDiff={handleSelectDiff} 
+              onSelectDiff={handleSelectDiff}
+              user={user}
             />
           ) : (
             <div className="account-view">
@@ -619,20 +673,78 @@ export default function App() {
               {!user ? (
                 <>
                   <div className="account-info">
-                    Sign in to your GitHub account to access your repositories and sync your settings.
+                    Sign in with any account to sync your settings and workspace.
                   </div>
-                  <button 
-                    className="github-login-btn" 
-                    onClick={handleLogin}
-                    disabled={loginLoading}
-                  >
-                    {loginLoading ? (
-                      <div className="toolbar-spinner" />
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    )}
-                    {loginLoading ? 'Signing in...' : 'Sign in with GitHub'}
-                  </button>
+                  {!showLoginForm ? (
+                    <button
+                      className="github-login-btn"
+                      onClick={() => { setShowLoginForm(true); setLoginError('') }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                      Sign In
+                    </button>
+                  ) : (
+                    <div className="login-form">
+                      <div className="login-field">
+                        <label className="login-label">Display Name</label>
+                        <input
+                          className="login-input"
+                          type="text"
+                          placeholder="e.g. John Doe"
+                          value={loginName}
+                          onChange={e => setLoginName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                          autoFocus
+                        />
+                      </div>
+                      <div className="login-field">
+                        <label className="login-label">GitHub Username</label>
+                        <input
+                          className="login-input"
+                          type="text"
+                          placeholder="e.g. octocat"
+                          value={loginUsername}
+                          onChange={e => setLoginUsername(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        />
+                        <span className="login-hint">Your avatar will be fetched automatically.</span>
+                      </div>
+                      <div className="login-field">
+                        <label className="login-label">Personal Access Token</label>
+                        <input
+                          className="login-input"
+                          type="password"
+                          placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                          value={loginToken}
+                          onChange={e => setLoginToken(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                        />
+                        <span className="login-hint">
+                          Needs <code>repo</code> scope.{' '}
+                          <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="login-link">
+                            Create token →
+                          </a>
+                        </span>
+                      </div>
+                      {loginError && <div className="login-error">{loginError}</div>}
+                      <div className="login-actions">
+                        <button
+                          className="github-login-btn"
+                          onClick={handleLogin}
+                          disabled={loginLoading}
+                        >
+                          {loginLoading ? <div className="toolbar-spinner" /> : null}
+                          {loginLoading ? 'Signing in...' : 'Sign In'}
+                        </button>
+                        <button
+                          className="profile-btn"
+                          onClick={() => { setShowLoginForm(false); setLoginError('') }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="user-profile">
@@ -646,12 +758,14 @@ export default function App() {
                   
                   <div className="profile-stats">
                     <div className="stat-item">
-                      <span className="stat-value">12</span>
-                      <span className="stat-label">Repos</span>
+                      <span className="stat-value" style={{ fontSize: 12, color: user.token ? '#4ec9b0' : '#f48771' }}>
+                        {user.token ? '✓ Active' : '✗ None'}
+                      </span>
+                      <span className="stat-label">Token</span>
                     </div>
                     <div className="stat-item">
-                      <span className="stat-value">158</span>
-                      <span className="stat-label">Stars</span>
+                      <span className="stat-value">@{user.login}</span>
+                      <span className="stat-label">GitHub</span>
                     </div>
                   </div>
 

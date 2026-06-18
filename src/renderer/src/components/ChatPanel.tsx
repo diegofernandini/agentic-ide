@@ -1354,13 +1354,13 @@ Rules:
           ))}
         </div>
         <div className="session-actions">
-          <button className="chat-action-btn" onClick={addSession} title="New Session">
+          <button className="chat-action-btn" onClick={addSession} data-tooltip="New Session: Start a clean chat conversation">
             <Plus size={14} strokeWidth={2} />
           </button>
-          <button className="chat-action-btn" onClick={() => setShowHistory(h => !h)} title="History">
+          <button className="chat-action-btn" onClick={() => setShowHistory(h => !h)} data-tooltip="Session History: Browse and restore past chat sessions" data-tooltip-align="right">
             <History size={14} strokeWidth={1.8} />
           </button>
-          <button className="chat-action-btn" onClick={clearSession} title="Clear Session">
+          <button className="chat-action-btn" onClick={clearSession} data-tooltip="Clear Chat: Reset message history in current session" data-tooltip-align="right">
             <Trash2 size={14} strokeWidth={1.8} />
           </button>
         </div>
@@ -1470,7 +1470,7 @@ Rules:
             style={{ height: 'auto' }}
           />
           <div className="chat-input-footer">
-            <button className="chat-action-btn" onClick={() => fileInputRef.current?.click()} title="Attach File">
+            <button className="chat-action-btn" onClick={() => fileInputRef.current?.click()} data-tooltip="Attach File: Select and upload a file or image" data-tooltip-position="top">
               <Paperclip size={14} strokeWidth={1.8} />
             </button>
             <input type="file" ref={fileInputRef} style={{display:'none'}} onChange={handleFileAttach} />
@@ -1496,7 +1496,9 @@ Rules:
             <button 
               className={`chat-action-btn ${autopilot ? 'active' : ''}`} 
               onClick={() => { const next = !autopilot; setAutopilot(next); autopilotRef.current = next }}
-              title={autopilot ? 'Autopilot ON' : 'Autopilot OFF'}
+              data-tooltip={autopilot ? 'Disable Autopilot: Approve agent actions manually' : 'Enable Autopilot: Let the agent execute actions autonomously'}
+              data-tooltip-position="top"
+              data-tooltip-align="right"
             >
               <Zap size={14} strokeWidth={1.8} />
             </button>

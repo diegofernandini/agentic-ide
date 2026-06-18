@@ -182,8 +182,17 @@ ipcMain.handle('list-files', async (_e, dirPath: string) => {
 ipcMain.handle('git-status', async (_e, dirPath: string) => {
   try {
     const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: dirPath, encoding: 'utf-8' })
-    const { stdout: branchOut } = await execFileAsync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dirPath, encoding: 'utf-8' })
-    const branch = branchOut.trim()
+    
+    let branch = 'main'
+    try {
+      const { stdout: branchOut } = await execFileAsync('git', ['symbolic-ref', '--short', 'HEAD'], { cwd: dirPath, encoding: 'utf-8' })
+      branch = branchOut.trim()
+    } catch {
+      try {
+        const { stdout: branchOut } = await execFileAsync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: dirPath, encoding: 'utf-8' })
+        branch = branchOut.trim()
+      } catch {}
+    }
     
     let ahead = 0
     let behind = 0
@@ -309,11 +318,93 @@ ipcMain.handle('exec-command', async (_e, dirPath: string, command: string) => {
 })
 
 ipcMain.handle('github-login', async () => {
-  const { shell } = require('electron')
-  const CLIENT_ID = 'your_client_id_here' // Placeholder
-  const GITHUB_AUTH_URL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=repo,user`
-  shell.openExternal(GITHUB_AUTH_URL)
   return true
+})
+
+ipcMain.handle('git-is-repo', async (_e, dirPath: string) => {
+  try {
+    await execFileAsync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: dirPath })
+    return true
+  } catch {
+    return false
+  }
+})
+
+ipcMain.handle('git-init', async (_e, dirPath: string) => {
+  try {
+    await execFileAsync('git', ['init'], { cwd: dirPath })
+    await execFileAsync('git', ['checkout', '-b', 'main'], { cwd: dirPath }).catch(() => {})
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-remote-add', async (_e, dirPath: string, name: string, url: string) => {
+  try {
+    // Remove existing remote with same name if it exists
+    await execFileAsync('git', ['remote', 'remove', name], { cwd: dirPath }).catch(() => {})
+    await execFileAsync('git', ['remote', 'add', name, url], { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('git-get-remote', async (_e, dirPath: string) => {
+  try {
+    const { stdout } = await execFileAsync('git', ['remote', 'get-url', 'origin'], { cwd: dirPath, encoding: 'utf-8' })
+    const url = stdout.trim()
+    return url.replace(/https:\/\/[^@]+@github.com/, 'https://github.com')
+  } catch {
+    return null
+  }
+})
+
+ipcMain.handle('git-push-upstream', async (_e, dirPath: string, branch: string) => {
+  try {
+    await execFileAsync('git', ['push', '-u', 'origin', branch], { cwd: dirPath })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+})
+
+ipcMain.handle('github-create-repo', async (_e, token: string, repoName: string, isPrivate: boolean, description: string) => {
+  return new Promise<{ success: boolean; cloneUrl?: string; error?: string }>((resolve) => {
+    const body = JSON.stringify({ name: repoName, private: isPrivate, description, auto_init: false })
+    const options = {
+      hostname: 'api.github.com',
+      path: '/user/repos',
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'User-Agent': 'agentic-ide'
+      }
+    }
+    const https = require('https')
+    const req = https.request(options, (res: any) => {
+      let data = ''
+      res.on('data', (chunk: any) => { data += chunk })
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data)
+          if (json.clone_url) {
+            resolve({ success: true, cloneUrl: json.clone_url })
+          } else {
+            resolve({ success: false, error: json.message || 'Unknown error' })
+          }
+        } catch (e: any) {
+          resolve({ success: false, error: e.message })
+        }
+      })
+    })
+    req.on('error', (e: any) => resolve({ success: false, error: e.message }))
+    req.write(body)
+    req.end()
+  })
 })
 
 // Sessions persistence
@@ -401,7 +492,10 @@ ipcMain.handle('list-backups', async () => {
     const files = await fs.promises.readdir(backupDir)
     const backupFiles = files.filter(f => f.startsWith('sessions.')).sort().reverse()
     
-    const backupsWithDetails = await Promise.all(backupFiles.map(async file => {
+    // Only process the 50 most recent backups to avoid OOM with thousands of files
+    const recentBackups = backupFiles.slice(0, 50)
+    
+    const backupsWithDetails = await Promise.all(recentBackups.map(async file => {
       try {
         const filePath = path.join(backupDir, file)
         const content = await fs.promises.readFile(filePath, 'utf-8')
@@ -463,19 +557,35 @@ ipcMain.handle('restore-backup', async (_e, backupFileName: string) => {
   } catch { return null }
 })
 
+let lastBackupTime = 0
+const BACKUP_THROTTLE_MS = 60_000 // One backup per minute at most
+const MAX_BACKUPS = 100
+
 ipcMain.handle('save-sessions', async (_e, data: string) => {
   try {
     // Ensure data dir exists (create lazily when saving sessions).
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true })
 
-    // Before overwriting, create a timestamped backup copy (retained).
-    if (fs.existsSync(sessionsPath)) {
+    // Before overwriting, create a throttled timestamped backup copy.
+    const now = Date.now()
+    if (fs.existsSync(sessionsPath) && (now - lastBackupTime) >= BACKUP_THROTTLE_MS) {
       const backupDir = path.join(dataDir, 'backups')
       if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir)
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
       const backupPath = path.join(backupDir, `sessions.${timestamp}.json`)
       await fs.promises.copyFile(sessionsPath, backupPath)
+      lastBackupTime = now
+
+      // Rotate: keep only the most recent MAX_BACKUPS files
+      try {
+        const files = await fs.promises.readdir(backupDir)
+        const backupFiles = files.filter(f => f.startsWith('sessions.')).sort()
+        if (backupFiles.length > MAX_BACKUPS) {
+          const toDelete = backupFiles.slice(0, backupFiles.length - MAX_BACKUPS)
+          await Promise.all(toDelete.map(f => fs.promises.unlink(path.join(backupDir, f)).catch(() => {})))
+        }
+      } catch {}
     }
     await fs.promises.writeFile(sessionsPath, data, 'utf-8')
     await logActivity('sessions-save', { size: data.length })
@@ -553,9 +663,12 @@ ipcMain.handle('get-historical-sessions', async () => {
     const backupDir = path.join(dataDir, 'backups')
     if (fs.existsSync(backupDir)) {
       const files = await fs.promises.readdir(backupDir)
-      const backupFiles = files.filter(f => f.startsWith('sessions.') && f.endsWith('.json'))
+      const backupFiles = files.filter(f => f.startsWith('sessions.') && f.endsWith('.json')).sort().reverse()
       
-      await Promise.all(backupFiles.map(async file => {
+      // Only process the 50 most recent backups to avoid OOM
+      const recentBackups = backupFiles.slice(0, 50)
+      
+      await Promise.all(recentBackups.map(async file => {
         try {
           const filePath = path.join(backupDir, file)
           const data = await fs.promises.readFile(filePath, 'utf-8')

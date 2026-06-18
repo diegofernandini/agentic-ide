@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import MonacoEditor, { type Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
+import { Search, Replace, Braces, WrapText, Save } from 'lucide-react'
 
 interface Props {
   path: string | null
@@ -85,45 +86,31 @@ export default function Editor({ path, content, onChange, onSave, onSaveAs, sess
           {/* Action bar */}
           <div className="editor-breadcrumb">
             <div className="breadcrumb-actions">
-              <button title="Find (⌘F)" onClick={triggerFind} className="bc-btn">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-                </svg>
+              <button data-tooltip="Find: Search text in this file (⌘F)" onClick={triggerFind} className="bc-btn">
+                <Search size={15} strokeWidth={1.8} />
               </button>
-              <button title="Find & Replace (⌘H)" onClick={triggerReplace} className="bc-btn">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-                  <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                </svg>
+              <button data-tooltip="Replace: Find and replace text (⌘H)" onClick={triggerReplace} className="bc-btn">
+                <Replace size={15} strokeWidth={1.8} />
               </button>
-              <button title="Format Document" onClick={formatDocument} className="bc-btn">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M2 2h12v1.5H2V2zm0 4h8v1.5H2V6zm0 4h10v1.5H2V10zm0 4h6v1.5H2V14z"/>
-                </svg>
+              <button data-tooltip="Format Code: Clean up layout and indentation" onClick={formatDocument} className="bc-btn">
+                <Braces size={15} strokeWidth={1.8} />
               </button>
               <button
-                title={`Word Wrap: ${wordWrap === 'on' ? 'On' : 'Off'}`}
+                data-tooltip={wordWrap === 'on' ? 'Word Wrap: On (Toggle wrapping)' : 'Word Wrap: Off (Toggle wrapping)'}
                 onClick={toggleWordWrap}
                 className={`bc-btn ${wordWrap === 'on' ? 'bc-btn--active' : ''}`}
               >
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M2 2h12v1.5H2V2zm0 4h9.5v1.5H2V6zm9.5 0h1a2 2 0 0 1 0 4h-1v1.5l-2-2.25L11.5 7V8.5h1a.5.5 0 0 0 0-1h-1V6zM2 10h6v1.5H2V10zm0 4h8v1.5H2V14z"/>
-                </svg>
+                <WrapText size={15} strokeWidth={1.8} />
               </button>
 
               <div className="bc-divider" />
 
-              <button title="Save (⌘S)" onClick={() => onSave(editorRef.current?.getValue() || content)} className="bc-btn bc-btn--save">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z"/>
-                </svg>
+              <button data-tooltip="Save: Persist changes to disk (⌘S)" data-tooltip-align="right" onClick={() => onSave(editorRef.current?.getValue() || content)} className="bc-btn bc-btn--save">
+                <Save size={15} strokeWidth={1.8} />
                 Save
               </button>
-              <button title="Save As (⌘⇧S)" onClick={() => onSaveAs?.(editorRef.current?.getValue() || content)} className="bc-btn bc-btn--save-as">
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z"/>
-                  <path d="M12.5 9.5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2a.5.5 0 0 1 .5-.5z"/>
-                </svg>
+              <button data-tooltip="Save As: Save file to a new path (⌘⇧S)" data-tooltip-align="right" onClick={() => onSaveAs?.(editorRef.current?.getValue() || content)} className="bc-btn bc-btn--save-as">
+                <Save size={15} strokeWidth={1.8} />
                 Save As
               </button>
             </div>

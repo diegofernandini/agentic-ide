@@ -261,8 +261,17 @@ electron.ipcMain.handle("list-files", async (_e, dirPath) => {
 electron.ipcMain.handle("git-status", async (_e, dirPath) => {
   try {
     const { stdout } = await execFileAsync("git", ["status", "--porcelain"], { cwd: dirPath, encoding: "utf-8" });
-    const { stdout: branchOut } = await execFileAsync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: dirPath, encoding: "utf-8" });
-    const branch = branchOut.trim();
+    let branch = "main";
+    try {
+      const { stdout: branchOut } = await execFileAsync("git", ["symbolic-ref", "--short", "HEAD"], { cwd: dirPath, encoding: "utf-8" });
+      branch = branchOut.trim();
+    } catch {
+      try {
+        const { stdout: branchOut } = await execFileAsync("git", ["rev-parse", "--abbrev-ref", "HEAD"], { cwd: dirPath, encoding: "utf-8" });
+        branch = branchOut.trim();
+      } catch {
+      }
+    }
     let ahead = 0;
     let behind = 0;
     try {
@@ -376,11 +385,90 @@ electron.ipcMain.handle("exec-command", async (_e, dirPath, command) => {
   }
 });
 electron.ipcMain.handle("github-login", async () => {
-  const { shell } = require("electron");
-  const CLIENT_ID = "your_client_id_here";
-  const GITHUB_AUTH_URL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=repo,user`;
-  shell.openExternal(GITHUB_AUTH_URL);
   return true;
+});
+electron.ipcMain.handle("git-is-repo", async (_e, dirPath) => {
+  try {
+    await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"], { cwd: dirPath });
+    return true;
+  } catch {
+    return false;
+  }
+});
+electron.ipcMain.handle("git-init", async (_e, dirPath) => {
+  try {
+    await execFileAsync("git", ["init"], { cwd: dirPath });
+    await execFileAsync("git", ["checkout", "-b", "main"], { cwd: dirPath }).catch(() => {
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+electron.ipcMain.handle("git-remote-add", async (_e, dirPath, name, url) => {
+  try {
+    await execFileAsync("git", ["remote", "remove", name], { cwd: dirPath }).catch(() => {
+    });
+    await execFileAsync("git", ["remote", "add", name, url], { cwd: dirPath });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+electron.ipcMain.handle("git-get-remote", async (_e, dirPath) => {
+  try {
+    const { stdout } = await execFileAsync("git", ["remote", "get-url", "origin"], { cwd: dirPath, encoding: "utf-8" });
+    const url = stdout.trim();
+    return url.replace(/https:\/\/[^@]+@github.com/, "https://github.com");
+  } catch {
+    return null;
+  }
+});
+electron.ipcMain.handle("git-push-upstream", async (_e, dirPath, branch) => {
+  try {
+    await execFileAsync("git", ["push", "-u", "origin", branch], { cwd: dirPath });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+electron.ipcMain.handle("github-create-repo", async (_e, token, repoName, isPrivate, description) => {
+  return new Promise((resolve) => {
+    const body = JSON.stringify({ name: repoName, private: isPrivate, description, auto_init: false });
+    const options = {
+      hostname: "api.github.com",
+      path: "/user/repos",
+      method: "POST",
+      headers: {
+        "Authorization": `token ${token}`,
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body),
+        "User-Agent": "agentic-ide"
+      }
+    };
+    const https = require("https");
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          if (json.clone_url) {
+            resolve({ success: true, cloneUrl: json.clone_url });
+          } else {
+            resolve({ success: false, error: json.message || "Unknown error" });
+          }
+        } catch (e) {
+          resolve({ success: false, error: e.message });
+        }
+      });
+    });
+    req.on("error", (e) => resolve({ success: false, error: e.message }));
+    req.write(body);
+    req.end();
+  });
 });
 const appSupportDir = path__namespace.dirname(electron.app.getPath("userData"));
 const dataDir = path__namespace.join(appSupportDir, "agentic-ide");
@@ -474,7 +562,8 @@ electron.ipcMain.handle("list-backups", async () => {
     if (!fs__namespace.existsSync(backupDir)) return [];
     const files = await fs__namespace.promises.readdir(backupDir);
     const backupFiles = files.filter((f) => f.startsWith("sessions.")).sort().reverse();
-    const backupsWithDetails = await Promise.all(backupFiles.map(async (file) => {
+    const recentBackups = backupFiles.slice(0, 50);
+    const backupsWithDetails = await Promise.all(recentBackups.map(async (file) => {
       try {
         const filePath = path__namespace.join(backupDir, file);
         const content = await fs__namespace.promises.readFile(filePath, "utf-8");
@@ -535,15 +624,30 @@ electron.ipcMain.handle("restore-backup", async (_e, backupFileName) => {
     return null;
   }
 });
+let lastBackupTime = 0;
+const BACKUP_THROTTLE_MS = 6e4;
+const MAX_BACKUPS = 100;
 electron.ipcMain.handle("save-sessions", async (_e, data) => {
   try {
     if (!fs__namespace.existsSync(dataDir)) fs__namespace.mkdirSync(dataDir, { recursive: true });
-    if (fs__namespace.existsSync(sessionsPath)) {
+    const now = Date.now();
+    if (fs__namespace.existsSync(sessionsPath) && now - lastBackupTime >= BACKUP_THROTTLE_MS) {
       const backupDir = path__namespace.join(dataDir, "backups");
       if (!fs__namespace.existsSync(backupDir)) fs__namespace.mkdirSync(backupDir);
       const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
       const backupPath = path__namespace.join(backupDir, `sessions.${timestamp}.json`);
       await fs__namespace.promises.copyFile(sessionsPath, backupPath);
+      lastBackupTime = now;
+      try {
+        const files = await fs__namespace.promises.readdir(backupDir);
+        const backupFiles = files.filter((f) => f.startsWith("sessions.")).sort();
+        if (backupFiles.length > MAX_BACKUPS) {
+          const toDelete = backupFiles.slice(0, backupFiles.length - MAX_BACKUPS);
+          await Promise.all(toDelete.map((f) => fs__namespace.promises.unlink(path__namespace.join(backupDir, f)).catch(() => {
+          })));
+        }
+      } catch {
+      }
     }
     await fs__namespace.promises.writeFile(sessionsPath, data, "utf-8");
     await logActivity("sessions-save", { size: data.length });
@@ -606,8 +710,9 @@ electron.ipcMain.handle("get-historical-sessions", async () => {
     const backupDir = path__namespace.join(dataDir, "backups");
     if (fs__namespace.existsSync(backupDir)) {
       const files = await fs__namespace.promises.readdir(backupDir);
-      const backupFiles = files.filter((f) => f.startsWith("sessions.") && f.endsWith(".json"));
-      await Promise.all(backupFiles.map(async (file) => {
+      const backupFiles = files.filter((f) => f.startsWith("sessions.") && f.endsWith(".json")).sort().reverse();
+      const recentBackups = backupFiles.slice(0, 50);
+      await Promise.all(recentBackups.map(async (file) => {
         try {
           const filePath = path__namespace.join(backupDir, file);
           const data = await fs__namespace.promises.readFile(filePath, "utf-8");

@@ -7093,55 +7093,75 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$r = [
+const __iconNode$A = [
   ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
   ["path", { d: "M4 7h16", key: "6tx8e3" }],
   ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
   ["path", { d: "M20 17H4", key: "h6l3hr" }]
 ];
-const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$r);
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$A);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$q = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$q);
+const __iconNode$z = [
+  [
+    "path",
+    { d: "M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1", key: "ezmyqa" }
+  ],
+  [
+    "path",
+    {
+      d: "M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1",
+      key: "e1hn23"
+    }
+  ]
+];
+const Braces = createLucideIcon("braces", __iconNode$z);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$p = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$p);
+const __iconNode$y = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$y);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$o = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$o);
+const __iconNode$x = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$x);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$n = [
+const __iconNode$w = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$w);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$v = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$n);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$v);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$m = [
+const __iconNode$u = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -7155,26 +7175,45 @@ const __iconNode$m = [
   ["path", { d: "M8 11h.01", key: "1dfujw" }],
   ["path", { d: "M8 16h.01", key: "18s6g9" }]
 ];
-const ClipboardList = createLucideIcon("clipboard-list", __iconNode$m);
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$u);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$l = [
+const __iconNode$t = [
   ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
   ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
   ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
 ];
-const Database = createLucideIcon("database", __iconNode$l);
+const Database = createLucideIcon("database", __iconNode$t);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$k = [
+const __iconNode$s = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
+  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }]
+];
+const FileCode = createLucideIcon("file-code", __iconNode$s);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$r = [
   [
     "path",
     {
@@ -7186,14 +7225,53 @@ const __iconNode$k = [
   ["path", { d: "M12 13V7", key: "h0r20n" }],
   ["path", { d: "M9 17h6", key: "r8uit2" }]
 ];
-const FileDiff = createLucideIcon("file-diff", __iconNode$k);
+const FileDiff = createLucideIcon("file-diff", __iconNode$r);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$j = [
+const __iconNode$q = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["circle", { cx: "10", cy: "12", r: "2", key: "737tya" }],
+  ["path", { d: "m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22", key: "wt3hpn" }]
+];
+const FileImage = createLucideIcon("file-image", __iconNode$q);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$p = [
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M4 12v6", key: "bg1pfk" }],
+  ["path", { d: "M4 14h2", key: "1sf9f8" }],
+  [
+    "path",
+    {
+      d: "M9.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v4",
+      key: "d56i0q"
+    }
+  ],
+  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
+];
+const FileKey = createLucideIcon("file-key", __iconNode$p);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [
   [
     "path",
     {
@@ -7205,14 +7283,34 @@ const __iconNode$j = [
   ["path", { d: "M9 15h6", key: "cctwl0" }],
   ["path", { d: "M12 18v-6", key: "17g6i2" }]
 ];
-const FilePlus = createLucideIcon("file-plus", __iconNode$j);
+const FilePlus = createLucideIcon("file-plus", __iconNode$o);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$i = [
+const __iconNode$n = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M10 9H8", key: "b1mrlr" }],
+  ["path", { d: "M16 13H8", key: "t4e002" }],
+  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+];
+const FileText = createLucideIcon("file-text", __iconNode$n);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$m = [
   ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
   [
     "path",
@@ -7223,14 +7321,31 @@ const __iconNode$i = [
   ],
   ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
 ];
-const Files = createLucideIcon("files", __iconNode$i);
+const Files = createLucideIcon("files", __iconNode$m);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$h = [
+const __iconNode$l = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }]
+];
+const File = createLucideIcon("file", __iconNode$l);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$k = [
   [
     "path",
     {
@@ -7239,14 +7354,14 @@ const __iconNode$h = [
     }
   ]
 ];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$h);
+const FolderOpen = createLucideIcon("folder-open", __iconNode$k);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$g = [
+const __iconNode$j = [
   [
     "path",
     {
@@ -7255,7 +7370,44 @@ const __iconNode$g = [
     }
   ]
 ];
-const Folder = createLucideIcon("folder", __iconNode$g);
+const Folder = createLucideIcon("folder", __iconNode$j);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$i = [
+  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
+  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
+  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
+];
+const GitBranch = createLucideIcon("git-branch", __iconNode$i);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$h = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
+  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
+];
+const History = createLucideIcon("history", __iconNode$h);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$g = [
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
+];
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$g);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7263,11 +7415,11 @@ const Folder = createLucideIcon("folder", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
-  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
-  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
 ];
-const GitBranch = createLucideIcon("git-branch", __iconNode$f);
+const LogOut = createLucideIcon("log-out", __iconNode$f);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7275,43 +7427,6 @@ const GitBranch = createLucideIcon("git-branch", __iconNode$f);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$e = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
-  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
-];
-const History = createLucideIcon("history", __iconNode$e);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$d = [
-  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
-  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
-  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
-  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
-];
-const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$d);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
-];
-const LogOut = createLucideIcon("log-out", __iconNode$c);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$b = [
   [
     "path",
     {
@@ -7320,7 +7435,47 @@ const __iconNode$b = [
     }
   ]
 ];
-const Paperclip = createLucideIcon("paperclip", __iconNode$b);
+const Paperclip = createLucideIcon("paperclip", __iconNode$e);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$d = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$d);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$c);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$b = [
+  ["path", { d: "M14 4a1 1 0 0 1 1-1", key: "dhj8ez" }],
+  ["path", { d: "M15 10a1 1 0 0 1-1-1", key: "1mnyi5" }],
+  ["path", { d: "M21 4a1 1 0 0 0-1-1", key: "sfs9ap" }],
+  ["path", { d: "M21 9a1 1 0 0 1-1 1", key: "mp6qeo" }],
+  ["path", { d: "m3 7 3 3 3-3", key: "x25e72" }],
+  ["path", { d: "M6 10V5a2 2 0 0 1 2-2h2", key: "15xut4" }],
+  ["rect", { x: "3", y: "14", width: "7", height: "7", rx: "1", key: "1bkyp8" }]
+];
+const Replace = createLucideIcon("replace", __iconNode$b);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7328,10 +7483,10 @@ const Paperclip = createLucideIcon("paperclip", __iconNode$b);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$a = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
 ];
-const Plus = createLucideIcon("plus", __iconNode$a);
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$a);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7339,12 +7494,17 @@ const Plus = createLucideIcon("plus", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+  [
+    "path",
+    {
+      d: "M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z",
+      key: "1c8476"
+    }
+  ],
+  ["path", { d: "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7", key: "1ydtos" }],
+  ["path", { d: "M7 3v4a1 1 0 0 0 1 1h7", key: "t51u73" }]
 ];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$9);
+const Save = createLucideIcon("save", __iconNode$9);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7352,10 +7512,10 @@ const RefreshCw = createLucideIcon("refresh-cw", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$8);
+const Search = createLucideIcon("search", __iconNode$8);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7363,17 +7523,6 @@ const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
-];
-const Search = createLucideIcon("search", __iconNode$7);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$6 = [
   [
     "path",
     {
@@ -7383,7 +7532,20 @@ const __iconNode$6 = [
   ],
   ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
 ];
-const Send = createLucideIcon("send", __iconNode$6);
+const Send = createLucideIcon("send", __iconNode$7);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  ["path", { d: "M14 17H5", key: "gfn3mx" }],
+  ["path", { d: "M19 7h-9", key: "6i9tg" }],
+  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
+  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+];
+const Settings2 = createLucideIcon("settings-2", __iconNode$6);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7391,12 +7553,11 @@ const Send = createLucideIcon("send", __iconNode$6);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$5 = [
-  ["path", { d: "M14 17H5", key: "gfn3mx" }],
-  ["path", { d: "M19 7h-9", key: "6i9tg" }],
-  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
-  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+  ["path", { d: "m7 11 2-2-2-2", key: "1lz0vl" }],
+  ["path", { d: "M11 13h4", key: "1p7l4v" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }]
 ];
-const Settings2 = createLucideIcon("settings-2", __iconNode$5);
+const SquareTerminal = createLucideIcon("square-terminal", __iconNode$5);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7404,11 +7565,12 @@ const Settings2 = createLucideIcon("settings-2", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "m7 11 2-2-2-2", key: "1lz0vl" }],
-  ["path", { d: "M11 13h4", key: "1p7l4v" }],
-  ["rect", { width: "18", height: "18", x: "3", y: "3", rx: "2", ry: "2", key: "1m3agn" }]
+  ["path", { d: "m16 16-3 3 3 3", key: "117b85" }],
+  ["path", { d: "M3 12h14.5a1 1 0 0 1 0 7H13", key: "18xa6z" }],
+  ["path", { d: "M3 19h6", key: "1ygdsz" }],
+  ["path", { d: "M3 5h18", key: "1u36vt" }]
 ];
-const SquareTerminal = createLucideIcon("square-terminal", __iconNode$4);
+const TextWrap = createLucideIcon("text-wrap", __iconNode$4);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -8245,31 +8407,25 @@ function Editor({ path, content, onChange, onSave, onSaveAs, sessions, onRestore
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-container", children: path ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "editor-breadcrumb", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "breadcrumb-actions", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find (⌘F)", onClick: triggerFind, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Find & Replace (⌘H)", onClick: triggerReplace, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { title: "Format Document", onClick: formatDocument, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h8v1.5H2V6zm0 4h10v1.5H2V10zm0 4h6v1.5H2V14z" }) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { "data-tooltip": "Find: Search text in this file (⌘F)", onClick: triggerFind, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Search, { size: 15, strokeWidth: 1.8 }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { "data-tooltip": "Replace: Find and replace text (⌘H)", onClick: triggerReplace, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Replace, { size: 15, strokeWidth: 1.8 }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { "data-tooltip": "Format Code: Clean up layout and indentation", onClick: formatDocument, className: "bc-btn", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Braces, { size: 15, strokeWidth: 1.8 }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",
         {
-          title: `Word Wrap: ${wordWrap === "on" ? "On" : "Off"}`,
+          "data-tooltip": wordWrap === "on" ? "Word Wrap: On (Toggle wrapping)" : "Word Wrap: Off (Toggle wrapping)",
           onClick: toggleWordWrap,
           className: `bc-btn ${wordWrap === "on" ? "bc-btn--active" : ""}`,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2h12v1.5H2V2zm0 4h9.5v1.5H2V6zm9.5 0h1a2 2 0 0 1 0 4h-1v1.5l-2-2.25L11.5 7V8.5h1a.5.5 0 0 0 0-1h-1V6zM2 10h6v1.5H2V10zm0 4h8v1.5H2V14z" }) })
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(TextWrap, { size: 15, strokeWidth: 1.8 })
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bc-divider" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { title: "Save (⌘S)", onClick: () => onSave(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { "data-tooltip": "Save: Persist changes to disk (⌘S)", "data-tooltip-align": "right", onClick: () => onSave(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Save, { size: 15, strokeWidth: 1.8 }),
         "Save"
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { title: "Save As (⌘⇧S)", onClick: () => onSaveAs?.(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save-as", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4.5L10.5 1H2zm0 1h8v3h3v9H2V2zm2 8v3h6v-3H4zm1-5h4v1H5V5z" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12.5 9.5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2a.5.5 0 0 1 .5-.5z" })
-        ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { "data-tooltip": "Save As: Save file to a new path (⌘⇧S)", "data-tooltip-align": "right", onClick: () => onSaveAs?.(editorRef.current?.getValue() || content), className: "bc-btn bc-btn--save-as", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Save, { size: 15, strokeWidth: 1.8 }),
         "Save As"
       ] })
     ] }) }),
@@ -8472,7 +8628,7 @@ function Markdown({ text }) {
         }) }, idx)) }, key)
       );
     } else if (mode === "list") {
-      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2) }, `${key}-li-${idx}`)) }, key));
+      parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "md-list", children: currentBlock.map((li2, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("li", { children: parseInline(li2, `${key}-li-${idx}`) }, `${key}-li-${idx}`)) }, key));
     } else {
       const paraLines = [];
       const flushPara = (k2) => {
@@ -8480,7 +8636,7 @@ function Markdown({ text }) {
         const nodes = [];
         paraLines.forEach((l3, li2) => {
           if (li2 > 0) nodes.push(/* @__PURE__ */ jsxRuntimeExports.jsx("br", {}, `br-${li2}`));
-          nodes.push(...parseInline(l3));
+          nodes.push(...parseInline(l3, `${k2}-line-${li2}`));
         });
         parts.push(/* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "md-p", children: nodes }, k2));
         paraLines.length = 0;
@@ -8549,7 +8705,7 @@ function Markdown({ text }) {
     currentBlock.push(line);
   });
   flush(9999);
-  function parseInline(t2) {
+  function parseInline(t2, keyPrefix) {
     const tokens = [];
     let i = 0;
     let tokenIndex = 0;
@@ -8557,7 +8713,7 @@ function Markdown({ text }) {
       if (t2.startsWith("**", i)) {
         const end = t2.indexOf("**", i + 2);
         if (end !== -1) {
-          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, `bold-${tokenIndex++}`));
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("b", { children: t2.slice(i + 2, end) }, `${keyPrefix ?? "tok"}-bold-${tokenIndex++}`));
           i = end + 2;
           continue;
         } else {
@@ -8569,7 +8725,7 @@ function Markdown({ text }) {
       if (t2[i] === "`") {
         const end = t2.indexOf("`", i + 1);
         if (end !== -1) {
-          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, `code-${tokenIndex++}`));
+          tokens.push(/* @__PURE__ */ jsxRuntimeExports.jsx("code", { className: "md-inline-code", children: t2.slice(i + 1, end) }, `${keyPrefix ?? "tok"}-code-${tokenIndex++}`));
           i = end + 1;
           continue;
         } else {
@@ -8719,19 +8875,29 @@ function ChatPanel({
   openFiles,
   activeFile
 }) {
+  const _dbg = (m2) => console.debug && console.debug(`ChatPanel.effect: ${m2}`);
   const [sessions, setSessions] = reactExports.useState(() => [newSession(1, "agent", rootPath)]);
   const [activeId, setActiveId] = reactExports.useState(sessions[0].id);
+  const skipNextActiveSyncRef = reactExports.useRef(false);
   reactExports.useEffect(() => {
+    _dbg("sync -> onActiveIdChange");
+    if (skipNextActiveSyncRef.current) {
+      skipNextActiveSyncRef.current = false;
+      return;
+    }
     if (activeId && onActiveIdChange) {
       onActiveIdChange(activeId);
     }
   }, [activeId, onActiveIdChange]);
   reactExports.useEffect(() => {
+    _dbg("prop activeIdProp -> setActiveId");
     if (activeIdProp && activeIdProp !== activeId) {
+      skipNextActiveSyncRef.current = true;
       setActiveId(activeIdProp);
     }
   }, [activeIdProp, activeId]);
   reactExports.useEffect(() => {
+    _dbg("sync openFiles/activeFile -> session tabs");
     if (activeId && (openFiles || activeFile)) {
       setSessions((prev) => {
         const current = prev.find((s15) => s15.id === activeId);
@@ -8747,6 +8913,7 @@ function ChatPanel({
     }
   }, [openFiles, activeFile, activeId]);
   reactExports.useEffect(() => {
+    _dbg("sync rootPath -> session.workspace");
     if (activeId && rootPath) {
       setSessions((prev) => {
         const current = prev.find((s15) => s15.id === activeId);
@@ -8785,26 +8952,45 @@ function ChatPanel({
     return /* @__PURE__ */ new Set();
   });
   reactExports.useEffect(() => {
+    _dbg("alwaysAllowedCommands -> save");
     localStorage.setItem("alwaysAllowedCommands", JSON.stringify(Array.from(alwaysAllowedCommands)));
   }, [alwaysAllowedCommands]);
   reactExports.useEffect(() => {
-    window.api.loadSessions().then((saved) => {
-      if (saved && saved.length > 0) {
-        const migrated = saved.map((s15) => ({
-          ...s15,
-          createdAt: s15.createdAt || Date.now(),
-          lastActive: s15.lastActive || Date.now()
-        }));
-        setSessions(migrated);
-        setActiveId(migrated[0].id);
-        if (onSessionsChange) onSessionsChange(migrated);
-      }
-      hasLoadedRef.current = true;
-    });
+    hasLoadedRef.current = true;
   }, []);
   reactExports.useEffect(() => {
-    if (hasLoadedRef.current) {
-      window.api.saveSessions(JSON.stringify(sessions));
+    _dbg("sessions changed -> persistence (compare ignoring lastActive)");
+    if (!hasLoadedRef.current) return;
+    const stripMeta = (s15) => {
+      const { lastActive, ...rest } = s15;
+      return rest;
+    };
+    try {
+      const forCompare = sessions.map(stripMeta);
+      const jsonNoMeta = JSON.stringify(forCompare);
+      if (ChatPanel._lastSentSessionsNoMeta !== jsonNoMeta) {
+        try {
+          window.api.saveSessions(JSON.stringify(sessions));
+        } catch (e) {
+          console.warn("Failed to save sessions:", e);
+        }
+        if (onSessionsChange) {
+          try {
+            onSessionsChange(sessions);
+          } catch (e) {
+            console.warn("onSessionsChange threw:", e);
+          }
+        }
+        ;
+        ChatPanel._lastSentSessionsNoMeta = jsonNoMeta;
+      } else {
+        _dbg("sessions change only in meta; skipping parent update");
+      }
+    } catch (e) {
+      try {
+        window.api.saveSessions(JSON.stringify(sessions));
+      } catch {
+      }
       if (onSessionsChange) onSessionsChange(sessions);
     }
   }, [sessions]);
@@ -8841,17 +9027,28 @@ function ChatPanel({
     };
   }, [loading]);
   const activeSession = sessions.find((s15) => s15.id === activeId) ?? sessions[0];
-  const messages = activeSession.messages;
-  const lastMsg = messages[messages.length - 1];
+  const messages = Array.isArray(activeSession?.messages) ? activeSession.messages : [];
+  const lastMsg = messages.length > 0 ? messages[messages.length - 1] : void 0;
   const isWaitingFirstToken = lastMsg && lastMsg.role === "assistant" && !lastMsg.content;
   reactExports.useEffect(() => {
-    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, lastActive: Date.now() } : s15));
+    _dbg("activeId -> update lastActive");
+    const now = Date.now();
+    setSessions((prev) => prev.map((s15) => {
+      if (s15.id !== activeId) return s15;
+      const last = s15.lastActive || 0;
+      if (now - last < 2e3) return s15;
+      return { ...s15, lastActive: now };
+    }));
   }, [activeId]);
   reactExports.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   function setMessages(updater) {
-    setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, messages: updater(s15.messages), lastActive: Date.now() } : s15));
+    setSessions((prev) => prev.map((s15) => {
+      if (s15.id !== activeId) return s15;
+      const prevMsgs = Array.isArray(s15.messages) ? s15.messages : [];
+      return { ...s15, messages: updater(prevMsgs), lastActive: Date.now() };
+    }));
   }
   function setMode(mode) {
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, mode, lastActive: Date.now() } : s15));
@@ -9080,6 +9277,19 @@ Currently open file (${rel}):
 ${fileContent.slice(0, 3e3)}
 \`\`\``;
     }
+    try {
+      const repoMems = rootPath ? await window.api.memory.query("", "repo", 5) : [];
+      const userMems = await window.api.memory.query("", "user", 5);
+      const merged = [...repoMems || [], ...userMems || []].slice(0, 8);
+      if (merged.length > 0) {
+        const lines = merged.map((m2) => `- ${String(m2.text || m2.content || "").replace(/\s+/g, " ").slice(0, 200)}`);
+        sys += `
+
+[MEMORY]
+${lines.join("\n")}`;
+      }
+    } catch (e) {
+    }
     return sys;
   }
   async function executeAndReply(command, getMsgIdx, execIdx) {
@@ -9131,8 +9341,15 @@ ${res.stderr?.trim() || "(no output)"}
       };
       history = [...messages, userMsg];
       setMessages(() => history);
+      console.debug && console.debug("ChatPanel.send: queued history", history);
       setInput("");
       setAttachments([]);
+      try {
+        const scope = rootPath ? "repo" : "user";
+        window.api.memory.store({ scope, text: userMsg.content, meta: { sessionId: activeId } }).catch(() => {
+        });
+      } catch (e) {
+      }
     }
     setLoading(true);
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, workspace: s15.workspace || rootPath } : s15));
@@ -9521,9 +9738,9 @@ ${ev.target?.result}
             s15.id
           )) }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "session-actions", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: addSession, title: "New Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 14, strokeWidth: 2 }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory((h2) => !h2), title: "History", children: /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 14, strokeWidth: 1.8 }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: clearSession, title: "Clear Session", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 14, strokeWidth: 1.8 }) })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: addSession, "data-tooltip": "New Session: Start a clean chat conversation", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 14, strokeWidth: 2 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => setShowHistory((h2) => !h2), "data-tooltip": "Session History: Browse and restore past chat sessions", "data-tooltip-align": "right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 14, strokeWidth: 1.8 }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: clearSession, "data-tooltip": "Clear Chat: Reset message history in current session", "data-tooltip-align": "right", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 14, strokeWidth: 1.8 }) })
           ] })
         ] }),
         activeSession.mode === "plan" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "planning-banner", children: [
@@ -9608,7 +9825,7 @@ ${ev.target?.result}
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), title: "Attach File", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), "data-tooltip": "Attach File: Select and upload a file or image", "data-tooltip-position": "top", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach }),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "select",
@@ -9637,7 +9854,9 @@ ${ev.target?.result}
                     setAutopilot(next);
                     autopilotRef.current = next;
                   },
-                  title: autopilot ? "Autopilot ON" : "Autopilot OFF",
+                  "data-tooltip": autopilot ? "Disable Autopilot: Approve agent actions manually" : "Enable Autopilot: Let the agent execute actions autonomously",
+                  "data-tooltip-position": "top",
+                  "data-tooltip-align": "right",
                   children: /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { size: 14, strokeWidth: 1.8 })
                 }
               ),
@@ -18452,6 +18671,15 @@ function TerminalPanel({ cwd }) {
     )) })
   ] });
 }
+function Modal({ title, children, onClose }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-modal-overlay", onClick: onClose, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-modal", onClick: (e) => e.stopPropagation(), children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-modal-header", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-modal-title", children: title }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-modal-close", onClick: onClose, children: "✕" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-modal-body", children })
+  ] }) });
+}
 const FileIcon = ({ path }) => {
   const ext = path.split(".").pop()?.toLowerCase();
   if (ext === "js") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--js", children: "JS" });
@@ -18460,7 +18688,7 @@ const FileIcon = ({ path }) => {
   if (ext === "css") return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon sc-file-icon--css", children: "CSS" });
   return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-file-icon" });
 };
-function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }) {
+function SourceControl({ rootPath, model, onSelectFile, onSelectDiff, user }) {
   const [gitInfo, setGitInfo] = reactExports.useState({ branch: "", ahead: 0, behind: 0, changes: [] });
   const [history, setHistory] = reactExports.useState([]);
   const [loading, setLoading] = reactExports.useState(false);
@@ -18469,16 +18697,40 @@ function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }) {
   const [isChangesExpanded, setIsChangesExpanded] = reactExports.useState(true);
   const [isStagedExpanded, setIsStagedExpanded] = reactExports.useState(true);
   const [isGraphExpanded, setIsGraphExpanded] = reactExports.useState(true);
+  const [statusMsg, setStatusMsg] = reactExports.useState(null);
+  const [remoteUrl, setRemoteUrl] = reactExports.useState(null);
+  const [isGitRepo, setIsGitRepo] = reactExports.useState(true);
+  const [showPublish, setShowPublish] = reactExports.useState(false);
+  const [publishName, setPublishName] = reactExports.useState("");
+  const [publishDesc, setPublishDesc] = reactExports.useState("");
+  const [publishPrivate, setPublishPrivate] = reactExports.useState(false);
+  const [publishing, setPublishing] = reactExports.useState(false);
+  const [publishError, setPublishError] = reactExports.useState("");
+  const flash = (text, ok2 = true) => {
+    setStatusMsg({ text, ok: ok2 });
+    setTimeout(() => setStatusMsg(null), 4e3);
+  };
   const refreshGit = reactExports.useCallback(async () => {
     if (!rootPath) return;
     setLoading(true);
     try {
-      const info = await window.api.getGitStatus(rootPath);
-      setGitInfo(info);
-      const log = await window.api.gitLog(rootPath);
+      const isRepo = await window.api.gitIsRepo(rootPath);
+      if (!isRepo) {
+        setIsGitRepo(false);
+        setLoading(false);
+        return;
+      }
+      setIsGitRepo(true);
+      const [info, log, remote] = await Promise.all([
+        window.api.getGitStatus(rootPath).catch(() => ({ branch: "main", ahead: 0, behind: 0, changes: [] })),
+        window.api.gitLog(rootPath).catch(() => []),
+        window.api.gitGetRemote(rootPath).catch(() => null)
+      ]);
+      setGitInfo({ ...info, branch: info.branch || "main" });
       setHistory(log);
-    } catch (e) {
-      console.error("Failed to get git info", e);
+      setRemoteUrl(remote);
+    } catch {
+      setIsGitRepo(false);
     } finally {
       setLoading(false);
     }
@@ -18488,11 +18740,67 @@ function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }) {
     const interval = setInterval(refreshGit, 3e4);
     return () => clearInterval(interval);
   }, [refreshGit]);
+  const handleInit = async () => {
+    if (!rootPath) return;
+    setLoading(true);
+    try {
+      const res = await window.api.gitInit(rootPath);
+      if (res.success) {
+        flash("Repository initialized on main branch");
+        await refreshGit();
+      } else {
+        flash("Init failed: " + res.error, false);
+      }
+    } catch (e) {
+      flash("Init error: " + (e?.message || "unknown"), false);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const openPublish = () => {
+    if (!user?.token) {
+      flash("Sign in with a GitHub token first (Account panel)", false);
+      return;
+    }
+    setPublishName(rootPath?.split(/[\\/]/).pop() || "");
+    setPublishDesc("");
+    setPublishPrivate(false);
+    setPublishError("");
+    setShowPublish(true);
+  };
+  const handlePublish = async () => {
+    if (!rootPath || !user?.token) return;
+    setPublishing(true);
+    setPublishError("");
+    try {
+      const created = await window.api.githubCreateRepo(user.token, publishName, publishPrivate, publishDesc);
+      if (!created.success || !created.cloneUrl) {
+        setPublishError(created.error || "Failed to create repository on GitHub");
+        return;
+      }
+      const authUrl = created.cloneUrl.replace("https://", `https://${encodeURIComponent(user.token)}@`);
+      await window.api.gitRemoteAdd(rootPath, "origin", authUrl);
+      if (history.length === 0) {
+        await window.api.gitStage(rootPath, ".");
+        await window.api.gitCommit(rootPath, "Initial commit");
+      }
+      const pushed = await window.api.gitPushUpstream(rootPath, gitInfo.branch || "main");
+      if (!pushed.success) {
+        setPublishError("Repo created but push failed: " + pushed.error);
+        return;
+      }
+      setShowPublish(false);
+      flash(`Published to github.com/${user.login}/${publishName}`);
+      refreshGit();
+    } finally {
+      setPublishing(false);
+    }
+  };
   const handleCommit = async () => {
     if (!rootPath || !commitMsg.trim()) return;
     const stagedCount = gitInfo.changes.filter((c) => c.status[0] !== " " && c.status[0] !== "?").length;
     if (stagedCount === 0) {
-      alert("There are no staged changes to commit.");
+      flash("No staged changes to commit", false);
       return;
     }
     setLoading(true);
@@ -18500,40 +18808,35 @@ function SourceControl({ rootPath, model, onSelectFile, onSelectDiff }) {
     if (res.success) {
       setCommitMsg("");
       refreshGit();
-    } else {
-      alert("Commit failed: " + res.error);
-    }
+      flash("Committed successfully");
+    } else flash("Commit failed: " + res.error, false);
     setLoading(false);
   };
   const handleGenerateMessage = async () => {
     if (!rootPath || !model) return;
     const diff = await window.api.gitGetStagedDiff(rootPath);
     if (!diff.trim()) {
-      alert("Stage some changes first to generate a message.");
+      flash("Stage some changes first", false);
       return;
     }
     setGenLoading(true);
     try {
-      const prompt = `Generate a concise, professional git commit message for the following staged changes.
-Return ONLY the message, no quotes or prefix.
-Diff:
-${diff.slice(0, 4e3)}`;
       const res = await fetch("http://localhost:11434/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
-          prompt,
           stream: false,
-          system: "You are an expert developer. You write concise and meaningful commit messages following Conventional Commits format if possible (e.g. feat: ..., fix: ...)."
+          prompt: `Generate a concise git commit message (Conventional Commits) for:
+${diff.slice(0, 4e3)}`,
+          system: "Return ONLY the commit message. No quotes, no prefix."
         })
       });
-      if (!res.ok) throw new Error("AI service failed");
+      if (!res.ok) throw new Error("AI service unavailable");
       const data = await res.json();
-      setCommitMsg(data.response.trim().replace(/^["']|["']$/g, ""));
-    } catch (e) {
-      console.error("Failed to generate message", e);
-      alert("Failed to generate message. Is Ollama running?");
+      setCommitMsg(data.response.trim().replace(/^[\"']|[\"']$/g, ""));
+    } catch {
+      flash("AI unavailable — is Ollama running?", false);
     } finally {
       setGenLoading(false);
     }
@@ -18552,16 +18855,36 @@ ${diff.slice(0, 4e3)}`;
     if (!rootPath) return;
     setLoading(true);
     const res = await window.api.gitPush(rootPath);
-    if (res.success) refreshGit();
-    else alert("Push failed: " + res.error);
+    if (res.success) {
+      refreshGit();
+      flash("Pushed successfully");
+      setLoading(false);
+      return;
+    }
+    if (res.error?.includes("No configured push destination") || res.error?.includes("no upstream")) {
+      setLoading(false);
+      openPublish();
+      return;
+    }
+    const res2 = await window.api.gitPushUpstream(rootPath, gitInfo.branch || "main");
+    if (res2.success) {
+      refreshGit();
+      flash("Pushed and set upstream");
+    } else flash("Push failed: " + res2.error, false);
     setLoading(false);
   };
   const handlePull = async () => {
     if (!rootPath) return;
+    if (!remoteUrl) {
+      flash("No remote configured. Publish the project first.", false);
+      return;
+    }
     setLoading(true);
     const res = await window.api.gitPull(rootPath);
-    if (res.success) refreshGit();
-    else alert("Pull failed: " + res.error);
+    if (res.success) {
+      refreshGit();
+      flash("Pulled successfully");
+    } else flash("Pull failed: " + res.error, false);
     setLoading(false);
   };
   const stagedChanges = gitInfo.changes.filter((c) => c.status[0] !== " " && c.status[0] !== "?");
@@ -18569,101 +18892,130 @@ ${diff.slice(0, 4e3)}`;
   if (!rootPath) {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-empty", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open a git repository to see source control" })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open a folder to see source control" })
     ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-view", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Source Control" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header-actions", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: refreshGit, title: "Refresh", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", className: loading ? "spinning" : "", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", title: "More Actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" }) }) })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-section", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-item", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", style: { opacity: 0.6 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2zm0 1h12a1 1 0 0 1 1 1v2H1V3a1 1 0 0 1 1-1zm13 4v7a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6h14z" }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-info", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-repo-name", children: rootPath.split(/[\\/]/).pop() }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "sc-repo-branch", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-2-1V4.5a1.5 1.5 0 1 1 1 0v7a1.5 1.5 0 0 1-1 0zm2-8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" }) }),
-          gitInfo.branch,
-          gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-            "↑",
-            gitInfo.ahead
-          ] }),
-          gitInfo.behind > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-            "↓",
-            gitInfo.behind
-          ] })
-        ] })
-      ] })
+  if (!isGitRepo) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-empty", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "10" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "8", x2: "12", y2: "12" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("line", { x1: "12", y1: "16", x2: "12.01", y2: "16" })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Not a Git repository" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-init-btn", onClick: handleInit, disabled: loading, children: loading ? "Initializing…" : "Initialize Repository" }),
+      user?.token && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "sc-init-hint", children: "After init you can publish to your GitHub account." })
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    showPublish && /* @__PURE__ */ jsxRuntimeExports.jsx(Modal, { title: "Publish to GitHub", onClose: () => setShowPublish(false), children: !user?.token ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "sc-modal-warn", children: "Please sign in with a GitHub token in the Account panel first." }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-modal-field", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Repository Name" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            className: "login-input",
+            value: publishName,
+            onChange: (e) => setPublishName(e.target.value),
+            placeholder: "my-project"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-modal-field", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Description (optional)" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            className: "login-input",
+            value: publishDesc,
+            onChange: (e) => setPublishDesc(e.target.value),
+            placeholder: "Short description…"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "sc-modal-check", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "checkbox", checked: publishPrivate, onChange: (e) => setPublishPrivate(e.target.checked) }),
+        "Private repository"
+      ] }),
+      publishError && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "login-error", children: publishError }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-publish-btn", onClick: handlePublish, disabled: publishing || !publishName.trim(), children: publishing ? "Publishing…" : `Publish to github.com/${user.login}` })
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section sc-section--changes", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-box", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-input-wrapper", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "textarea",
-            {
-              placeholder: "Message (Ctrl+Enter to commit)",
-              rows: 2,
-              value: commitMsg,
-              onChange: (e) => setCommitMsg(e.target.value),
-              onKeyDown: (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleCommit();
-              }
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "button",
-            {
-              className: `sc-generate-btn ${genLoading ? "spinning" : ""}`,
-              onClick: handleGenerateMessage,
-              disabled: genLoading,
-              title: "Generate Message with AI",
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0L6.5 4.5L2 6L6.5 7.5L8 12L9.5 7.5L14 6L9.5 4.5L8 0Z" }) })
-            }
-          )
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-group", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "sc-commit-btn", onClick: handleCommit, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13.854 3.646l-8 8-3.5-3.5a.5.5 0 1 0-.708.708l4 4a.5.5 0 0 0 .708 0l8.5-8.5a.5.5 0 1 0-.708-.708z" }) }),
-            "Commit"
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-commit-dropdown", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 6l4 4 4-4H4z" }) }) })
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "source-control-view", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Source Control" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-header-actions", children: [
+          statusMsg && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `sc-status-flash ${statusMsg.ok ? "sc-status-flash--ok" : "sc-status-flash--err"}`, children: statusMsg.text }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: refreshGit, title: "Refresh", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", className: loading ? "spinning" : "", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z" })
+          ] }) })
         ] })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-changes-list", children: [
-        stagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsStagedExpanded(!isStagedExpanded), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isStagedExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Staged Changes" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: stagedChanges.length })
-          ] }),
-          isStagedExpanded && stagedChanges.map((change, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FileIcon, { path: change.path }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-path-info", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filename", children: change.path.split(/[\\/]/).pop() }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filepath", children: change.path.split(/[\\/]/).slice(0, -1).join("/") })
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-section", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-item", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 16 16", fill: "currentColor", style: { opacity: 0.6 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 1 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 0 1 1-1h8z" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-repo-info", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-repo-name", children: rootPath.split(/[\\/]/).pop() }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "sc-repo-branch", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M10 12.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm-2-1V4.5a1.5 1.5 0 1 1 1 0v7a1.5 1.5 0 0 1-1 0zm2-8.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" }) }),
+            gitInfo.branch || "main",
+            gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              "↑",
+              gitInfo.ahead
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-item-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-item-btn", onClick: (e) => {
-              e.stopPropagation();
-              handleUnstage(change.path);
-            }, title: "Unstage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" }) }) }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-status-badge sc-status-badge--A", children: change.status[0].trim() })
-          ] }, i))
+            gitInfo.behind > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              "↓",
+              gitInfo.behind
+            ] }),
+            remoteUrl && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "sc-remote-badge", title: remoteUrl, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M7.775 3.275a.75.75 0 0 0 1.06 1.06l1.25-1.25a2 2 0 1 1 2.83 2.83l-2.5 2.5a2 2 0 0 1-2.83 0 .75.75 0 0 0-1.06 1.06 3.5 3.5 0 0 0 4.95 0l2.5-2.5a3.5 3.5 0 0 0-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 1 2.83 0 .75.75 0 0 0 1.06-1.06 3.5 3.5 0 0 0-4.95 0l-2.5 2.5a3.5 3.5 0 0 0 4.95 4.95l1.25-1.25a.75.75 0 0 0-1.06-1.06l-1.25 1.25a2 2 0 0 1-2.83 0z" }) }),
+              "GitHub"
+            ] })
+          ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsChangesExpanded(!isChangesExpanded), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isChangesExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Changes" }),
-            unstagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: unstagedChanges.length })
+        !remoteUrl && /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-publish-small-btn", onClick: openPublish, title: "Publish to GitHub", children: "↑ Publish" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section sc-section--changes", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-box", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-input-wrapper", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "textarea",
+              {
+                placeholder: "Commit message (⌘Enter to commit)",
+                rows: 2,
+                value: commitMsg,
+                onChange: (e) => setCommitMsg(e.target.value),
+                onKeyDown: (e) => {
+                  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleCommit();
+                }
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                className: `sc-generate-btn ${genLoading ? "spinning" : ""}`,
+                onClick: handleGenerateMessage,
+                disabled: genLoading,
+                title: "Generate Message with AI",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 0L6.5 4.5L2 6L6.5 7.5L8 12L9.5 7.5L14 6L9.5 4.5L8 0Z" }) })
+              }
+            )
           ] }),
-          isChangesExpanded && (unstagedChanges.length === 0 && stagedChanges.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-no-changes", children: "No changes detected" }) : unstagedChanges.map((change, i) => {
-            const s15 = change.status === "??" ? "U" : change.status[1].trim();
-            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-group", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("button", { className: "sc-commit-btn", onClick: handleCommit, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13.854 3.646l-8 8-3.5-3.5a.5.5 0 1 0-.708.708l4 4a.5.5 0 0 0 .708 0l8.5-8.5a.5.5 0 1 0-.708-.708z" }) }),
+              "Commit"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-commit-dropdown", onClick: openPublish, title: "Commit & Publish", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 6l4 4 4-4H4z" }) }) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-changes-list", children: [
+          stagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsStagedExpanded(!isStagedExpanded), children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isStagedExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Staged Changes" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: stagedChanges.length })
+            ] }),
+            isStagedExpanded && stagedChanges.map((change, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(FileIcon, { path: change.path }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-path-info", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filename", children: change.path.split(/[\\/]/).pop() }),
@@ -18671,40 +19023,62 @@ ${diff.slice(0, 4e3)}`;
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-item-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-item-btn", onClick: (e) => {
                 e.stopPropagation();
-                handleStage(change.path);
-              }, title: "Stage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4a.5.5 0 0 1 .5.5v3H11a.5.5 0 0 1 0 1H8.5v3a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1 0-1h2.5v-3A.5.5 0 0 1 8 4z" }) }) }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `sc-status-badge sc-status-badge--${s15}`, children: s15 })
-            ] }, i);
-          }))
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-view", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-left", onClick: () => setIsGraphExpanded(!isGraphExpanded), children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isGraphExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "History" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-actions", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePull, title: "Pull", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 5h-3V1h-4v4h-3l5 5 5-5zM0 14h16v1H0v-1z" }) }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePush, title: "Push", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 11h3v4h4v-4h3l-5-5-5 5zM16 2H0V1h16v1z" }) }) })
+                handleUnstage(change.path);
+              }, title: "Unstage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z" }) }) }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-status-badge sc-status-badge--A", children: change.status[0].trim() })
+            ] }, i))
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-group", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-section-header", onClick: () => setIsChangesExpanded(!isChangesExpanded), children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isChangesExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-title", children: "Changes" }),
+              unstagedChanges.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-section-count", children: unstagedChanges.length })
+            ] }),
+            isChangesExpanded && (unstagedChanges.length === 0 && stagedChanges.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-no-changes", children: "No changes detected" }) : unstagedChanges.map((change, i) => {
+              const s15 = change.status === "??" ? "U" : change.status[1].trim();
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-change-item", onClick: () => onSelectDiff(change.path), children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(FileIcon, { path: change.path }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-path-info", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filename", children: change.path.split(/[\\/]/).pop() }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-filepath", children: change.path.split(/[\\/]/).slice(0, -1).join("/") })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-item-actions", children: /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-item-btn", onClick: (e) => {
+                  e.stopPropagation();
+                  handleStage(change.path);
+                }, title: "Stage", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8 4a.5.5 0 0 1 .5.5v3H11a.5.5 0 0 1 0 1H8.5v3a.5.5 0 0 1-1 0V8.5H5a.5.5 0 0 1 0-1h2.5v-3A.5.5 0 0 1 8 4z" }) }) }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: `sc-status-badge sc-status-badge--${s15}`, children: s15 })
+              ] }, i);
+            }))
+          ] })
         ] })
       ] }),
-      isGraphExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-content", children: [
-        gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-item sc-commit-item--outgoing", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-commit-dot sc-commit-dot--outgoing" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: "Outgoing Changes" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-label", children: gitInfo.branch })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-view", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-left", onClick: () => setIsGraphExpanded(!isGraphExpanded), children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor", style: { transform: isGraphExpanded ? "rotate(90deg)" : "none" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M6 4l4 4-4 4V4z" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "History" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-header-actions", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePull, title: "Pull from remote", disabled: loading, children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 5h-3V1h-4v4h-3l5 5 5-5zM0 14h16v1H0v-1z" }) }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "sc-action-btn", onClick: handlePush, title: "Push to remote", disabled: loading, children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 11h3v4h4v-4h3l-5-5-5 5zM16 2H0V1h16v1z" }) }) })
+          ] })
         ] }),
-        history.map((commit, i) => {
-          const isActual = i === 0;
-          return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `sc-commit-item ${isActual ? "sc-commit-item--actual" : ""}`, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `sc-commit-dot ${isActual ? "sc-commit-dot--actual" : "sc-commit-dot--past"}` }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: commit.message }),
-            isActual && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-tag", children: gitInfo.branch }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-hash", children: commit.hash })
-          ] }, i);
-        })
+        isGraphExpanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-graph-content", children: [
+          gitInfo.ahead > 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "sc-commit-item sc-commit-item--outgoing", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sc-commit-dot sc-commit-dot--outgoing" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: "Outgoing Changes" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-label", children: gitInfo.branch })
+          ] }),
+          history.map((commit, i) => {
+            const isActual = i === 0;
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `sc-commit-item ${isActual ? "sc-commit-item--actual" : ""}`, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `sc-commit-dot ${isActual ? "sc-commit-dot--actual" : "sc-commit-dot--past"}` }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-msg", children: commit.message }),
+              isActual && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-branch-tag", children: gitInfo.branch }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sc-commit-hash", children: commit.hash })
+            ] }, i);
+          })
+        ] })
       ] })
     ] })
   ] });
@@ -19290,9 +19664,34 @@ function App() {
   const [diffInfo, setDiffInfo] = reactExports.useState(null);
   const [model, setModel] = reactExports.useState("");
   const [models, setModels] = reactExports.useState([]);
+  const handleSessionsChange = reactExports.useCallback((next) => {
+    try {
+      const normalize = (s15) => {
+        const { lastActive, ...rest } = s15;
+        return rest;
+      };
+      const normalized = next.map(normalize);
+      const json = JSON.stringify(normalized);
+      if (App._lastSessionsJson !== json) {
+        setSessions(next);
+        App._lastSessionsJson = json;
+      }
+    } catch (e) {
+      setSessions(next);
+    }
+  }, []);
+  const handleActiveIdChange = reactExports.useCallback((id2) => {
+    if (!id2) return;
+    setActiveId((prev) => prev === id2 ? prev : id2);
+  }, []);
   const [terminalOpen, setTerminalOpen] = reactExports.useState(true);
   const [user, setUser] = reactExports.useState(null);
   const [loginLoading, setLoginLoading] = reactExports.useState(false);
+  const [showLoginForm, setShowLoginForm] = reactExports.useState(false);
+  const [loginName, setLoginName] = reactExports.useState("");
+  const [loginUsername, setLoginUsername] = reactExports.useState("");
+  const [loginToken, setLoginToken] = reactExports.useState("");
+  const [loginError, setLoginError] = reactExports.useState("");
   const [sidebarOpen, setSidebarOpen] = reactExports.useState(true);
   const [activeSidebar, setActiveSidebar] = reactExports.useState("explorer");
   const [history, setHistory] = reactExports.useState([]);
@@ -19324,9 +19723,18 @@ function App() {
       }
     };
     loadModels();
-    window.api.loadSessions().then((sessions2) => {
-      if (sessions2 && sessions2.user) {
-        setUser(sessions2.user);
+    window.api.loadSessions().then((data) => {
+      try {
+        if (!data) return;
+        if (data.user) setUser(data.user);
+        if (Array.isArray(data)) {
+          setSessions(data);
+          if (data.length > 0) setActiveId(data[0].id);
+        } else if (data.sessions && Array.isArray(data.sessions)) {
+          setSessions(data.sessions);
+          if (data.sessions.length > 0) setActiveId(data.sessions[0].id);
+        }
+      } catch (e) {
       }
     });
   }, []);
@@ -19412,7 +19820,7 @@ function App() {
     const files = await window.api.listFiles(p2);
     setAllFiles(files);
   }
-  async function selectFile(path, fromHistory = false) {
+  const selectFile = reactExports.useCallback(async (path, fromHistory = false) => {
     if (!tabs.includes(path)) {
       setTabs((prev) => [...prev, path]);
     }
@@ -19429,7 +19837,7 @@ function App() {
         return next;
       });
     }
-  }
+  }, [tabs, historyIdx]);
   function closeTab(path, e) {
     if (e) e.stopPropagation();
     if (dirtyTabs.has(path)) {
@@ -19473,20 +19881,10 @@ function App() {
       selectFile(history[idx], true);
     }
   }
-  async function saveFile(content) {
-    if (!openFile) {
-      await saveFileAs(content);
-      return;
-    }
-    await window.api.writeFile(openFile, content);
-    setFileContent(content);
-    setDirtyTabs((prev) => {
-      const next = new Set(prev);
-      next.delete(openFile);
-      return next;
-    });
-  }
-  async function saveFileAs(content) {
+  const refreshTree = reactExports.useCallback(async () => {
+    if (rootPath) setTree(await window.api.readDir(rootPath));
+  }, [rootPath]);
+  const saveFileAs = reactExports.useCallback(async (content) => {
     const defaultPath = rootPath ? rootPath + "/untitled" : "untitled";
     const savedPath = await window.api.saveDialog(defaultPath, content);
     if (!savedPath) return;
@@ -19501,10 +19899,20 @@ function App() {
       return next;
     });
     await refreshTree();
-  }
-  async function refreshTree() {
-    if (rootPath) setTree(await window.api.readDir(rootPath));
-  }
+  }, [rootPath, tabs, refreshTree]);
+  const saveFile = reactExports.useCallback(async (content) => {
+    if (!openFile) {
+      await saveFileAs(content);
+      return;
+    }
+    await window.api.writeFile(openFile, content);
+    setFileContent(content);
+    setDirtyTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(openFile);
+      return next;
+    });
+  }, [openFile, saveFileAs]);
   async function handleContextMenu(path, isDir) {
     const action = await window.api.showContextMenu(path, isDir);
     if (!action) return;
@@ -19535,17 +19943,39 @@ function App() {
     }
   }
   async function handleLogin() {
+    setLoginError("");
+    const name = loginName.trim();
+    const username = loginUsername.trim();
+    const token = loginToken.trim();
+    if (!name) {
+      setLoginError("Please enter a display name.");
+      return;
+    }
+    if (!username) {
+      setLoginError("Please enter a GitHub username.");
+      return;
+    }
+    if (!token) {
+      setLoginError("Please enter a GitHub Personal Access Token.");
+      return;
+    }
     setLoginLoading(true);
     try {
-      const mockUser = {
-        name: "Diego Fernandini",
-        login: "fernandini2007",
-        avatar: "https://github.com/fernandini2007.png"
+      const newUser = {
+        name,
+        login: username,
+        avatar: `https://github.com/${encodeURIComponent(username)}.png`,
+        token
       };
-      await new Promise((r2) => setTimeout(r2, 1500));
-      setUser(mockUser);
+      await new Promise((r2) => setTimeout(r2, 400));
+      setUser(newUser);
+      setShowLoginForm(false);
+      setLoginName("");
+      setLoginUsername("");
+      setLoginToken("");
+      const userToSave = { name: newUser.name, login: newUser.login, avatar: newUser.avatar };
       const existing = await window.api.loadSessions() || {};
-      await window.api.saveSessions(JSON.stringify({ ...existing, user: mockUser }));
+      await window.api.saveSessions(JSON.stringify({ ...existing, user: userToSave }));
     } finally {
       setLoginLoading(false);
     }
@@ -19563,32 +19993,58 @@ function App() {
       return next;
     });
   }
+  const handleOpenFile = reactExports.useCallback((path) => selectFile(path, true), [selectFile]);
+  const handleOpenDiff = reactExports.useCallback((filename, original, current) => {
+    setDiffInfo({ filename, original, current });
+    setOpenFile(null);
+  }, []);
   const filteredFiles = quickQuery ? allFiles.filter((f2) => f2.toLowerCase().includes(quickQuery.toLowerCase())).slice(0, 12) : allFiles.slice(0, 12);
   function getFileIcon(filePath) {
     const ext = filePath.split(".").pop()?.toLowerCase() ?? "";
-    const icons = {
-      ts: "󰛦",
-      tsx: "󰜈",
-      js: "󰌞",
-      jsx: "󰜈",
-      json: "󰘦",
-      md: "󰍔",
-      css: "󰌜",
-      html: "󰌝",
-      py: "󰌠",
-      rs: "󱘗",
-      go: "󰟓",
-      sh: "󰆍",
-      svg: "󰜡",
-      png: "󰋩",
-      jpg: "󰋩",
-      gif: "󰋩",
-      lock: "󰌾",
-      yml: "󰬴",
-      yaml: "󰬴",
-      env: "󰒓"
+    const colors = {
+      ts: "#3178c6",
+      tsx: "#61dafb",
+      js: "#f1e05a",
+      jsx: "#61dafb",
+      json: "#cbcb41",
+      md: "#b0bec5",
+      css: "#a06ccd",
+      html: "#e34c26",
+      py: "#4b8bbe",
+      rs: "#dea584",
+      go: "#00ADD8",
+      sh: "#89e051",
+      svg: "#ffb13b",
+      png: "#90a4ae",
+      jpg: "#90a4ae",
+      gif: "#90a4ae",
+      lock: "#777",
+      yml: "#cbcb41",
+      yaml: "#cbcb41",
+      env: "#aaa",
+      toml: "#9c4221",
+      sql: "#e38d40",
+      graphql: "#e535ab"
     };
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontFamily: "monospace", fontSize: "11px", opacity: 0.7 }, children: icons[ext] ?? "󰈙" });
+    const color = colors[ext] ?? "#9cdcfe";
+    let IconComponent = File;
+    if (["ts", "tsx", "js", "jsx", "json", "py", "rs", "go", "sh", "html", "css", "yml", "yaml", "toml", "sql", "graphql"].includes(ext)) {
+      IconComponent = FileCode;
+    } else if (["md", "txt", "log", "env"].includes(ext)) {
+      IconComponent = FileText;
+    } else if (["png", "jpg", "jpeg", "gif", "svg", "ico"].includes(ext)) {
+      IconComponent = FileImage;
+    } else if (["lock", "key"].includes(ext)) {
+      IconComponent = FileKey;
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      IconComponent,
+      {
+        size: 14,
+        strokeWidth: 1.8,
+        style: { color, display: "block" }
+      }
+    );
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "app", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "topbar", children: [
@@ -19664,7 +20120,8 @@ function App() {
                     setSidebarOpen(true);
                   }
                 },
-                title: "Explorer",
+                "data-tooltip": "Explorer",
+                "data-tooltip-position": "right",
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx(Files, { size: 22, strokeWidth: 1.6 })
               }
             ),
@@ -19679,7 +20136,8 @@ function App() {
                     setSidebarOpen(true);
                   }
                 },
-                title: "Source Control",
+                "data-tooltip": "Source Control",
+                "data-tooltip-position": "right",
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx(GitBranch, { size: 22, strokeWidth: 1.6 })
               }
             ),
@@ -19695,7 +20153,8 @@ function App() {
                       setSidebarOpen(true);
                     }
                   },
-                  title: "Accounts",
+                  "data-tooltip": "Accounts",
+                  "data-tooltip-position": "right",
                   children: /* @__PURE__ */ jsxRuntimeExports.jsx(User, { size: 22, strokeWidth: 1.6 })
                 }
               ),
@@ -19704,11 +20163,20 @@ function App() {
                 {
                   className: `activity-btn ${activeSidebar === "dashboard" ? "activity-btn--active" : ""}`,
                   onClick: () => setActiveSidebar("dashboard"),
-                  title: "Dashboard",
+                  "data-tooltip": "Dashboard",
+                  "data-tooltip-position": "right",
                   children: /* @__PURE__ */ jsxRuntimeExports.jsx(LayoutDashboard, { size: 22, strokeWidth: 1.6 })
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "activity-btn", title: "Settings", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Settings2, { size: 22, strokeWidth: 1.6 }) })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  className: "activity-btn",
+                  "data-tooltip": "Settings",
+                  "data-tooltip-position": "right",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Settings2, { size: 22, strokeWidth: 1.6 })
+                }
+              )
             ] })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "sidebar", style: { display: sidebarOpen && activeSidebar !== "dashboard" ? "flex" : "none" }, children: activeSidebar === "explorer" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
@@ -19723,24 +20191,105 @@ function App() {
               rootPath,
               model,
               onSelectFile: selectFile,
-              onSelectDiff: handleSelectDiff
+              onSelectDiff: handleSelectDiff,
+              user
             }
           ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "account-view", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Account" }),
             !user ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "account-info", children: "Sign in to your GitHub account to access your repositories and sync your settings." }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "account-info", children: "Sign in with any account to sync your settings and workspace." }),
+              !showLoginForm ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "button",
                 {
                   className: "github-login-btn",
-                  onClick: handleLogin,
-                  disabled: loginLoading,
+                  onClick: () => {
+                    setShowLoginForm(true);
+                    setLoginError("");
+                  },
                   children: [
-                    loginLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" }) }),
-                    loginLoading ? "Signing in..." : "Sign in with GitHub"
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "currentColor", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" }) }),
+                    "Sign In"
                   ]
                 }
-              )
+              ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "login-form", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "login-field", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "login-label", children: "Display Name" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      className: "login-input",
+                      type: "text",
+                      placeholder: "e.g. John Doe",
+                      value: loginName,
+                      onChange: (e) => setLoginName(e.target.value),
+                      onKeyDown: (e) => e.key === "Enter" && handleLogin(),
+                      autoFocus: true
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "login-field", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "login-label", children: "GitHub Username" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      className: "login-input",
+                      type: "text",
+                      placeholder: "e.g. octocat",
+                      value: loginUsername,
+                      onChange: (e) => setLoginUsername(e.target.value),
+                      onKeyDown: (e) => e.key === "Enter" && handleLogin()
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "login-hint", children: "Your avatar will be fetched automatically." })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "login-field", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("label", { className: "login-label", children: "Personal Access Token" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      className: "login-input",
+                      type: "password",
+                      placeholder: "ghp_xxxxxxxxxxxxxxxxxxxx",
+                      value: loginToken,
+                      onChange: (e) => setLoginToken(e.target.value),
+                      onKeyDown: (e) => e.key === "Enter" && handleLogin()
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "login-hint", children: [
+                    "Needs ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: "repo" }),
+                    " scope.",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("a", { href: "https://github.com/settings/tokens/new", target: "_blank", rel: "noreferrer", className: "login-link", children: "Create token →" })
+                  ] })
+                ] }),
+                loginError && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "login-error", children: loginError }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "login-actions", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      className: "github-login-btn",
+                      onClick: handleLogin,
+                      disabled: loginLoading,
+                      children: [
+                        loginLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner" }) : null,
+                        loginLoading ? "Signing in..." : "Sign In"
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      className: "profile-btn",
+                      onClick: () => {
+                        setShowLoginForm(false);
+                        setLoginError("");
+                      },
+                      children: "Cancel"
+                    }
+                  )
+                ] })
+              ] })
             ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "user-profile", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-card", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: user.avatar, alt: "Avatar", className: "profile-avatar" }),
@@ -19754,12 +20303,15 @@ function App() {
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-stats", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "12" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Repos" })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", style: { fontSize: 12, color: user.token ? "#4ec9b0" : "#f48771" }, children: user.token ? "✓ Active" : "✗ None" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Token" })
                 ] }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-item", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-value", children: "158" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "Stars" })
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "stat-value", children: [
+                    "@",
+                    user.login
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "stat-label", children: "GitHub" })
                 ] })
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "profile-actions", children: [
@@ -19837,14 +20389,11 @@ function App() {
               fileContent,
               onWriteFile: saveFile,
               onRefreshTree: refreshTree,
-              onOpenFile: (path) => selectFile(path, true),
-              onOpenDiff: (filename, original, current) => {
-                setDiffInfo({ filename, original, current });
-                setOpenFile(null);
-              },
-              onSessionsChange: setSessions,
+              onOpenFile: handleOpenFile,
+              onOpenDiff: handleOpenDiff,
+              onSessionsChange: handleSessionsChange,
               activeId,
-              onActiveIdChange: setActiveId,
+              onActiveIdChange: handleActiveIdChange,
               openFiles: tabs,
               activeFile: openFile
             }
