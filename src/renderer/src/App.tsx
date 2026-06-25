@@ -180,18 +180,56 @@ export default function App() {
     loadModels()
 
     // Load saved sessions and optional user info
-    window.api.loadSessions().then(data => {
+    window.api.loadSessions().then(async data => {
       try {
         if (!data) return
         if ((data as any).user) setUser((data as any).user)
+
+        let loadedSessions: Session[] = []
         if (Array.isArray(data)) {
-          setSessions(data as any)
-          if ((data as any).length > 0) setActiveId((data as any)[0].id)
+          loadedSessions = data as Session[]
         } else if ((data as any).sessions && Array.isArray((data as any).sessions)) {
-          setSessions((data as any).sessions)
-          if ((data as any).sessions.length > 0) setActiveId((data as any).sessions[0].id)
+          loadedSessions = (data as any).sessions as Session[]
         }
-      } catch (e) {}
+        if (loadedSessions.length === 0) return
+
+        setSessions(loadedSessions)
+        const firstSession = loadedSessions[0]
+        setActiveId(firstSession.id)
+
+        if (firstSession.workspace) {
+          const workspacePath = firstSession.workspace
+          setRootPath(workspacePath)
+          try {
+            const [treeData, files] = await Promise.all([
+              window.api.readDir(workspacePath),
+              window.api.listFiles(workspacePath)
+            ])
+            setTree(treeData)
+            setAllFiles(files)
+            setOpenDirs(new Set())
+          } catch (e) {
+            console.warn('Failed to restore workspace tree:', e)
+          }
+        }
+
+        if (firstSession.tabs && firstSession.tabs.length > 0) {
+          setTabs(firstSession.tabs)
+        }
+
+        if (firstSession.openFile) {
+          setOpenFile(firstSession.openFile)
+          try {
+            const content = await window.api.readFile(firstSession.openFile)
+            setFileContent(content)
+          } catch (e) {
+            console.warn('Failed to restore open file content:', e)
+            setFileContent('')
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load sessions:', e)
+      }
     })
   }, [])
 

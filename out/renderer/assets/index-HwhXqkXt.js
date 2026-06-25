@@ -8956,6 +8956,18 @@ function ChatPanel({
     localStorage.setItem("alwaysAllowedCommands", JSON.stringify(Array.from(alwaysAllowedCommands)));
   }, [alwaysAllowedCommands]);
   reactExports.useEffect(() => {
+    const loadStoredSessions = async () => {
+      try {
+        const stored = await window.api.loadSessions();
+        if (Array.isArray(stored) && stored.length > 0) {
+          setSessions(stored);
+          setActiveId(stored[0].id);
+        }
+      } catch (e) {
+        console.warn("Failed to load stored sessions:", e);
+      }
+    };
+    loadStoredSessions();
     hasLoadedRef.current = true;
   }, []);
   reactExports.useEffect(() => {
@@ -9167,7 +9179,29 @@ Write the complete plan to a single markdown file using this exact format:
 
 After writing the plan file, briefly summarize what you've planned in 1-2 sentences. The user can then review PLAN.md and switch to Agent mode to implement it.`;
     } else {
-      sys += ` You have DIRECT WRITE ACCESS to the user's project files. You are NOT a chatbot — you are an autonomous coding agent that writes files.
+      sys += ` You have DIRECT WRITE ACCESS to the user's project files. You are NOT a chatbot — you are an autonomous coding agent that writes files.`;
+      if (sessionMode === "agent") {
+        sys += `
+
+[MODE: AGENT]
+In AGENT mode, when asked to implement changes, you MUST produce file edits using only action blocks like write:, replace:, or execute:. Do NOT answer with plain text suggestions alone.`;
+      } else if (sessionMode === "debug") {
+        sys += `
+
+[MODE: DEBUG]
+In DEBUG mode, analyze logs, diagnose the issue, and provide clear hypotheses. Do NOT make direct file edits unless explicitly instructed.`;
+      } else if (sessionMode === "multitask") {
+        sys += `
+
+[MODE: MULTITASK]
+In MULTITASK mode, coordinate changes across multiple files while still using exact action block syntax for edits.`;
+      }
+      sys += `
+
+⚠️ When making code changes in AGENT mode, always output actionable file operations using exact action blocks:
+- write:path/to/file for new files
+- replace:path/to/file for edits
+- execute for shell commands
 
 ⚠️ CRITICAL OUTPUT RULES — YOU MUST FOLLOW THESE EXACTLY:
 
@@ -9369,18 +9403,6 @@ ${res.stderr?.trim() || "(no output)"}
           return { role: msg.role, content: msg.content };
         })
       ];
-      const res = await fetch("http://localhost:11434/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          stream: true,
-          messages: chatMessages
-        })
-      });
-      if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
       let assistantText = "";
       const activeIdAtSend = activeId;
       let processedUpTo = 0;
@@ -9389,86 +9411,160 @@ ${res.stderr?.trim() || "(no output)"}
       let promptTokens = 0;
       let responseTokens = 0;
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        for (const line of decoder.decode(value).split("\n")) {
-          if (!line.trim()) continue;
+      const normalizeStreamLine = (rawLine) => {
+        const line = rawLine.replace(/\r$/, "").trim();
+        if (!line) return "";
+        if (line === "[DONE]") return "";
+        if (line.startsWith("data:")) {
+          return line.slice(5).trim();
+        }
+        return line;
+      };
+      const getChatContent = (json) => {
+        if (json.message?.content) return json.message.content;
+        if (Array.isArray(json.choices) && json.choices.length > 0) {
+          const first = json.choices[0];
+          if (first.delta?.content) return first.delta.content;
+          if (first.message?.content) return first.message.content;
+          if (typeof first.text === "string") return first.text;
+        }
+        if (typeof json.text === "string") return json.text;
+        if (typeof json.content === "string") return json.content;
+        return void 0;
+      };
+      const processOllamaJson = async (json) => {
+        if (json.prompt_eval_count) promptTokens = json.prompt_eval_count;
+        if (json.eval_count) responseTokens = json.eval_count;
+        const content = getChatContent(json);
+        if (!content) return;
+        assistantText += content;
+        setSessions((prev) => prev.map((s15) => {
+          if (s15.id !== activeIdAtSend) return s15;
+          const msgs = [...s15.messages];
+          msgs[msgs.length - 1] = { role: "assistant", content: assistantText };
+          return { ...s15, messages: msgs };
+        }));
+        const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g;
+        blockRe.lastIndex = processedUpTo;
+        let m2;
+        while ((m2 = blockRe.exec(assistantText)) !== null) {
+          processedUpTo = m2.index + m2[0].length;
+          const type = m2[1];
+          const filePath = m2[2] ? decodeURIComponent(m2[2].trim()) : "";
+          const blockContent = m2[3];
+          if (!rootPath) continue;
+          if (type === "execute") {
+            if (activeSession.mode === "ask" || activeSession.mode === "plan") continue;
+            if (streamExecutes.length > 0) continue;
+            const command = blockContent.trim();
+            if (command && rootPath) {
+              let status = "pending";
+              if (alwaysAllowedCommands.has(command)) status = "running";
+              streamExecutes.push({ command, status });
+            }
+            continue;
+          }
+          if (activeSession.mode === "ask") continue;
+          const isPlanMode = activeSession.mode === "plan";
+          const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
+          if (isPlanMode && !isPlanFile) continue;
+          if (isPlanMode && type === "replace") continue;
+          const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ""));
+          let prevContent;
           try {
-            const json = JSON.parse(line);
-            if (json.prompt_eval_count) {
-              promptTokens = json.prompt_eval_count;
-            }
-            if (json.eval_count) {
-              responseTokens = json.eval_count;
-            }
-            if (json.message?.content) {
-              assistantText += json.message.content;
-              setSessions((prev) => prev.map((s15) => {
-                if (s15.id !== activeIdAtSend) return s15;
-                const msgs = [...s15.messages];
-                msgs[msgs.length - 1] = { role: "assistant", content: assistantText };
-                return { ...s15, messages: msgs };
-              }));
-              const blockRe = /```(write|replace|execute)(?::\s*([^\n]*?))?\s*\n([\s\S]*?)```/g;
-              blockRe.lastIndex = processedUpTo;
-              let m2;
-              while ((m2 = blockRe.exec(assistantText)) !== null) {
-                processedUpTo = m2.index + m2[0].length;
-                const type = m2[1];
-                const filePath = m2[2] ? decodeURIComponent(m2[2].trim()) : "";
-                const blockContent = m2[3];
-                if (!rootPath) continue;
-                if (type === "execute") {
-                  if (activeSession.mode === "ask" || activeSession.mode === "plan") continue;
-                  if (streamExecutes.length > 0) continue;
-                  const command = blockContent.trim();
-                  if (command && rootPath) {
-                    let status = "pending";
-                    if (alwaysAllowedCommands.has(command)) status = "running";
-                    streamExecutes.push({ command, status });
-                  }
-                  continue;
-                }
-                if (activeSession.mode === "ask") continue;
-                const isPlanMode = activeSession.mode === "plan";
-                const isPlanFile = filePath.endsWith(".md") && (filePath.startsWith("plans/") || filePath.includes("PLAN"));
-                if (isPlanMode && !isPlanFile) continue;
-                if (isPlanMode && type === "replace") continue;
-                const abs = filePath.startsWith(rootPath) ? filePath : joinPath(rootPath, filePath.replace(/^\//, ""));
-                let prevContent;
-                try {
-                  prevContent = await window.api.readFile(abs);
-                } catch {
-                }
-                let finalContent = blockContent;
-                if (type === "replace" && prevContent) {
-                  const parts = blockContent.split("====");
-                  if (parts.length === 2) {
-                    const target = parts[0].replace("<<<<\n", "").replace("<<<<\r\n", "").trimEnd();
-                    const replacement = parts[1].replace("\n>>>>", "").replace("\r\n>>>>", "").replace(">>>>", "").trimStart();
-                    const normalizedPrev = prevContent.replace(/\r\n/g, "\n");
-                    const normalizedTarget = target.replace(/\r\n/g, "\n");
-                    const normalizedReplacement = replacement.replace(/\r\n/g, "\n");
-                    if (normalizedPrev.includes(normalizedTarget)) {
-                      finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement);
-                    } else {
-                      finalContent = prevContent.replace(target, replacement);
-                    }
-                  }
-                }
-                if (autopilotRef.current) {
-                  await window.api.writeFile(abs, finalContent);
-                  if (openFile && abs === openFile) onWriteFile(finalContent);
-                  onRefreshTree();
-                  if (isPlanMode && isPlanFile && onOpenFile) {
-                    onOpenFile(abs);
-                  }
-                }
-                streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent });
+            prevContent = await window.api.readFile(abs);
+          } catch {
+          }
+          let finalContent = blockContent;
+          if (type === "replace" && prevContent) {
+            const parts = blockContent.split("====");
+            if (parts.length === 2) {
+              const target = parts[0].replace("<<<<\n", "").replace("<<<<\r\n", "").trimEnd();
+              const replacement = parts[1].replace("\n>>>>", "").replace("\r\n>>>>", "").replace(">>>>", "").trimStart();
+              const normalizedPrev = prevContent.replace(/\r\n/g, "\n");
+              const normalizedTarget = target.replace(/\r\n/g, "\n");
+              const normalizedReplacement = replacement.replace(/\r\n/g, "\n");
+              if (normalizedPrev.includes(normalizedTarget)) {
+                finalContent = normalizedPrev.replace(normalizedTarget, normalizedReplacement);
+              } else {
+                finalContent = prevContent.replace(target, replacement);
               }
             }
+          }
+          if (autopilotRef.current) {
+            await window.api.writeFile(abs, finalContent);
+            if (openFile && abs === openFile) onWriteFile(finalContent);
+            onRefreshTree();
+            if (isPlanMode && isPlanFile && onOpenFile) onOpenFile(abs);
+          }
+          streamWrites.push({ path: abs, content: finalContent, accepted: autopilotRef.current ? null : null, prevContent });
+        }
+      };
+      const processBodyLines = async (body) => {
+        const lines = body.split(/\r?\n/);
+        for (const rawLine of lines) {
+          const line = normalizeStreamLine(rawLine);
+          if (!line) continue;
+          try {
+            const json = JSON.parse(line);
+            await processOllamaJson(json);
           } catch {
+          }
+        }
+      };
+      const tryParseFullJson = async (body) => {
+        try {
+          const json = JSON.parse(body);
+          await processOllamaJson(json);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      if (window.api && typeof window.api.ollamaChat === "function") {
+        const body = await window.api.ollamaChat({ model, stream: true, messages: chatMessages });
+        const text = String(body || "");
+        await processBodyLines(text);
+        if (!assistantText) {
+          await tryParseFullJson(text);
+        }
+      } else {
+        const res = await fetch("http://localhost:11434/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model, stream: true, messages: chatMessages })
+        });
+        if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let newlineIndex = buffer.indexOf("\n");
+          while (newlineIndex !== -1) {
+            const line = buffer.slice(0, newlineIndex);
+            buffer = buffer.slice(newlineIndex + 1);
+            const normalized = normalizeStreamLine(line);
+            if (normalized) {
+              try {
+                const json = JSON.parse(normalized);
+                await processOllamaJson(json);
+              } catch {
+              }
+            }
+            newlineIndex = buffer.indexOf("\n");
+          }
+        }
+        if (buffer.trim()) {
+          const normalized = normalizeStreamLine(buffer);
+          if (normalized) {
+            try {
+              const json = JSON.parse(normalized);
+              await processOllamaJson(json);
+            } catch {
+            }
           }
         }
       }
@@ -9502,24 +9598,63 @@ ${res.stderr?.trim() || "(no output)"}
     }
   }
   async function generateSessionTitle(sessionId, msgs) {
+    const normalizeStreamLine = (rawLine) => {
+      const line = rawLine.replace(/\r$/, "").trim();
+      if (!line || line === "[DONE]") return "";
+      if (line.startsWith("data:")) return line.slice(5).trim();
+      return line;
+    };
+    const getChatContent = (json) => {
+      if (json.message?.content) return json.message.content;
+      if (Array.isArray(json.choices) && json.choices.length > 0) {
+        const first = json.choices[0];
+        if (first.delta?.content) return first.delta.content;
+        if (first.message?.content) return first.message.content;
+        if (typeof first.text === "string") return first.text;
+      }
+      if (typeof json.text === "string") return json.text;
+      if (typeof json.content === "string") return json.content;
+      return void 0;
+    };
+    const extractTitle = (text) => {
+      try {
+        const json = JSON.parse(text);
+        return getChatContent(json)?.trim() ?? null;
+      } catch {
+        return null;
+      }
+    };
+    const findTitleInBody = (body) => {
+      const lines = body.split(/\r?\n/);
+      for (const rawLine of lines) {
+        const line = normalizeStreamLine(rawLine);
+        if (!line) continue;
+        const maybe = extractTitle(line);
+        if (maybe) return maybe;
+      }
+      return null;
+    };
     try {
+      if (window.api && typeof window.api.ollamaChat === "function") {
+        const body = await window.api.ollamaChat({ model, stream: false, messages: [{ role: "system", content: "Summarize the conversation into a 3-5 word title. ONLY the title. No quotes, no markdown, no prefixes." }, ...msgs.slice(-2)] });
+        const text2 = String(body || "");
+        const rawTitle2 = findTitleInBody(text2) ?? extractTitle(text2);
+        if (rawTitle2) {
+          const title = rawTitle2.replace(/^['"]|['"]$/g, "").replace(/\*/g, "");
+          setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: title } : s15));
+          return;
+        }
+      }
       const res = await fetch("http://localhost:11434/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model,
-          stream: false,
-          messages: [
-            { role: "system", content: "Summarize the conversation into a 3-5 word title. ONLY the title. No quotes, no markdown, no prefixes." },
-            ...msgs.slice(-2)
-          ]
-        })
+        body: JSON.stringify({ model, stream: false, messages: [{ role: "system", content: "Summarize the conversation into a 3-5 word title. ONLY the title. No quotes, no markdown, no prefixes." }, ...msgs.slice(-2)] })
       });
       if (!res.ok) throw new Error("API failed");
-      const json = await res.json();
-      const rawTitle = json.message?.content?.trim();
+      const text = await res.text();
+      const rawTitle = findTitleInBody(text) ?? extractTitle(text);
       if (rawTitle) {
-        const title = rawTitle.replace(/^["']|["']$/g, "").replace(/\*/g, "");
+        const title = rawTitle.replace(/^['"]|['"]$/g, "").replace(/\*/g, "");
         setSessions((prev) => prev.map((s15) => s15.id === sessionId ? { ...s15, name: title } : s15));
         return;
       }
@@ -19723,18 +19858,50 @@ function App() {
       }
     };
     loadModels();
-    window.api.loadSessions().then((data) => {
+    window.api.loadSessions().then(async (data) => {
       try {
         if (!data) return;
         if (data.user) setUser(data.user);
+        let loadedSessions = [];
         if (Array.isArray(data)) {
-          setSessions(data);
-          if (data.length > 0) setActiveId(data[0].id);
+          loadedSessions = data;
         } else if (data.sessions && Array.isArray(data.sessions)) {
-          setSessions(data.sessions);
-          if (data.sessions.length > 0) setActiveId(data.sessions[0].id);
+          loadedSessions = data.sessions;
+        }
+        if (loadedSessions.length === 0) return;
+        setSessions(loadedSessions);
+        const firstSession = loadedSessions[0];
+        setActiveId(firstSession.id);
+        if (firstSession.workspace) {
+          const workspacePath = firstSession.workspace;
+          setRootPath(workspacePath);
+          try {
+            const [treeData, files] = await Promise.all([
+              window.api.readDir(workspacePath),
+              window.api.listFiles(workspacePath)
+            ]);
+            setTree(treeData);
+            setAllFiles(files);
+            setOpenDirs(/* @__PURE__ */ new Set());
+          } catch (e) {
+            console.warn("Failed to restore workspace tree:", e);
+          }
+        }
+        if (firstSession.tabs && firstSession.tabs.length > 0) {
+          setTabs(firstSession.tabs);
+        }
+        if (firstSession.openFile) {
+          setOpenFile(firstSession.openFile);
+          try {
+            const content = await window.api.readFile(firstSession.openFile);
+            setFileContent(content);
+          } catch (e) {
+            console.warn("Failed to restore open file content:", e);
+            setFileContent("");
+          }
         }
       } catch (e) {
+        console.warn("Failed to load sessions:", e);
       }
     });
   }, []);
