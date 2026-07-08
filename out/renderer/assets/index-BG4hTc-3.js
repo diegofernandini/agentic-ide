@@ -7093,20 +7093,20 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$A = [
+const __iconNode$C = [
   ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
   ["path", { d: "M4 7h16", key: "6tx8e3" }],
   ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
   ["path", { d: "M20 17H4", key: "h6l3hr" }]
 ];
-const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$A);
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$C);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$z = [
+const __iconNode$B = [
   [
     "path",
     { d: "M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1", key: "ezmyqa" }
@@ -7119,49 +7119,49 @@ const __iconNode$z = [
     }
   ]
 ];
-const Braces = createLucideIcon("braces", __iconNode$z);
+const Braces = createLucideIcon("braces", __iconNode$B);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$y = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$y);
+const __iconNode$A = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$A);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$x = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$x);
+const __iconNode$z = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$z);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$w = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$w);
+const __iconNode$y = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$y);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$v = [
+const __iconNode$x = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$v);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$x);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$u = [
+const __iconNode$w = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -7175,7 +7175,38 @@ const __iconNode$u = [
   ["path", { d: "M8 11h.01", key: "1dfujw" }],
   ["path", { d: "M8 16h.01", key: "18s6g9" }]
 ];
-const ClipboardList = createLucideIcon("clipboard-list", __iconNode$u);
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$w);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$v = [
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+];
+const Database = createLucideIcon("database", __iconNode$v);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$u = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
+  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }]
+];
+const FileCode = createLucideIcon("file-code", __iconNode$u);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7183,11 +7214,18 @@ const ClipboardList = createLucideIcon("clipboard-list", __iconNode$u);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$t = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M9 10h6", key: "9gxzsh" }],
+  ["path", { d: "M12 13V7", key: "h0r20n" }],
+  ["path", { d: "M9 17h6", key: "r8uit2" }]
 ];
-const Database = createLucideIcon("database", __iconNode$t);
+const FileDiff = createLucideIcon("file-diff", __iconNode$t);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7203,10 +7241,10 @@ const __iconNode$s = [
     }
   ],
   ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
-  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }]
+  ["circle", { cx: "10", cy: "12", r: "2", key: "737tya" }],
+  ["path", { d: "m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22", key: "wt3hpn" }]
 ];
-const FileCode = createLucideIcon("file-code", __iconNode$s);
+const FileImage = createLucideIcon("file-image", __iconNode$s);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7214,18 +7252,19 @@ const FileCode = createLucideIcon("file-code", __iconNode$s);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$r = [
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M4 12v6", key: "bg1pfk" }],
+  ["path", { d: "M4 14h2", key: "1sf9f8" }],
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M9.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v4",
+      key: "d56i0q"
     }
   ],
-  ["path", { d: "M9 10h6", key: "9gxzsh" }],
-  ["path", { d: "M12 13V7", key: "h0r20n" }],
-  ["path", { d: "M9 17h6", key: "r8uit2" }]
+  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
 ];
-const FileDiff = createLucideIcon("file-diff", __iconNode$r);
+const FileKey = createLucideIcon("file-key", __iconNode$r);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7241,10 +7280,10 @@ const __iconNode$q = [
     }
   ],
   ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["circle", { cx: "10", cy: "12", r: "2", key: "737tya" }],
-  ["path", { d: "m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22", key: "wt3hpn" }]
+  ["path", { d: "M9 15h6", key: "cctwl0" }],
+  ["path", { d: "M12 18v-6", key: "17g6i2" }]
 ];
-const FileImage = createLucideIcon("file-image", __iconNode$q);
+const FilePlus = createLucideIcon("file-plus", __iconNode$q);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7252,26 +7291,6 @@ const FileImage = createLucideIcon("file-image", __iconNode$q);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$p = [
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M4 12v6", key: "bg1pfk" }],
-  ["path", { d: "M4 14h2", key: "1sf9f8" }],
-  [
-    "path",
-    {
-      d: "M9.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v4",
-      key: "d56i0q"
-    }
-  ],
-  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
-];
-const FileKey = createLucideIcon("file-key", __iconNode$p);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$o = [
   [
     "path",
     {
@@ -7280,10 +7299,29 @@ const __iconNode$o = [
     }
   ],
   ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M9 15h6", key: "cctwl0" }],
-  ["path", { d: "M12 18v-6", key: "17g6i2" }]
+  ["path", { d: "M10 9H8", key: "b1mrlr" }],
+  ["path", { d: "M16 13H8", key: "t4e002" }],
+  ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-const FilePlus = createLucideIcon("file-plus", __iconNode$o);
+const FileText = createLucideIcon("file-text", __iconNode$p);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [
+  ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
+  [
+    "path",
+    {
+      d: "M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z",
+      key: "1970lx"
+    }
+  ],
+  ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
+];
+const Files = createLucideIcon("files", __iconNode$o);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7298,12 +7336,9 @@ const __iconNode$n = [
       key: "1oefj6"
     }
   ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 9H8", key: "b1mrlr" }],
-  ["path", { d: "M16 13H8", key: "t4e002" }],
-  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }]
 ];
-const FileText = createLucideIcon("file-text", __iconNode$n);
+const File = createLucideIcon("file", __iconNode$n);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7311,17 +7346,15 @@ const FileText = createLucideIcon("file-text", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
   [
     "path",
     {
-      d: "M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z",
-      key: "1970lx"
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
     }
-  ],
-  ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
+  ]
 ];
-const Files = createLucideIcon("files", __iconNode$m);
+const FolderOpen = createLucideIcon("folder-open", __iconNode$m);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7332,13 +7365,12 @@ const __iconNode$l = [
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+      key: "1kt360"
     }
-  ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }]
+  ]
 ];
-const File = createLucideIcon("file", __iconNode$l);
+const Folder = createLucideIcon("folder", __iconNode$l);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7346,15 +7378,11 @@ const File = createLucideIcon("file", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  [
-    "path",
-    {
-      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
-      key: "usdka0"
-    }
-  ]
+  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
+  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
+  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
 ];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$k);
+const GitBranch = createLucideIcon("git-branch", __iconNode$k);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7362,15 +7390,11 @@ const FolderOpen = createLucideIcon("folder-open", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  [
-    "path",
-    {
-      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
-      key: "1kt360"
-    }
-  ]
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
+  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
 ];
-const Folder = createLucideIcon("folder", __iconNode$j);
+const History = createLucideIcon("history", __iconNode$j);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7378,11 +7402,12 @@ const Folder = createLucideIcon("folder", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
-  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
-  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
 ];
-const GitBranch = createLucideIcon("git-branch", __iconNode$i);
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$i);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7390,11 +7415,11 @@ const GitBranch = createLucideIcon("git-branch", __iconNode$i);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$h = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
-  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
 ];
-const History = createLucideIcon("history", __iconNode$h);
+const LogOut = createLucideIcon("log-out", __iconNode$h);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7402,31 +7427,6 @@ const History = createLucideIcon("history", __iconNode$h);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$g = [
-  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
-  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
-  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
-  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
-];
-const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$g);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$f = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
-];
-const LogOut = createLucideIcon("log-out", __iconNode$f);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$e = [
   [
     "path",
     {
@@ -7435,7 +7435,35 @@ const __iconNode$e = [
     }
   ]
 ];
-const Paperclip = createLucideIcon("paperclip", __iconNode$e);
+const Paperclip = createLucideIcon("paperclip", __iconNode$g);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [
+  ["path", { d: "M13 21h8", key: "1jsn5i" }],
+  [
+    "path",
+    {
+      d: "M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z",
+      key: "1a8usu"
+    }
+  ]
+];
+const PenLine = createLucideIcon("pen-line", __iconNode$f);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$e);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7443,10 +7471,12 @@ const Paperclip = createLucideIcon("paperclip", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Plus = createLucideIcon("plus", __iconNode$d);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$d);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7454,19 +7484,6 @@ const Plus = createLucideIcon("plus", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$c);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$b = [
   ["path", { d: "M14 4a1 1 0 0 1 1-1", key: "dhj8ez" }],
   ["path", { d: "M15 10a1 1 0 0 1-1-1", key: "1mnyi5" }],
   ["path", { d: "M21 4a1 1 0 0 0-1-1", key: "sfs9ap" }],
@@ -7475,7 +7492,18 @@ const __iconNode$b = [
   ["path", { d: "M6 10V5a2 2 0 0 1 2-2h2", key: "15xut4" }],
   ["rect", { x: "3", y: "14", width: "7", height: "7", rx: "1", key: "1bkyp8" }]
 ];
-const Replace = createLucideIcon("replace", __iconNode$b);
+const Replace = createLucideIcon("replace", __iconNode$c);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$b = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+];
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$b);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7483,17 +7511,6 @@ const Replace = createLucideIcon("replace", __iconNode$b);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$a = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
-];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$a);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$9 = [
   [
     "path",
     {
@@ -7504,7 +7521,18 @@ const __iconNode$9 = [
   ["path", { d: "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7", key: "1ydtos" }],
   ["path", { d: "M7 3v4a1 1 0 0 0 1 1h7", key: "t51u73" }]
 ];
-const Save = createLucideIcon("save", __iconNode$9);
+const Save = createLucideIcon("save", __iconNode$a);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$9 = [
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+];
+const Search = createLucideIcon("search", __iconNode$9);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7512,17 +7540,6 @@ const Save = createLucideIcon("save", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
-];
-const Search = createLucideIcon("search", __iconNode$8);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$7 = [
   [
     "path",
     {
@@ -7532,7 +7549,20 @@ const __iconNode$7 = [
   ],
   ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
 ];
-const Send = createLucideIcon("send", __iconNode$7);
+const Send = createLucideIcon("send", __iconNode$8);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$7 = [
+  ["path", { d: "M14 17H5", key: "gfn3mx" }],
+  ["path", { d: "M19 7h-9", key: "6i9tg" }],
+  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
+  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+];
+const Settings2 = createLucideIcon("settings-2", __iconNode$7);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7540,12 +7570,16 @@ const Send = createLucideIcon("send", __iconNode$7);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$6 = [
-  ["path", { d: "M14 17H5", key: "gfn3mx" }],
-  ["path", { d: "M19 7h-9", key: "6i9tg" }],
-  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
-  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+  [
+    "path",
+    {
+      d: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915",
+      key: "1i5ecw"
+    }
+  ],
+  ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-const Settings2 = createLucideIcon("settings-2", __iconNode$6);
+const Settings = createLucideIcon("settings", __iconNode$6);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -9388,16 +9422,52 @@ ${res.stderr?.trim() || "(no output)"}
     setLoading(true);
     setSessions((prev) => prev.map((s15) => s15.id === activeId ? { ...s15, workspace: s15.workspace || rootPath } : s15));
     startTimeRef.current = Date.now();
+    let activeMcpTools = [];
+    try {
+      const servers = await window.api.mcpGetServers();
+      activeMcpTools = servers.filter((s15) => s15.status === "connected").flatMap((s15) => (s15.tools || []).map((t2) => ({
+        serverName: s15.name,
+        name: t2.name,
+        description: t2.description,
+        inputSchema: t2.inputSchema
+      })));
+    } catch (e) {
+      console.warn("Failed to retrieve MCP tools:", e);
+    }
+    const ollamaTools = activeMcpTools.map((t2) => ({
+      type: "function",
+      function: {
+        name: `mcp__${t2.serverName}__${t2.name}`,
+        description: t2.description,
+        parameters: t2.inputSchema
+      }
+    }));
     try {
       const systemPrompt = await buildSystemPrompt();
       const chatMessages = [
         { role: "system", content: systemPrompt },
         ...history.map((msg) => {
-          if (msg.role === "user" && msg.images) {
+          if (msg.role === "user") {
+            if (msg.images) {
+              return {
+                role: msg.role,
+                content: msg.content,
+                images: msg.images.map((img) => img.includes(",") ? img.split(",")[1] : img)
+              };
+            }
+            return { role: msg.role, content: msg.content };
+          }
+          if (msg.role === "assistant") {
+            const out = { role: msg.role, content: msg.content };
+            if (msg.tool_calls) out.tool_calls = msg.tool_calls;
+            return out;
+          }
+          if (msg.role === "tool") {
             return {
-              role: msg.role,
-              content: msg.content,
-              images: msg.images.map((img) => img.includes(",") ? img.split(",")[1] : img)
+              role: "tool",
+              name: msg.name,
+              tool_call_id: msg.tool_call_id,
+              content: msg.content
             };
           }
           return { role: msg.role, content: msg.content };
@@ -9410,6 +9480,7 @@ ${res.stderr?.trim() || "(no output)"}
       const streamExecutes = [];
       let promptTokens = 0;
       let responseTokens = 0;
+      let toolCalls = [];
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
       const normalizeStreamLine = (rawLine) => {
         const line = rawLine.replace(/\r$/, "").trim();
@@ -9435,6 +9506,24 @@ ${res.stderr?.trim() || "(no output)"}
       const processOllamaJson = async (json) => {
         if (json.prompt_eval_count) promptTokens = json.prompt_eval_count;
         if (json.eval_count) responseTokens = json.eval_count;
+        const deltaToolCalls = json.choices?.[0]?.delta?.tool_calls || json.message?.tool_calls;
+        if (deltaToolCalls) {
+          for (const tc2 of deltaToolCalls) {
+            const idx = tc2.index ?? toolCalls.length;
+            if (!toolCalls[idx]) {
+              toolCalls[idx] = { id: tc2.id, type: "function", function: { name: "", arguments: "" } };
+            }
+            if (tc2.id) toolCalls[idx].id = tc2.id;
+            if (tc2.function?.name) toolCalls[idx].function.name += tc2.function.name;
+            if (tc2.function?.arguments) {
+              if (typeof tc2.function.arguments === "string") {
+                toolCalls[idx].function.arguments += tc2.function.arguments;
+              } else {
+                toolCalls[idx].function.arguments = JSON.stringify(tc2.function.arguments);
+              }
+            }
+          }
+        }
         const content = getChatContent(json);
         if (!content) return;
         assistantText += content;
@@ -9521,8 +9610,16 @@ ${res.stderr?.trim() || "(no output)"}
           return false;
         }
       };
+      const chatPayload = {
+        model,
+        stream: true,
+        messages: chatMessages
+      };
+      if (ollamaTools.length > 0) {
+        chatPayload.tools = ollamaTools;
+      }
       if (window.api && typeof window.api.ollamaChat === "function") {
-        const body = await window.api.ollamaChat({ model, stream: true, messages: chatMessages });
+        const body = await window.api.ollamaChat(chatPayload);
         const text = String(body || "");
         await processBodyLines(text);
         if (!assistantText) {
@@ -9532,7 +9629,7 @@ ${res.stderr?.trim() || "(no output)"}
         const res = await fetch("http://localhost:11434/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ model, stream: true, messages: chatMessages })
+          body: JSON.stringify(chatPayload)
         });
         if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
         const reader = res.body.getReader();
@@ -9567,6 +9664,87 @@ ${res.stderr?.trim() || "(no output)"}
             }
           }
         }
+      }
+      if (toolCalls.length > 0) {
+        const resolvedToolCalls = toolCalls.map((tc2) => {
+          let parsedArgs = {};
+          try {
+            if (tc2.function.arguments) {
+              parsedArgs = typeof tc2.function.arguments === "string" ? JSON.parse(tc2.function.arguments) : tc2.function.arguments;
+            }
+          } catch (e) {
+            console.error("Failed to parse tool arguments:", tc2.function.arguments, e);
+          }
+          return {
+            id: tc2.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+            type: "function",
+            function: {
+              name: tc2.function.name,
+              arguments: JSON.stringify(parsedArgs)
+            }
+          };
+        });
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: assistantText,
+            tool_calls: resolvedToolCalls,
+            model,
+            elapsed: Math.round((Date.now() - startTimeRef.current) / 1e3)
+          };
+          return updated;
+        });
+        const nextMessages = [...history, {
+          role: "assistant",
+          content: assistantText,
+          tool_calls: resolvedToolCalls
+        }];
+        for (const tc2 of resolvedToolCalls) {
+          const match = tc2.function.name.match(/^mcp__([a-zA-Z0-9_-]+)__(.+)$/);
+          let resultText = "";
+          if (match) {
+            const serverName = match[1];
+            const toolName = match[2];
+            const args = JSON.parse(tc2.function.arguments || "{}");
+            setMessages((prev) => [...prev, {
+              role: "tool",
+              name: tc2.function.name,
+              content: `Executing ${serverName}.${toolName}...`,
+              tool_call_id: tc2.id,
+              toolStatus: "running"
+            }]);
+            try {
+              const res = await window.api.mcpCallTool(serverName, toolName, args);
+              resultText = typeof res === "string" ? res : JSON.stringify(res, null, 2);
+              try {
+                const parsedRes = typeof res === "string" ? JSON.parse(res) : res;
+                if (parsedRes && Array.isArray(parsedRes.content)) {
+                  resultText = parsedRes.content.map((c) => c.text || c.value || "").filter(Boolean).join("\n");
+                } else if (parsedRes && typeof parsedRes.text === "string") {
+                  resultText = parsedRes.text;
+                }
+              } catch {
+              }
+            } catch (err) {
+              resultText = `Error calling tool: ${err.message || String(err)}`;
+            }
+          } else {
+            resultText = `Error: Tool name format invalid. Expected prefix mcp__`;
+          }
+          const toolMsg = {
+            role: "tool",
+            name: tc2.function.name,
+            content: resultText,
+            tool_call_id: tc2.id,
+            toolStatus: "completed"
+          };
+          nextMessages.push(toolMsg);
+        }
+        setMessages(() => nextMessages);
+        setLoading(false);
+        setTimeout(() => send(nextMessages), 500);
+        return;
       }
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1e3);
       const blocks = streamWrites.length > 0 || streamExecutes.length > 0 ? { writes: streamWrites, executes: streamExecutes } : await processBlocks(assistantText);
@@ -9888,38 +10066,82 @@ ${ev.target?.result}
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-messages", children: [
-          messages.map((m2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role} ${m2.isToolOutput ? "chat-msg--tool-output" : ""}`, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", style: m2.isToolOutput ? { color: "#a8a29e" } : {}, children: m2.isToolOutput ? "TERMINAL" : m2.role.toUpperCase() }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", style: m2.isToolOutput ? { backgroundColor: "#2d2d2d", border: "1px solid #444", color: "#ccc" } : {}, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                MessageContent,
-                {
-                  content: m2.content,
-                  writes: m2.writes,
-                  executes: m2.executes,
-                  onAccept: (p2) => handleAccept(i, p2),
-                  onRevert: (p2) => handleRevert(i, p2),
-                  onOpenDiff,
-                  onExecuteAllow: (cmd, always) => handleExecuteAllow(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1, cmd, always),
-                  onExecuteCancel: (cmd) => handleExecuteCancel(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1)
-                }
-              ),
-              m2.images && m2.images.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg-images", children: m2.images.map((img, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: img, className: "chat-msg-image", alt: "attachment", onClick: () => window.open(img) }, idx)) }),
-              (m2.writes || m2.elapsed) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
-                m2.writes && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
-                  m2.writes.length,
-                  " patches"
+          messages.map((m2, i) => {
+            if (m2.role === "tool") {
+              const cleanName = m2.name?.replace(/^mcp__([a-zA-Z0-9_-]+)__/, "") || m2.name || "tool";
+              const serverName = m2.name?.match(/^mcp__([a-zA-Z0-9_-]+)__/)?.[1] || "mcp";
+              return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg chat-msg--tool", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "chat-role", style: { color: "#4ec9b0" }, children: [
+                    "TOOL (",
+                    serverName.toUpperCase(),
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
                 ] }),
-                m2.elapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
-                  m2.elapsed.toFixed(1),
-                  "s"
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble chat-msg-bubble--tool", style: { backgroundColor: "rgba(78, 201, 176, 0.04)", border: "1px solid rgba(78, 201, 176, 0.15)", color: "#ccc" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mcp-tool-call-header", style: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", marginBottom: "8px", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "6px", width: "100%" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 12, className: "mcp-tool-call-icon", style: { color: "#4ec9b0", flexShrink: 0 } }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { color: "#aaa" }, children: [
+                      "Called ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: cleanName })
+                    ] }),
+                    m2.toolStatus === "running" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mcp-tool-status mcp-tool-status--running", style: { marginLeft: "auto", background: "rgba(206,145,120,0.1)", color: "#ce9178", padding: "1px 5px", borderRadius: "3px", fontSize: "9px" }, children: "Executing..." }),
+                    m2.toolStatus === "completed" && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "mcp-tool-status mcp-tool-status--completed", style: { marginLeft: "auto", background: "rgba(78,201,176,0.1)", color: "#4ec9b0", padding: "1px 5px", borderRadius: "3px", fontSize: "9px" }, children: "Success" })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { className: "mcp-tool-output-pre", style: { margin: 0, overflowX: "auto", maxHeight: "250px", fontSize: "11px", fontFamily: "monospace", padding: "8px", background: "rgba(0,0,0,0.2)", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.03)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: m2.content }) })
+                ] })
+              ] }, `msg-${activeId}-${i}`);
+            }
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `chat-msg chat-msg--${m2.role} ${m2.isToolOutput ? "chat-msg--tool-output" : ""}`, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", style: m2.isToolOutput ? { color: "#a8a29e" } : {}, children: m2.isToolOutput ? "TERMINAL" : m2.role.toUpperCase() }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-time", children: (/* @__PURE__ */ new Date()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-bubble", style: m2.isToolOutput ? { backgroundColor: "#2d2d2d", border: "1px solid #444", color: "#ccc" } : {}, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  MessageContent,
+                  {
+                    content: m2.content,
+                    writes: m2.writes,
+                    executes: m2.executes,
+                    onAccept: (p2) => handleAccept(i, p2),
+                    onRevert: (p2) => handleRevert(i, p2),
+                    onOpenDiff,
+                    onExecuteAllow: (cmd, always) => handleExecuteAllow(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1, cmd, always),
+                    onExecuteCancel: (cmd) => handleExecuteCancel(i, m2.executes?.findIndex((e) => e.command === cmd) ?? -1)
+                  }
+                ),
+                m2.tool_calls && m2.tool_calls.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mcp-tool-calls-container", style: { marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", width: "100%" }, children: m2.tool_calls.map((tc2, tcIdx) => {
+                  const match = tc2.function.name.match(/^mcp__([a-zA-Z0-9_-]+)__(.+)$/);
+                  const server = match ? match[1] : "mcp";
+                  const tool = match ? match[2] : tc2.function.name;
+                  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mcp-tool-call-indicator", style: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", padding: "5px 8px", borderRadius: "4px", color: "#ccc" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 11, style: { color: "#4ec9b0", flexShrink: 0 } }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                      "Using tool: ",
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { style: { color: "#4fc1ff" }, children: [
+                        server,
+                        ".",
+                        tool
+                      ] })
+                    ] })
+                  ] }, tcIdx);
+                }) }),
+                m2.images && m2.images.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg-images", children: m2.images.map((img, idx) => /* @__PURE__ */ jsxRuntimeExports.jsx("img", { src: img, className: "chat-msg-image", alt: "attachment", onClick: () => window.open(img) }, idx)) }),
+                (m2.writes || m2.elapsed) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "msg-meta", children: [
+                  m2.writes && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-writes", children: [
+                    m2.writes.length,
+                    " patches"
+                  ] }),
+                  m2.elapsed && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "msg-elapsed", children: [
+                    m2.elapsed.toFixed(1),
+                    "s"
+                  ] })
                 ] })
               ] })
-            ] })
-          ] }, `msg-${activeId}-${i}`)),
+            ] }, `msg-${activeId}-${i}`);
+          }),
           loading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "chat-msg chat-msg--assistant", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-msg-header", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-role", children: "AGENT" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "toolbar-spinner", style: { marginLeft: 8 } }),
@@ -19253,6 +19475,138 @@ function Dashboard({ models, sessions = [], rootPath }) {
   const [activeTab, setActiveTab] = reactExports.useState("project");
   const [historicalSessions, setHistoricalSessions] = reactExports.useState([]);
   const [loadingHistorical, setLoadingHistorical] = reactExports.useState(false);
+  const [mcpServers, setMcpServers] = reactExports.useState([]);
+  const [config2, setConfig] = reactExports.useState({ mcpServers: {} });
+  const [editingServer, setEditingServer] = reactExports.useState(null);
+  const [showForm, setShowForm] = reactExports.useState(false);
+  const [srvName, setSrvName] = reactExports.useState("");
+  const [srvType, setSrvType] = reactExports.useState("stdio");
+  const [srvCommand, setSrvCommand] = reactExports.useState("");
+  const [srvArgs, setSrvArgs] = reactExports.useState("");
+  const [srvEnv, setSrvEnv] = reactExports.useState("");
+  const [srvUrl, setSrvUrl] = reactExports.useState("");
+  const [expandedLogs, setExpandedLogs] = reactExports.useState({});
+  const [expandedTools, setExpandedTools] = reactExports.useState({});
+  reactExports.useEffect(() => {
+    if (activeTab === "mcp") {
+      const fetchConfig = async () => {
+        try {
+          const cfg = await window.api.mcpGetConfig();
+          setConfig(cfg || { mcpServers: {} });
+        } catch (e) {
+          console.warn("Failed to load MCP config:", e);
+        }
+      };
+      fetchConfig();
+      const fetchServers = async () => {
+        try {
+          const svrs = await window.api.mcpGetServers();
+          setMcpServers(svrs || []);
+        } catch (e) {
+          console.warn("Failed to load MCP servers:", e);
+        }
+      };
+      fetchServers();
+      const interval = setInterval(fetchServers, 2e3);
+      return () => clearInterval(interval);
+    }
+    return void 0;
+  }, [activeTab]);
+  const handleEditServer = (name, srvConfig) => {
+    setEditingServer(name);
+    setSrvName(name);
+    if (srvConfig.url) {
+      setSrvType("sse");
+      setSrvUrl(srvConfig.url);
+      setSrvCommand("");
+      setSrvArgs("");
+      setSrvEnv("");
+    } else {
+      setSrvType("stdio");
+      setSrvUrl("");
+      setSrvCommand(srvConfig.command || "");
+      setSrvArgs(Array.isArray(srvConfig.args) ? srvConfig.args.join(" ") : "");
+      setSrvEnv(srvConfig.env ? JSON.stringify(srvConfig.env, null, 2) : "");
+    }
+    setShowForm(true);
+  };
+  const handleToggleServer = async (name) => {
+    const newMcpServers = { ...config2.mcpServers };
+    if (newMcpServers[name]) {
+      newMcpServers[name].disabled = !newMcpServers[name].disabled;
+      const newConfig = { ...config2, mcpServers: newMcpServers };
+      setConfig(newConfig);
+      try {
+        await window.api.mcpSaveConfig(newConfig);
+      } catch (e) {
+        console.error("Failed to save config:", e);
+      }
+    }
+  };
+  const handleDeleteServer = async (name) => {
+    if (!confirm(`Are you sure you want to delete the MCP server configuration for "${name}"?`)) return;
+    const newMcpServers = { ...config2.mcpServers };
+    delete newMcpServers[name];
+    const newConfig = { ...config2, mcpServers: newMcpServers };
+    setConfig(newConfig);
+    try {
+      await window.api.mcpSaveConfig(newConfig);
+    } catch (e) {
+      console.error("Failed to delete server:", e);
+    }
+  };
+  const handleRestartServer = async (name) => {
+    try {
+      await window.api.mcpRestartServer(name);
+    } catch (e) {
+      console.error("Failed to restart server:", e);
+    }
+  };
+  const handleSaveServer = async (e) => {
+    e.preventDefault();
+    if (!srvName.trim()) return;
+    const newMcpServers = { ...config2.mcpServers };
+    if (editingServer && editingServer !== srvName.trim()) {
+      delete newMcpServers[editingServer];
+    }
+    let parsedEnv = {};
+    try {
+      if (srvEnv.trim()) {
+        parsedEnv = JSON.parse(srvEnv);
+      }
+    } catch (err) {
+      alert("Invalid JSON in Environment Variables field. Please enter a valid JSON object or leave it empty.");
+      return;
+    }
+    const srvConfig = {
+      disabled: config2.mcpServers[editingServer || srvName.trim()]?.disabled || false
+    };
+    if (srvType === "sse") {
+      srvConfig.url = srvUrl.trim();
+    } else {
+      srvConfig.command = srvCommand.trim();
+      const matches = srvArgs.match(/"[^"]+"|'[^']+'|\S+/g) || [];
+      srvConfig.args = matches.map((m2) => m2.replace(/^['"]|['"]$/g, ""));
+      if (Object.keys(parsedEnv).length > 0) {
+        srvConfig.env = parsedEnv;
+      }
+    }
+    newMcpServers[srvName.trim()] = srvConfig;
+    const newConfig = { ...config2, mcpServers: newMcpServers };
+    setConfig(newConfig);
+    try {
+      await window.api.mcpSaveConfig(newConfig);
+    } catch (e2) {
+      console.error("Failed to save config:", e2);
+    }
+    setShowForm(false);
+    setEditingServer(null);
+    setSrvName("");
+    setSrvCommand("");
+    setSrvArgs("");
+    setSrvEnv("");
+    setSrvUrl("");
+  };
   reactExports.useEffect(() => {
     if (activeTab === "historical") {
       setLoadingHistorical(true);
@@ -19395,7 +19749,7 @@ function Dashboard({ models, sessions = [], rootPath }) {
             "System ",
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600 }, children: "Analytics" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "14px", lineHeight: 1.6 }, children: activeTab === "project" ? "Real-time administrative overview of performance and token usage for the current workspace folder." : "Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "14px", lineHeight: 1.6 }, children: activeTab === "project" ? "Real-time administrative overview of performance and token usage for the current workspace folder." : activeTab === "historical" ? "Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects." : "Connect and manage Model Context Protocol (MCP) servers to extend the agent with custom database, search, and browser tools." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
           display: "flex",
@@ -19451,6 +19805,30 @@ function Dashboard({ models, sessions = [], rootPath }) {
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(History, { size: 14 }),
                 "Time Machine (Historical)"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setActiveTab("mcp"),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 500,
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "none",
+                background: activeTab === "mcp" ? "#007acc" : "transparent",
+                color: activeTab === "mcp" ? "#fff" : "#888",
+                cursor: "pointer"
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 14 }),
+                "MCP Connections"
               ]
             }
           )
@@ -19698,7 +20076,560 @@ function Dashboard({ models, sessions = [], rootPath }) {
             ] })
           ] })
         ] })
-      ] }) })
+      ] }) }),
+      activeTab === "mcp" && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginBottom: "32px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { size: 15, style: { color: "#007acc" } }),
+            "MCP Preset Market"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }, children: [
+            {
+              name: "Brave Search",
+              description: "Enables web search for the agent using the Brave API",
+              preset: { type: "stdio", command: "npx", args: "-y @modelcontextprotocol/server-brave-search", env: '{"BRAVE_API_KEY": "YOUR_BRAVE_API_KEY"}' }
+            },
+            {
+              name: "SQLite Database",
+              description: "Allows reading and querying local SQLite databases",
+              preset: { type: "stdio", command: "npx", args: "-y @modelcontextprotocol/server-sqlite --db /absolute/path/to/db.sqlite", env: "{}" }
+            },
+            {
+              name: "PostgreSQL Database",
+              description: "Enables querying PostgreSQL database schemas and data",
+              preset: { type: "stdio", command: "npx", args: "-y @modelcontextprotocol/server-postgres --db-url postgresql://localhost/mydb", env: "{}" }
+            },
+            {
+              name: "Puppeteer Browser",
+              description: "Enables browser automation and web page screenshots",
+              preset: { type: "stdio", command: "npx", args: "-y @modelcontextprotocol/server-puppeteer", env: "{}" }
+            },
+            {
+              name: "Filesystem Access",
+              description: "Exposes directories to the agent for reading and writing",
+              preset: { type: "stdio", command: "npx", args: `-y @modelcontextprotocol/server-filesystem ${rootPath || "/path/to/directory"}`, env: "{}" }
+            },
+            {
+              name: "GitHub API",
+              description: "Enables repository querying, PR listing, and issue creation",
+              preset: { type: "stdio", command: "npx", args: "-y @modelcontextprotocol/server-github", env: '{"GITHUB_PERSONAL_ACCESS_TOKEN": "YOUR_TOKEN"}' }
+            }
+          ].map((p2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(30, 30, 30, 0.4)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            borderRadius: "8px",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            transition: "all 0.2s",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
+          }, className: "preset-card-hover", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { fontSize: "13px", color: "#fff", fontWeight: 600, margin: "0 0 6px 0" }, children: p2.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: "11px", color: "#888", margin: "0 0 12px 0", lineHeight: "1.4" }, children: p2.description })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  setEditingServer(null);
+                  setSrvName(p2.name.toLowerCase().replace(/\s+/g, "-"));
+                  setSrvType(p2.preset.type);
+                  setSrvCommand(p2.preset.command);
+                  setSrvArgs(p2.preset.args);
+                  setSrvEnv(p2.preset.env);
+                  setSrvUrl("");
+                  setShowForm(true);
+                  setTimeout(() => {
+                    document.getElementById("mcp-config-form-section")?.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                },
+                style: {
+                  padding: "6px 12px",
+                  background: "rgba(0, 122, 204, 0.1)",
+                  border: "1px solid rgba(0, 122, 204, 0.2)",
+                  borderRadius: "4px",
+                  color: "#4fc1ff",
+                  fontSize: "11px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  fontWeight: 500,
+                  transition: "all 0.2s"
+                },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 12 }),
+                  " Configure Preset"
+                ]
+              }
+            )
+          ] }, p2.name)) })
+        ] }),
+        showForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { id: "mcp-config-form-section", style: {
+          background: "rgba(37, 37, 38, 0.4)",
+          border: "1px solid rgba(0, 122, 204, 0.3)",
+          borderRadius: "12px",
+          padding: "24px",
+          marginBottom: "32px",
+          animation: "fadeIn 0.25s ease-out"
+        }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { size: 15, style: { color: "#007acc" } }),
+            editingServer ? `Edit Server: ${editingServer}` : "Add New MCP Server"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSaveServer, style: { display: "flex", flexDirection: "column", gap: "16px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "Server Name" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "e.g. postgres-db",
+                    value: srvName,
+                    onChange: (e) => setSrvName(e.target.value),
+                    required: true,
+                    disabled: !!editingServer,
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(0,0,0,0.2)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px"
+                    }
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "Connection Type" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "select",
+                  {
+                    value: srvType,
+                    onChange: (e) => setSrvType(e.target.value),
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(30,30,30,0.9)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px",
+                      height: "35px"
+                    },
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "stdio", children: "Stdio (Local Process)" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "sse", children: "SSE (Server-Sent Events)" })
+                    ]
+                  }
+                )
+              ] })
+            ] }),
+            srvType === "stdio" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr 2fr", gap: "16px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "Command" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      type: "text",
+                      placeholder: "e.g. npx, node, python",
+                      value: srvCommand,
+                      onChange: (e) => setSrvCommand(e.target.value),
+                      required: true,
+                      style: {
+                        padding: "8px 12px",
+                        background: "rgba(0,0,0,0.2)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "6px",
+                        color: "#fff",
+                        fontSize: "13px"
+                      }
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "Arguments" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "input",
+                    {
+                      type: "text",
+                      placeholder: "e.g. -y @modelcontextprotocol/server-postgres --db-url ...",
+                      value: srvArgs,
+                      onChange: (e) => setSrvArgs(e.target.value),
+                      style: {
+                        padding: "8px 12px",
+                        background: "rgba(0,0,0,0.2)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "6px",
+                        color: "#fff",
+                        fontSize: "13px"
+                      }
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "Environment Variables (JSON)" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "textarea",
+                  {
+                    rows: 3,
+                    placeholder: 'e.g. { "API_KEY": "secret" }',
+                    value: srvEnv,
+                    onChange: (e) => setSrvEnv(e.target.value),
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(0,0,0,0.2)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontFamily: "monospace"
+                    }
+                  }
+                )
+              ] })
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "SSE Endpoint URL" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  type: "url",
+                  placeholder: "e.g. http://localhost:3012/sse",
+                  value: srvUrl,
+                  onChange: (e) => setSrvUrl(e.target.value),
+                  required: true,
+                  style: {
+                    padding: "8px 12px",
+                    background: "rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "6px",
+                    color: "#fff",
+                    fontSize: "13px"
+                  }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "12px", marginTop: "8px", justifyContent: "flex-end" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => {
+                    setShowForm(false);
+                    setEditingServer(null);
+                  },
+                  style: {
+                    padding: "8px 16px",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "6px",
+                    color: "#aaa",
+                    fontSize: "13px",
+                    cursor: "pointer"
+                  },
+                  children: "Cancel"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "submit",
+                  style: {
+                    padding: "8px 20px",
+                    background: "#007acc",
+                    border: "none",
+                    borderRadius: "6px",
+                    color: "#fff",
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    fontWeight: 600
+                  },
+                  children: editingServer ? "Save Changes" : "Create Connection"
+                }
+              )
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 15, style: { color: "#4ec9b0" } }),
+              "Active Connections (",
+              mcpServers.length,
+              ")"
+            ] }),
+            !showForm && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                onClick: () => {
+                  setEditingServer(null);
+                  setSrvName("");
+                  setSrvType("stdio");
+                  setSrvCommand("");
+                  setSrvArgs("");
+                  setSrvEnv("");
+                  setSrvUrl("");
+                  setShowForm(true);
+                },
+                style: {
+                  padding: "8px 16px",
+                  background: "#007acc",
+                  border: "none",
+                  borderRadius: "6px",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 13 }),
+                  " Add Connection"
+                ]
+              }
+            )
+          ] }),
+          mcpServers.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.05)",
+            borderRadius: "12px",
+            padding: "48px 24px",
+            textAlign: "center"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 32, style: { color: "#555", marginBottom: "16px" } }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { color: "#eee", fontSize: "14px", margin: "0 0 6px 0", fontWeight: 500 }, children: "No MCP Servers Configured" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#777", fontSize: "12px", maxWidth: "420px", margin: "0 auto", lineHeight: "1.5" }, children: 'Model Context Protocol connections are empty. Use a preset above or click "Add Connection" to connect your agent with databases, browsers, and other services.' })
+          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "16px" }, children: mcpServers.map((svr) => {
+            const isEnabled = !config2.mcpServers[svr.name]?.disabled;
+            const isLogsOpen = !!expandedLogs[svr.name];
+            const isToolsOpen = !!expandedTools[svr.name];
+            let statusColor = "#888";
+            let statusBg = "rgba(128,128,128,0.1)";
+            if (svr.status === "connected") {
+              statusColor = "#4ec9b0";
+              statusBg = "rgba(78, 201, 176, 0.08)";
+            } else if (svr.status === "connecting") {
+              statusColor = "#ce9178";
+              statusBg = "rgba(206, 145, 120, 0.08)";
+            } else if (svr.status === "error") {
+              statusColor = "#f44747";
+              statusBg = "rgba(244, 71, 71, 0.08)";
+            }
+            return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+              background: "rgba(30, 30, 30, 0.25)",
+              border: "1px solid rgba(255, 255, 255, 0.03)",
+              borderRadius: "8px",
+              padding: "16px 20px",
+              transition: "all 0.2s"
+            }, className: "project-card-hover", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, margin: 0 }, children: svr.name }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                      fontSize: "10px",
+                      textTransform: "uppercase",
+                      color: "#aaa",
+                      background: "rgba(255,255,255,0.05)",
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      fontFamily: "monospace"
+                    }, children: svr.type }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                      fontSize: "10px",
+                      padding: "2px 8px",
+                      borderRadius: "12px",
+                      color: statusColor,
+                      border: `1px solid ${statusColor}`,
+                      background: statusBg,
+                      fontWeight: 600
+                    }, children: svr.status.toUpperCase() })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", color: "#777", fontFamily: "monospace" }, children: svr.type === "sse" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    "URL: ",
+                    config2.mcpServers[svr.name]?.url
+                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    "Cmd: ",
+                    config2.mcpServers[svr.name]?.command,
+                    " ",
+                    config2.mcpServers[svr.name]?.args?.join(" ")
+                  ] }) })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "10px", marginLeft: "auto" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => setExpandedTools((prev) => ({ ...prev, [svr.name]: !isToolsOpen })),
+                      disabled: svr.status !== "connected",
+                      style: {
+                        padding: "5px 10px",
+                        background: isToolsOpen ? "rgba(0,122,204,0.1)" : "transparent",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "4px",
+                        color: isToolsOpen ? "#4fc1ff" : "#aaa",
+                        fontSize: "11px",
+                        cursor: svr.status === "connected" ? "pointer" : "not-allowed",
+                        transition: "all 0.2s",
+                        opacity: svr.status === "connected" ? 1 : 0.5
+                      },
+                      children: [
+                        "Tools (",
+                        svr.tools?.length || 0,
+                        ")"
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => setExpandedLogs((prev) => ({ ...prev, [svr.name]: !isLogsOpen })),
+                      style: {
+                        padding: "5px 10px",
+                        background: isLogsOpen ? "rgba(0,122,204,0.1)" : "transparent",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "4px",
+                        color: isLogsOpen ? "#4fc1ff" : "#aaa",
+                        fontSize: "11px",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      },
+                      children: "Logs"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleRestartServer(svr.name),
+                      style: {
+                        padding: "5px",
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "4px",
+                        color: "#aaa",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      },
+                      title: "Restart Connection",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { size: 12 })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleEditServer(svr.name, config2.mcpServers[svr.name]),
+                      style: {
+                        padding: "5px",
+                        background: "transparent",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "4px",
+                        color: "#aaa",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      },
+                      title: "Edit Configuration",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(PenLine, { size: 12 })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleDeleteServer(svr.name),
+                      style: {
+                        padding: "5px",
+                        background: "transparent",
+                        border: "1px solid rgba(244, 71, 71, 0.1)",
+                        borderRadius: "4px",
+                        color: "#f44747",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      },
+                      title: "Delete Server",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { size: 12 })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleToggleServer(svr.name),
+                      style: {
+                        padding: "5px 8px",
+                        background: isEnabled ? "rgba(78,201,176,0.1)" : "rgba(255,255,255,0.05)",
+                        border: isEnabled ? "1px solid rgba(78,201,176,0.2)" : "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "4px",
+                        color: isEnabled ? "#4ec9b0" : "#888",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        cursor: "pointer"
+                      },
+                      children: isEnabled ? "ENABLED" : "DISABLED"
+                    }
+                  )
+                ] })
+              ] }),
+              isToolsOpen && svr.status === "connected" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+                marginTop: "16px",
+                background: "rgba(0,0,0,0.15)",
+                border: "1px solid rgba(255,255,255,0.03)",
+                borderRadius: "6px",
+                padding: "16px",
+                animation: "fadeIn 0.2s ease-out"
+              }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { style: { fontSize: "12px", color: "#eee", fontWeight: 600, margin: "0 0 12px 0" }, children: "Available Tools" }),
+                svr.tools && svr.tools.length > 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "12px" }, children: svr.tools.map((t2) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { borderBottom: "1px solid rgba(255,255,255,0.03)", paddingBottom: "10px" }, children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "8px", margin: "0 0 4px 0" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { fontSize: "12px", color: "#4fc1ff", fontWeight: 600 }, children: t2.name }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: "10px", color: "#777" }, children: [
+                      "(",
+                      Object.keys(t2.inputSchema?.properties || {}).length,
+                      " params)"
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { fontSize: "11px", color: "#aaa", margin: "0 0 6px 0", lineHeight: 1.4 }, children: t2.description })
+                ] }, t2.name)) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", color: "#777", fontStyle: "italic" }, children: "No tools provided by this server" })
+              ] }),
+              isLogsOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+                marginTop: "16px",
+                animation: "fadeIn 0.2s ease-out"
+              }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { style: { fontSize: "12px", color: "#eee", fontWeight: 600, margin: "0 0 8px 0" }, children: "Stdout/Stderr Output Logs" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: {
+                  background: "#0a0a0a",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                  borderRadius: "6px",
+                  padding: "12px",
+                  fontFamily: "monospace",
+                  fontSize: "11px",
+                  color: "#4ec9b0",
+                  maxHeight: "220px",
+                  overflowY: "auto",
+                  whiteSpace: "pre-wrap",
+                  lineHeight: "1.4"
+                }, children: svr.logs && svr.logs.length > 0 ? svr.logs.join("\n") : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#555", fontStyle: "italic" }, children: "Console log is empty. Waiting for events..." }) })
+              ] })
+            ] }, svr.name);
+          }) })
+        ] })
+      ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("style", { dangerouslySetInnerHTML: { __html: `
         @keyframes spin {

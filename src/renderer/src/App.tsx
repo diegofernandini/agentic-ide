@@ -90,6 +90,11 @@ declare global {
       offFileChanged: () => void
       ollamaTags: () => Promise<string[]>
       ollamaChat: (payload: object) => Promise<string>
+      mcpGetConfig: () => Promise<any>
+      mcpSaveConfig: (config: any) => Promise<boolean>
+      mcpGetServers: () => Promise<any[]>
+      mcpRestartServer: (name: string) => Promise<void>
+      mcpCallTool: (serverName: string, toolName: string, args: any) => Promise<any>
     }
   }
 }

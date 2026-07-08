@@ -6,6 +6,7 @@ import { execFile, exec } from 'child_process'
 import { promisify } from 'util'
 import * as http from 'http'
 import type { FSWatcher } from 'chokidar'
+import { McpManager } from './mcp'
 
 const execFileAsync = promisify(execFile)
 const execAsync = promisify(exec)
@@ -38,7 +39,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  createWindow()
+  mcpManager.startAll().catch(console.error)
+})
 app.on('window-all-closed', () => app.quit())
 
 app.on('before-quit', () => {
@@ -49,6 +53,7 @@ app.on('before-quit', () => {
   for (const term of terminals.values()) {
     try { term.kill() } catch {}
   }
+  mcpManager.stopAll()
 })
 
 interface FileNode {
@@ -62,6 +67,7 @@ ipcMain.handle('open-folder', async () => {
   const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
   if (result.canceled) return null
   const dirPath = result.filePaths[0]
+  mcpManager.setWorkspaceRoot(dirPath)
   
   const chokidar = await import('chokidar')
   if (currentWatcher) currentWatcher.close()
@@ -415,6 +421,8 @@ const appSupportDir = path.dirname(app.getPath('userData'))
 const dataDir = path.join(appSupportDir, 'agentic-ide')
 const sessionsPath = path.join(dataDir, 'sessions.json')
 
+const mcpManager = new McpManager(dataDir)
+
 // Ollama proxy — runs in main process (Node.js) to avoid renderer CORS/security restrictions
 ipcMain.handle('ollama-tags', async () => {
   return new Promise<string[]>((resolve) => {
@@ -480,7 +488,22 @@ ipcMain.handle('memory-all', async () => {
 ipcMain.handle('load-sessions', async () => {
   try {
     const data = await fs.promises.readFile(sessionsPath, 'utf-8')
-    return JSON.parse(data)
+    const parsed = JSON.parse(data)
+    let ws: string | null = null
+    if (parsed) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ws = parsed[0].workspace || null
+      } else if (typeof parsed === 'object') {
+        const sessions = (parsed as any).sessions
+        if (Array.isArray(sessions) && sessions.length > 0) {
+          ws = sessions[0].workspace || null
+        }
+      }
+    }
+    if (ws) {
+      mcpManager.setWorkspaceRoot(ws)
+    }
+    return parsed
   } catch {}
   return null
 })
@@ -691,4 +714,26 @@ ipcMain.handle('get-historical-sessions', async () => {
   }
 
   return Array.from(sessionMap.values())
+})
+
+// MCP Event Handlers
+ipcMain.handle('mcp-get-config', () => {
+  return mcpManager.getConfig()
+})
+
+ipcMain.handle('mcp-save-config', (_e, config) => {
+  mcpManager.saveConfig(config)
+  return true
+})
+
+ipcMain.handle('mcp-get-servers', () => {
+  return mcpManager.getServersStatus()
+})
+
+ipcMain.handle('mcp-restart-server', (_e, name) => {
+  return mcpManager.restartServer(name)
+})
+
+ipcMain.handle('mcp-call-tool', (_e, serverName, toolName, args) => {
+  return mcpManager.callTool(serverName, toolName, args)
 })

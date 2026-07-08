@@ -27,6 +27,9 @@ const path = require("path");
 const child_process = require("child_process");
 const util = require("util");
 const http = require("http");
+const readline = require("readline");
+const https = require("https");
+const url = require("url");
 const pty = require("node-pty");
 const os = require("os");
 function _interopNamespaceDefault(e) {
@@ -48,8 +51,523 @@ function _interopNamespaceDefault(e) {
 const fs__namespace = /* @__PURE__ */ _interopNamespaceDefault(fs);
 const path__namespace = /* @__PURE__ */ _interopNamespaceDefault(path);
 const http__namespace = /* @__PURE__ */ _interopNamespaceDefault(http);
+const readline__namespace = /* @__PURE__ */ _interopNamespaceDefault(readline);
+const https__namespace = /* @__PURE__ */ _interopNamespaceDefault(https);
 const pty__namespace = /* @__PURE__ */ _interopNamespaceDefault(pty);
 const os__namespace = /* @__PURE__ */ _interopNamespaceDefault(os);
+class StdioMcpClient {
+  constructor(name, command, args, envVariables, getWorkspaceRoot) {
+    this.name = name;
+    this.command = command;
+    this.args = args;
+    this.envVariables = envVariables;
+    this.getWorkspaceRoot = getWorkspaceRoot;
+  }
+  process = null;
+  nextId = 1;
+  pendingRequests = /* @__PURE__ */ new Map();
+  logs = [];
+  connectionStatus = "disconnected";
+  tools = [];
+  errorMsg = "";
+  rl = null;
+  log(msg) {
+    const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
+    this.logs.push(`[${timestamp}] ${msg}`);
+    if (this.logs.length > 500) this.logs.shift();
+  }
+  async connect() {
+    this.connectionStatus = "connecting";
+    this.errorMsg = "";
+    this.tools = [];
+    this.log(`Starting stdio server: ${this.command} ${this.args.join(" ")}`);
+    return new Promise((resolve, reject) => {
+      try {
+        const env = { ...process.env, ...this.envVariables || {} };
+        const paths = [
+          "/opt/homebrew/bin",
+          "/usr/local/bin",
+          "/usr/bin",
+          "/bin",
+          "/usr/sbin",
+          "/sbin"
+        ];
+        if (process.env.HOME) {
+          paths.push(path__namespace.join(process.env.HOME, ".nvm/versions/node", process.version, "bin"));
+        }
+        const currentPath = process.env.PATH || "";
+        env.PATH = Array.from(/* @__PURE__ */ new Set([...currentPath.split(":"), ...paths])).filter(Boolean).join(":");
+        this.process = child_process.spawn(this.command, this.args, { env, shell: true });
+        this.process.on("error", (err) => {
+          this.connectionStatus = "error";
+          this.errorMsg = err.message;
+          this.log(`[Process Error] ${err.message}`);
+          reject(err);
+        });
+        this.process.stderr?.on("data", (data) => {
+          const str = data.toString().trim();
+          if (str) {
+            this.log(`[Stderr] ${str}`);
+          }
+        });
+        this.rl = readline__namespace.createInterface({
+          input: this.process.stdout,
+          terminal: false
+        });
+        let initialized = false;
+        this.rl.on("line", async (line) => {
+          this.log(`[Received] ${line}`);
+          try {
+            const msg = JSON.parse(line);
+            if (msg.id !== void 0) {
+              const pending = this.pendingRequests.get(msg.id);
+              if (pending) {
+                this.pendingRequests.delete(msg.id);
+                if (msg.error) {
+                  pending.reject(msg.error);
+                } else {
+                  pending.resolve(msg.result);
+                }
+              }
+            } else if (msg.method === "workspace/roots" || msg.method === "roots/list") {
+              const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null;
+              const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path__namespace.basename(rootPath) }] : [];
+              const response = {
+                jsonrpc: "2.0",
+                id: msg.id,
+                result: { roots }
+              };
+              this.sendRaw(response);
+            }
+          } catch (err) {
+            this.log(`[Error Parsing JSON-RPC] ${err.message}`);
+          }
+        });
+        this.process.on("exit", (code, signal) => {
+          this.connectionStatus = "disconnected";
+          this.log(`Server process exited. Code: ${code}, Signal: ${signal}`);
+          for (const pending of this.pendingRequests.values()) {
+            pending.reject(new Error(`Server process exited with code ${code}`));
+          }
+          this.pendingRequests.clear();
+          this.process = null;
+          if (!initialized) {
+            reject(new Error(`Server exited during handshake (code ${code})`));
+          }
+        });
+        const handshake = async () => {
+          try {
+            this.log(`Sending initialize request...`);
+            const initResult = await this.sendRequest("initialize", {
+              protocolVersion: "2024-11-05",
+              capabilities: {
+                roots: { listChanged: true }
+              },
+              clientInfo: { name: "agentic-ide", version: "1.0.0" }
+            });
+            this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`);
+            this.sendNotification("notifications/initialized", {});
+            this.log(`Sent initialized notification. Fetching tools...`);
+            const toolsResult = await this.sendRequest("tools/list", {});
+            this.tools = toolsResult?.tools || [];
+            this.log(`Success! Server connected. Found ${this.tools.length} tools.`);
+            this.connectionStatus = "connected";
+            initialized = true;
+            resolve();
+          } catch (err) {
+            this.log(`Handshake failed: ${err.message || String(err)}`);
+            this.disconnect();
+            reject(err);
+          }
+        };
+        handshake();
+      } catch (err) {
+        this.connectionStatus = "error";
+        this.errorMsg = err.message || String(err);
+        this.log(`Connection failed: ${this.errorMsg}`);
+        this.disconnect();
+        reject(err);
+      }
+    });
+  }
+  sendRaw(payload) {
+    if (!this.process || !this.process.stdin || this.process.stdin.writableEnded) {
+      this.log(`[Error] Cannot write to stdin, process is not running.`);
+      return;
+    }
+    const str = JSON.stringify(payload);
+    this.log(`[Sending] ${str}`);
+    this.process.stdin.write(str + "\n");
+  }
+  sendRequest(method, params) {
+    return new Promise((resolve, reject) => {
+      if (this.connectionStatus === "error" && !this.process) {
+        return reject(new Error(`Server is in error state: ${this.errorMsg}`));
+      }
+      if (!this.process) {
+        return reject(new Error(`Server is not running`));
+      }
+      const id = this.nextId++;
+      const payload = { jsonrpc: "2.0", id, method, params };
+      this.pendingRequests.set(id, { resolve, reject });
+      this.sendRaw(payload);
+    });
+  }
+  sendNotification(method, params) {
+    const payload = { jsonrpc: "2.0", method, params };
+    this.sendRaw(payload);
+  }
+  disconnect() {
+    this.log("Disconnecting from server...");
+    if (this.rl) {
+      try {
+        this.rl.close();
+      } catch {
+      }
+      this.rl = null;
+    }
+    if (this.process) {
+      try {
+        this.process.kill();
+      } catch {
+      }
+      this.process = null;
+    }
+    this.connectionStatus = "disconnected";
+    for (const pending of this.pendingRequests.values()) {
+      pending.reject(new Error(`Client disconnected`));
+    }
+    this.pendingRequests.clear();
+  }
+}
+class SseMcpClient {
+  constructor(name, url2, getWorkspaceRoot) {
+    this.name = name;
+    this.url = url2;
+    this.getWorkspaceRoot = getWorkspaceRoot;
+  }
+  nextId = 1;
+  pendingRequests = /* @__PURE__ */ new Map();
+  logs = [];
+  connectionStatus = "disconnected";
+  tools = [];
+  errorMsg = "";
+  sseRequest = null;
+  postUrl = null;
+  log(msg) {
+    const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
+    this.logs.push(`[${timestamp}] ${msg}`);
+    if (this.logs.length > 500) this.logs.shift();
+  }
+  async connect() {
+    this.connectionStatus = "connecting";
+    this.errorMsg = "";
+    this.tools = [];
+    this.postUrl = null;
+    this.log(`Connecting to SSE server: ${this.url}`);
+    return new Promise((resolve, reject) => {
+      try {
+        const parsedUrl = new url.URL(this.url);
+        const requestModule = parsedUrl.protocol === "https:" ? https__namespace : http__namespace;
+        const options = {
+          headers: {
+            "Accept": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+          }
+        };
+        this.sseRequest = requestModule.get(this.url, options, (res) => {
+          if (res.statusCode && res.statusCode >= 400) {
+            const err = new Error(`Server returned status code ${res.statusCode}`);
+            this.handleError(err);
+            reject(err);
+            return;
+          }
+          this.log(`SSE connection established. Parsing stream...`);
+          let buffer = "";
+          let currentEvent = "message";
+          res.on("data", async (chunk) => {
+            buffer += chunk.toString();
+            let index;
+            while ((index = buffer.indexOf("\n")) !== -1) {
+              const line = buffer.slice(0, index).trim();
+              buffer = buffer.slice(index + 1);
+              if (line.startsWith("event:")) {
+                currentEvent = line.slice(6).trim();
+              } else if (line.startsWith("data:")) {
+                const data = line.slice(5).trim();
+                await this.handleEvent(currentEvent, data, resolve, reject);
+              } else if (line === "") {
+                currentEvent = "message";
+              }
+            }
+          });
+          res.on("end", () => {
+            this.log("SSE stream ended by server");
+            this.disconnect();
+          });
+        });
+        this.sseRequest.on("error", (err) => {
+          this.handleError(err);
+          reject(err);
+        });
+      } catch (err) {
+        this.handleError(err);
+        reject(err);
+      }
+    });
+  }
+  handleError(err) {
+    this.connectionStatus = "error";
+    this.errorMsg = err.message || String(err);
+    this.log(`[Error] ${this.errorMsg}`);
+    this.disconnect();
+  }
+  async handleEvent(event, data, resolveConnect, rejectConnect) {
+    this.log(`[Event: ${event}] ${data}`);
+    if (event === "endpoint") {
+      try {
+        const resolved = new url.URL(data, this.url).toString();
+        this.postUrl = resolved;
+        this.log(`POST message endpoint resolved to: ${this.postUrl}`);
+        this.log("Sending initialize request...");
+        const initResult = await this.sendRequest("initialize", {
+          protocolVersion: "2024-11-05",
+          capabilities: {
+            roots: { listChanged: true }
+          },
+          clientInfo: { name: "agentic-ide", version: "1.0.0" }
+        });
+        this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`);
+        this.sendNotification("notifications/initialized", {});
+        this.log("Sent initialized notification. Fetching tools...");
+        const toolsResult = await this.sendRequest("tools/list", {});
+        this.tools = toolsResult?.tools || [];
+        this.log(`Success! SSE server connected. Found ${this.tools.length} tools.`);
+        this.connectionStatus = "connected";
+        resolveConnect();
+      } catch (err) {
+        rejectConnect(err);
+      }
+    } else if (event === "message") {
+      try {
+        const msg = JSON.parse(data);
+        if (msg.id !== void 0) {
+          const pending = this.pendingRequests.get(msg.id);
+          if (pending) {
+            this.pendingRequests.delete(msg.id);
+            if (msg.error) {
+              pending.reject(msg.error);
+            } else {
+              pending.resolve(msg.result);
+            }
+          }
+        }
+      } catch (err) {
+        this.log(`[Error parsing message JSON] ${err.message}`);
+      }
+    }
+  }
+  async sendRequest(method, params) {
+    if (!this.postUrl) {
+      throw new Error("Message endpoint not established yet");
+    }
+    const id = this.nextId++;
+    const payload = { jsonrpc: "2.0", id, method, params };
+    return new Promise((resolve, reject) => {
+      this.pendingRequests.set(id, { resolve, reject });
+      this.postMessage(payload).catch((err) => {
+        this.pendingRequests.delete(id);
+        reject(err);
+      });
+    });
+  }
+  sendNotification(method, params) {
+    if (!this.postUrl) return;
+    const payload = { jsonrpc: "2.0", method, params };
+    this.postMessage(payload).catch((err) => {
+      this.log(`[Error sending notification] ${err.message}`);
+    });
+  }
+  async postMessage(payload) {
+    if (!this.postUrl) return;
+    const url$1 = new url.URL(this.postUrl);
+    const body = JSON.stringify(payload);
+    const requestModule = url$1.protocol === "https:" ? https__namespace : http__namespace;
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body)
+      }
+    };
+    return new Promise((resolve, reject) => {
+      const req = requestModule.request(url$1, options, (res) => {
+        res.on("data", () => {
+        });
+        res.on("end", () => resolve());
+      });
+      req.on("error", (err) => reject(err));
+      req.write(body);
+      req.end();
+    });
+  }
+  disconnect() {
+    this.log("Disconnecting from SSE server...");
+    if (this.sseRequest) {
+      try {
+        this.sseRequest.destroy();
+      } catch {
+      }
+      this.sseRequest = null;
+    }
+    this.connectionStatus = "disconnected";
+    for (const pending of this.pendingRequests.values()) {
+      pending.reject(new Error("Client disconnected"));
+    }
+    this.pendingRequests.clear();
+  }
+}
+class McpManager {
+  constructor(dataDir2) {
+    this.dataDir = dataDir2;
+    this.configPath = path__namespace.join(this.dataDir, "mcp-config.json");
+    this.ensureConfigExists();
+  }
+  configPath;
+  servers = /* @__PURE__ */ new Map();
+  workspaceRoot = null;
+  setWorkspaceRoot(root) {
+    this.workspaceRoot = root;
+    this.logGlobal(`Workspace root updated to: ${root}`);
+  }
+  getWorkspaceRoot() {
+    return this.workspaceRoot;
+  }
+  ensureConfigExists() {
+    if (!fs__namespace.existsSync(this.dataDir)) {
+      fs__namespace.mkdirSync(this.dataDir, { recursive: true });
+    }
+    if (!fs__namespace.existsSync(this.configPath)) {
+      const defaultConfig = {
+        mcpServers: {
+          "sqlite-demo": {
+            command: "npx",
+            args: ["-y", "@modelcontextprotocol/server-sqlite", "--db", path__namespace.join(this.dataDir, "demo.db")],
+            disabled: true
+          }
+        }
+      };
+      fs__namespace.writeFileSync(this.configPath, JSON.stringify(defaultConfig, null, 2), "utf-8");
+    }
+  }
+  getConfig() {
+    this.ensureConfigExists();
+    try {
+      const content = fs__namespace.readFileSync(this.configPath, "utf-8");
+      return JSON.parse(content);
+    } catch (e) {
+      return { mcpServers: {} };
+    }
+  }
+  saveConfig(config) {
+    fs__namespace.writeFileSync(this.configPath, JSON.stringify(config, null, 2), "utf-8");
+    this.reloadServers();
+  }
+  async startAll() {
+    const config = this.getConfig();
+    for (const [name, srvConfig] of Object.entries(config.mcpServers)) {
+      if (srvConfig.disabled) {
+        continue;
+      }
+      try {
+        await this.startServer(name, srvConfig);
+      } catch (err) {
+        console.error(`Failed to start MCP server ${name}:`, err);
+      }
+    }
+  }
+  async startServer(name, srvConfig) {
+    this.stopServer(name);
+    let client;
+    if (srvConfig.url) {
+      client = new SseMcpClient(name, srvConfig.url, () => this.workspaceRoot);
+    } else if (srvConfig.command && srvConfig.args) {
+      client = new StdioMcpClient(name, srvConfig.command, srvConfig.args, srvConfig.env, () => this.workspaceRoot);
+    } else {
+      throw new Error(`Invalid server configuration for ${name}`);
+    }
+    this.servers.set(name, client);
+    client.connect().catch(() => {
+    });
+  }
+  stopServer(name) {
+    const client = this.servers.get(name);
+    if (client) {
+      client.disconnect();
+      this.servers.delete(name);
+    }
+  }
+  stopAll() {
+    for (const name of this.servers.keys()) {
+      this.stopServer(name);
+    }
+  }
+  async reloadServers() {
+    this.stopAll();
+    await this.startAll();
+  }
+  async restartServer(name) {
+    const config = this.getConfig();
+    const srvConfig = config.mcpServers[name];
+    if (!srvConfig) {
+      throw new Error(`Server ${name} not found in configuration`);
+    }
+    await this.startServer(name, srvConfig);
+  }
+  getServersStatus() {
+    const config = this.getConfig();
+    const statuses = [];
+    for (const [name, srvConfig] of Object.entries(config.mcpServers)) {
+      const activeClient = this.servers.get(name);
+      if (activeClient) {
+        statuses.push({
+          name,
+          status: activeClient.connectionStatus,
+          type: activeClient instanceof SseMcpClient ? "sse" : "stdio",
+          tools: activeClient.tools,
+          logs: activeClient.logs,
+          error: activeClient.errorMsg
+        });
+      } else {
+        statuses.push({
+          name,
+          status: "disconnected",
+          type: srvConfig.url ? "sse" : "stdio",
+          tools: [],
+          logs: srvConfig.disabled ? [`[SYSTEM] Server is disabled in configuration.`] : [],
+          error: srvConfig.disabled ? "Disabled" : void 0
+        });
+      }
+    }
+    return statuses;
+  }
+  async callTool(serverName, toolName, args) {
+    const client = this.servers.get(serverName);
+    if (!client) {
+      throw new Error(`MCP Server ${serverName} is not running or connected`);
+    }
+    return client.sendRequest("tools/call", { name: toolName, arguments: args });
+  }
+  logGlobal(msg) {
+    for (const client of this.servers.values()) {
+      if (client instanceof StdioMcpClient || client instanceof SseMcpClient) {
+        const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
+        client.logs.push(`[${timestamp}] [IDE] ${msg}`);
+      }
+    }
+  }
+}
 const appSupportDir$1 = path__namespace.dirname(electron.app.getPath("userData"));
 const dataDir$1 = path__namespace.join(appSupportDir$1, "agentic-ide");
 const memoryDir = path__namespace.join(dataDir$1, "memory");
@@ -129,7 +647,10 @@ function createWindow() {
     win.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 }
-electron.app.whenReady().then(createWindow);
+electron.app.whenReady().then(() => {
+  createWindow();
+  mcpManager.startAll().catch(console.error);
+});
 electron.app.on("window-all-closed", () => electron.app.quit());
 electron.app.on("before-quit", () => {
   if (currentWatcher) {
@@ -141,11 +662,13 @@ electron.app.on("before-quit", () => {
     } catch {
     }
   }
+  mcpManager.stopAll();
 });
 electron.ipcMain.handle("open-folder", async () => {
   const result = await electron.dialog.showOpenDialog({ properties: ["openDirectory"] });
   if (result.canceled) return null;
   const dirPath = result.filePaths[0];
+  mcpManager.setWorkspaceRoot(dirPath);
   const chokidar = await import("chokidar");
   if (currentWatcher) currentWatcher.close();
   currentWatcher = chokidar.watch(dirPath, {
@@ -405,11 +928,11 @@ electron.ipcMain.handle("git-init", async (_e, dirPath) => {
     return { success: false, error: e.message };
   }
 });
-electron.ipcMain.handle("git-remote-add", async (_e, dirPath, name, url) => {
+electron.ipcMain.handle("git-remote-add", async (_e, dirPath, name, url2) => {
   try {
     await execFileAsync("git", ["remote", "remove", name], { cwd: dirPath }).catch(() => {
     });
-    await execFileAsync("git", ["remote", "add", name, url], { cwd: dirPath });
+    await execFileAsync("git", ["remote", "add", name, url2], { cwd: dirPath });
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
@@ -418,8 +941,8 @@ electron.ipcMain.handle("git-remote-add", async (_e, dirPath, name, url) => {
 electron.ipcMain.handle("git-get-remote", async (_e, dirPath) => {
   try {
     const { stdout } = await execFileAsync("git", ["remote", "get-url", "origin"], { cwd: dirPath, encoding: "utf-8" });
-    const url = stdout.trim();
-    return url.replace(/https:\/\/[^@]+@github.com/, "https://github.com");
+    const url2 = stdout.trim();
+    return url2.replace(/https:\/\/[^@]+@github.com/, "https://github.com");
   } catch {
     return null;
   }
@@ -446,8 +969,8 @@ electron.ipcMain.handle("github-create-repo", async (_e, token, repoName, isPriv
         "User-Agent": "agentic-ide"
       }
     };
-    const https = require("https");
-    const req = https.request(options, (res) => {
+    const https2 = require("https");
+    const req = https2.request(options, (res) => {
       let data = "";
       res.on("data", (chunk) => {
         data += chunk;
@@ -473,6 +996,7 @@ electron.ipcMain.handle("github-create-repo", async (_e, token, repoName, isPriv
 const appSupportDir = path__namespace.dirname(electron.app.getPath("userData"));
 const dataDir = path__namespace.join(appSupportDir, "agentic-ide");
 const sessionsPath = path__namespace.join(dataDir, "sessions.json");
+const mcpManager = new McpManager(dataDir);
 electron.ipcMain.handle("ollama-tags", async () => {
   return new Promise((resolve) => {
     const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
@@ -551,7 +1075,22 @@ electron.ipcMain.handle("memory-all", async () => {
 electron.ipcMain.handle("load-sessions", async () => {
   try {
     const data = await fs__namespace.promises.readFile(sessionsPath, "utf-8");
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    let ws = null;
+    if (parsed) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ws = parsed[0].workspace || null;
+      } else if (typeof parsed === "object") {
+        const sessions = parsed.sessions;
+        if (Array.isArray(sessions) && sessions.length > 0) {
+          ws = sessions[0].workspace || null;
+        }
+      }
+    }
+    if (ws) {
+      mcpManager.setWorkspaceRoot(ws);
+    }
+    return parsed;
   } catch {
   }
   return null;
@@ -735,4 +1274,20 @@ electron.ipcMain.handle("get-historical-sessions", async () => {
     console.error("Error reading backup sessions:", err);
   }
   return Array.from(sessionMap.values());
+});
+electron.ipcMain.handle("mcp-get-config", () => {
+  return mcpManager.getConfig();
+});
+electron.ipcMain.handle("mcp-save-config", (_e, config) => {
+  mcpManager.saveConfig(config);
+  return true;
+});
+electron.ipcMain.handle("mcp-get-servers", () => {
+  return mcpManager.getServersStatus();
+});
+electron.ipcMain.handle("mcp-restart-server", (_e, name) => {
+  return mcpManager.restartServer(name);
+});
+electron.ipcMain.handle("mcp-call-tool", (_e, serverName, toolName, args) => {
+  return mcpManager.callTool(serverName, toolName, args);
 });

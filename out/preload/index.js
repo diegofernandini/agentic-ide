@@ -39,6 +39,11 @@ electron.contextBridge.exposeInMainWorld("api", {
   getHistoricalSessions: () => electron.ipcRenderer.invoke("get-historical-sessions"),
   ollamaTags: () => electron.ipcRenderer.invoke("ollama-tags"),
   ollamaChat: (payload) => electron.ipcRenderer.invoke("ollama-chat", payload),
+  mcpGetConfig: () => electron.ipcRenderer.invoke("mcp-get-config"),
+  mcpSaveConfig: (config) => electron.ipcRenderer.invoke("mcp-save-config", config),
+  mcpGetServers: () => electron.ipcRenderer.invoke("mcp-get-servers"),
+  mcpRestartServer: (name) => electron.ipcRenderer.invoke("mcp-restart-server", name),
+  mcpCallTool: (serverName, toolName, args) => electron.ipcRenderer.invoke("mcp-call-tool", serverName, toolName, args),
   memory: {
     store: (item) => electron.ipcRenderer.invoke("memory-store", item),
     query: (q, scope, limit) => electron.ipcRenderer.invoke("memory-query", q, scope, limit),

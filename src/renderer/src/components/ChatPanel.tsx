@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Plus, History, Trash2, Paperclip, Send, Zap, Copy, FilePlus, FileDiff, CheckCircle2, RotateCcw, X, Bot, ClipboardList, Bug, Layers, MessageCircleQuestion } from 'lucide-react'
+import { Plus, History, Trash2, Paperclip, Send, Zap, Copy, FilePlus, FileDiff, CheckCircle2, RotateCcw, X, Bot, ClipboardList, Bug, Layers, MessageCircleQuestion, Database } from 'lucide-react'
 
 interface ExecuteAction {
   command: string
@@ -9,7 +9,7 @@ interface ExecuteAction {
 }
 
 interface Message {
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'tool'
   content: string
   writes?: WriteAction[]
   executes?: ExecuteAction[]
@@ -19,6 +19,10 @@ interface Message {
   model?: string
   images?: string[]
   isToolOutput?: boolean
+  tool_calls?: any[]
+  tool_call_id?: string
+  name?: string
+  toolStatus?: 'pending' | 'running' | 'completed' | 'error'
 }
 
 interface WriteAction {
@@ -59,6 +63,11 @@ declare global {
       ollamaTags: () => Promise<string[]>
       ollamaChat: (payload: object) => Promise<string>
       execCommand: (cwd: string, command: string) => Promise<{ success: boolean; stdout?: string; stderr?: string; error?: string }>
+      mcpGetConfig: () => Promise<any>
+      mcpSaveConfig: (config: any) => Promise<boolean>
+      mcpGetServers: () => Promise<any[]>
+      mcpRestartServer: (name: string) => Promise<void>
+      mcpCallTool: (serverName: string, toolName: string, args: any) => Promise<any>
       memory: {
         store: (item: any) => Promise<any>
         query: (q: string, scope?: string, limit?: number) => Promise<any[]>
@@ -943,22 +952,63 @@ Rules:
     setSessions(prev => prev.map(s => s.id === activeId ? { ...s, workspace: s.workspace || rootPath } : s))
     startTimeRef.current = Date.now()
 
+    // 1. Fetch active MCP tools
+    let activeMcpTools: any[] = []
+    try {
+      const servers = await window.api.mcpGetServers()
+      activeMcpTools = servers
+        .filter(s => s.status === 'connected')
+        .flatMap(s => (s.tools || []).map((t: any) => ({
+          serverName: s.name,
+          name: t.name,
+          description: t.description,
+          inputSchema: t.inputSchema
+        })))
+    } catch (e) {
+      console.warn('Failed to retrieve MCP tools:', e)
+    }
+
+    const ollamaTools = activeMcpTools.map(t => ({
+      type: 'function',
+      function: {
+        name: `mcp__${t.serverName}__${t.name}`,
+        description: t.description,
+        parameters: t.inputSchema
+      }
+    }))
+
     try {
       const systemPrompt = await buildSystemPrompt()
       const chatMessages = [
         { role: 'system', content: systemPrompt },
         ...history.map(msg => {
-          if (msg.role === 'user' && msg.images) {
+          if (msg.role === 'user') {
+            if (msg.images) {
+              return {
+                role: msg.role,
+                content: msg.content,
+                images: msg.images.map(img => img.includes(',') ? img.split(',')[1] : img)
+              }
+            }
+            return { role: msg.role, content: msg.content }
+          }
+          if (msg.role === 'assistant') {
+            const out: any = { role: msg.role, content: msg.content }
+            if (msg.tool_calls) out.tool_calls = msg.tool_calls
+            return out
+          }
+          if (msg.role === 'tool') {
             return {
-              role: msg.role,
-              content: msg.content,
-              images: msg.images.map(img => img.includes(',') ? img.split(',')[1] : img)
+              role: 'tool',
+              name: msg.name,
+              tool_call_id: msg.tool_call_id,
+              content: msg.content
             }
           }
           return { role: msg.role, content: msg.content }
         })
       ]
-      // Use IPC shim if available (preload exposes `window.api.ollamaChat`) to avoid CORS and to support non-fetch backends.
+
       let assistantText = ''
       const activeIdAtSend = activeId
       let processedUpTo = 0
@@ -966,6 +1016,8 @@ Rules:
       const streamExecutes: ExecuteAction[] = []
       let promptTokens = 0
       let responseTokens = 0
+      let toolCalls: any[] = []
+
       setMessages(prev => [...prev, { role: 'assistant', content: '' }])
 
       const normalizeStreamLine = (rawLine: string) => {
@@ -994,6 +1046,27 @@ Rules:
       const processOllamaJson = async (json: any) => {
         if (json.prompt_eval_count) promptTokens = json.prompt_eval_count
         if (json.eval_count) responseTokens = json.eval_count
+        
+        // Accumulate tool calls if present
+        const deltaToolCalls = json.choices?.[0]?.delta?.tool_calls || json.message?.tool_calls
+        if (deltaToolCalls) {
+          for (const tc of deltaToolCalls) {
+            const idx = tc.index ?? toolCalls.length
+            if (!toolCalls[idx]) {
+              toolCalls[idx] = { id: tc.id, type: 'function', function: { name: '', arguments: '' } }
+            }
+            if (tc.id) toolCalls[idx].id = tc.id
+            if (tc.function?.name) toolCalls[idx].function.name += tc.function.name
+            if (tc.function?.arguments) {
+              if (typeof tc.function.arguments === 'string') {
+                toolCalls[idx].function.arguments += tc.function.arguments
+              } else {
+                toolCalls[idx].function.arguments = JSON.stringify(tc.function.arguments)
+              }
+            }
+          }
+        }
+
         const content = getChatContent(json)
         if (!content) return
         assistantText += content
@@ -1088,8 +1161,17 @@ Rules:
         }
       }
 
+      const chatPayload: any = {
+        model,
+        stream: true,
+        messages: chatMessages
+      }
+      if (ollamaTools.length > 0) {
+        chatPayload.tools = ollamaTools
+      }
+
       if (window.api && typeof window.api.ollamaChat === 'function') {
-        const body = await window.api.ollamaChat({ model, stream: true, messages: chatMessages })
+        const body = await window.api.ollamaChat(chatPayload)
         const text = String(body || '')
         await processBodyLines(text)
 
@@ -1100,7 +1182,7 @@ Rules:
         const res = await fetch('http://localhost:11434/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, stream: true, messages: chatMessages })
+          body: JSON.stringify(chatPayload)
         })
         if (!res.ok) throw new Error(`Ollama error: ${res.status}`)
 
@@ -1138,6 +1220,101 @@ Rules:
             }
           }
         }
+      }
+
+      // If tool calls were requested, execute them and trigger agent loop recursively
+      if (toolCalls.length > 0) {
+        const resolvedToolCalls = toolCalls.map(tc => {
+          let parsedArgs = {}
+          try {
+            if (tc.function.arguments) {
+              parsedArgs = typeof tc.function.arguments === 'string'
+                ? JSON.parse(tc.function.arguments)
+                : tc.function.arguments
+            }
+          } catch (e) {
+            console.error('Failed to parse tool arguments:', tc.function.arguments, e)
+          }
+          return {
+            id: tc.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'function',
+            function: {
+              name: tc.function.name,
+              arguments: JSON.stringify(parsedArgs)
+            }
+          }
+        })
+
+        setMessages(prev => {
+          const updated = [...prev]
+          updated[updated.length - 1] = {
+            role: 'assistant',
+            content: assistantText,
+            tool_calls: resolvedToolCalls,
+            model,
+            elapsed: Math.round((Date.now() - startTimeRef.current) / 1000)
+          }
+          return updated
+        })
+
+        const nextMessages = [...history, {
+          role: 'assistant',
+          content: assistantText,
+          tool_calls: resolvedToolCalls
+        } as Message]
+
+        for (const tc of resolvedToolCalls) {
+          const match = tc.function.name.match(/^mcp__([a-zA-Z0-9_-]+)__(.+)$/)
+          let resultText = ''
+          
+          if (match) {
+            const serverName = match[1]
+            const toolName = match[2]
+            const args = JSON.parse(tc.function.arguments || '{}')
+            
+            setMessages(prev => [...prev, {
+              role: 'tool',
+              name: tc.function.name,
+              content: `Executing ${serverName}.${toolName}...`,
+              tool_call_id: tc.id,
+              toolStatus: 'running'
+            } as Message])
+
+            try {
+              const res = await window.api.mcpCallTool(serverName, toolName, args)
+              resultText = typeof res === 'string' ? res : JSON.stringify(res, null, 2)
+              try {
+                const parsedRes = typeof res === 'string' ? JSON.parse(res) : res
+                if (parsedRes && Array.isArray(parsedRes.content)) {
+                  resultText = parsedRes.content
+                    .map((c: any) => c.text || c.value || '')
+                    .filter(Boolean)
+                    .join('\n')
+                } else if (parsedRes && typeof parsedRes.text === 'string') {
+                  resultText = parsedRes.text
+                }
+              } catch {}
+            } catch (err: any) {
+              resultText = `Error calling tool: ${err.message || String(err)}`
+            }
+          } else {
+            resultText = `Error: Tool name format invalid. Expected prefix mcp__`
+          }
+
+          const toolMsg: Message = {
+            role: 'tool',
+            name: tc.function.name,
+            content: resultText,
+            tool_call_id: tc.id,
+            toolStatus: 'completed'
+          }
+          nextMessages.push(toolMsg)
+        }
+
+        setMessages(() => nextMessages)
+        setLoading(false)
+        setTimeout(() => send(nextMessages), 500)
+        return
       }
 
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000)
@@ -1512,39 +1689,82 @@ Rules:
 
       {/* Messages Area */}
       <div className="chat-messages">
-        {messages.map((m, i) => (
-          <div key={`msg-${activeId}-${i}`} className={`chat-msg chat-msg--${m.role} ${m.isToolOutput ? 'chat-msg--tool-output' : ''}`}>
-            <div className="chat-msg-header">
-              <span className="chat-role" style={m.isToolOutput ? { color: '#a8a29e' } : {}}>{m.isToolOutput ? 'TERMINAL' : m.role.toUpperCase()}</span>
-              <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-            <div className="chat-msg-bubble" style={m.isToolOutput ? { backgroundColor: '#2d2d2d', border: '1px solid #444', color: '#ccc' } : {}}>
-              <MessageContent 
-                content={m.content} 
-                writes={m.writes}
-                executes={m.executes}
-                onAccept={p => handleAccept(i, p)}
-                onRevert={p => handleRevert(i, p)}
-                onOpenDiff={onOpenDiff}
-                onExecuteAllow={(cmd, always) => handleExecuteAllow(i, m.executes?.findIndex(e => e.command === cmd) ?? -1, cmd, always)}
-                onExecuteCancel={(cmd) => handleExecuteCancel(i, m.executes?.findIndex(e => e.command === cmd) ?? -1)}
-              />
-              {m.images && m.images.length > 0 && (
-                <div className="chat-msg-images">
-                  {m.images.map((img, idx) => (
-                    <img key={idx} src={img} className="chat-msg-image" alt="attachment" onClick={() => window.open(img)} />
-                  ))}
+        {messages.map((m, i) => {
+          if (m.role === 'tool') {
+            const cleanName = m.name?.replace(/^mcp__([a-zA-Z0-9_-]+)__/, '') || m.name || 'tool'
+            const serverName = m.name?.match(/^mcp__([a-zA-Z0-9_-]+)__/)?.[1] || 'mcp'
+            return (
+              <div key={`msg-${activeId}-${i}`} className="chat-msg chat-msg--tool">
+                <div className="chat-msg-header">
+                  <span className="chat-role" style={{ color: '#4ec9b0' }}>
+                    TOOL ({serverName.toUpperCase()})
+                  </span>
+                  <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
-              )}
-              {(m.writes || m.elapsed) && (
-                <div className="msg-meta">
-                  {m.writes && <span className="msg-writes">{m.writes.length} patches</span>}
-                  {m.elapsed && <span className="msg-elapsed">{m.elapsed.toFixed(1)}s</span>}
+                <div className="chat-msg-bubble chat-msg-bubble--tool" style={{ backgroundColor: 'rgba(78, 201, 176, 0.04)', border: '1px solid rgba(78, 201, 176, 0.15)', color: '#ccc' }}>
+                  <div className="mcp-tool-call-header" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '6px', width: '100%' }}>
+                    <Database size={12} className="mcp-tool-call-icon" style={{ color: '#4ec9b0', flexShrink: 0 }} />
+                    <span style={{ color: '#aaa' }}>Called <code>{cleanName}</code></span>
+                    {m.toolStatus === 'running' && <span className="mcp-tool-status mcp-tool-status--running" style={{ marginLeft: 'auto', background: 'rgba(206,145,120,0.1)', color: '#ce9178', padding: '1px 5px', borderRadius: '3px', fontSize: '9px' }}>Executing...</span>}
+                    {m.toolStatus === 'completed' && <span className="mcp-tool-status mcp-tool-status--completed" style={{ marginLeft: 'auto', background: 'rgba(78,201,176,0.1)', color: '#4ec9b0', padding: '1px 5px', borderRadius: '3px', fontSize: '9px' }}>Success</span>}
+                  </div>
+                  <pre className="mcp-tool-output-pre" style={{ margin: 0, overflowX: 'auto', maxHeight: '250px', fontSize: '11px', fontFamily: 'monospace', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <code>{m.content}</code>
+                  </pre>
                 </div>
-              )}
+              </div>
+            )
+          }
+
+          return (
+            <div key={`msg-${activeId}-${i}`} className={`chat-msg chat-msg--${m.role} ${m.isToolOutput ? 'chat-msg--tool-output' : ''}`}>
+              <div className="chat-msg-header">
+                <span className="chat-role" style={m.isToolOutput ? { color: '#a8a29e' } : {}}>{m.isToolOutput ? 'TERMINAL' : m.role.toUpperCase()}</span>
+                <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              <div className="chat-msg-bubble" style={m.isToolOutput ? { backgroundColor: '#2d2d2d', border: '1px solid #444', color: '#ccc' } : {}}>
+                <MessageContent 
+                  content={m.content} 
+                  writes={m.writes}
+                  executes={m.executes}
+                  onAccept={p => handleAccept(i, p)}
+                  onRevert={p => handleRevert(i, p)}
+                  onOpenDiff={onOpenDiff}
+                  onExecuteAllow={(cmd, always) => handleExecuteAllow(i, m.executes?.findIndex(e => e.command === cmd) ?? -1, cmd, always)}
+                  onExecuteCancel={(cmd) => handleExecuteCancel(i, m.executes?.findIndex(e => e.command === cmd) ?? -1)}
+                />
+                {m.tool_calls && m.tool_calls.length > 0 && (
+                  <div className="mcp-tool-calls-container" style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
+                    {m.tool_calls.map((tc: any, tcIdx: number) => {
+                      const match = tc.function.name.match(/^mcp__([a-zA-Z0-9_-]+)__(.+)$/)
+                      const server = match ? match[1] : 'mcp'
+                      const tool = match ? match[2] : tc.function.name
+                      return (
+                        <div key={tcIdx} className="mcp-tool-call-indicator" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '5px 8px', borderRadius: '4px', color: '#ccc' }}>
+                          <Database size={11} style={{ color: '#4ec9b0', flexShrink: 0 }} />
+                          <span>Using tool: <strong style={{ color: '#4fc1ff' }}>{server}.{tool}</strong></span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {m.images && m.images.length > 0 && (
+                  <div className="chat-msg-images">
+                    {m.images.map((img, idx) => (
+                      <img key={idx} src={img} className="chat-msg-image" alt="attachment" onClick={() => window.open(img)} />
+                    ))}
+                  </div>
+                )}
+                {(m.writes || m.elapsed) && (
+                  <div className="msg-meta">
+                    {m.writes && <span className="msg-writes">{m.writes.length} patches</span>}
+                    {m.elapsed && <span className="msg-elapsed">{m.elapsed.toFixed(1)}s</span>}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
         {loading && (
           <div className="chat-msg chat-msg--assistant">
             <div className="chat-msg-header">

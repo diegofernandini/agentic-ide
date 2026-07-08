@@ -3014,5 +3014,13 @@ body {
   animation: fadeIn 0.2s ease-out;
 }
 
+.preset-card-hover:hover {
+  border-color: rgba(0, 122, 204, 0.3) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  background: rgba(30, 30, 30, 0.6) !important;
+}
+
+
 
 

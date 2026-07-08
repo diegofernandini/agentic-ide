@@ -39,6 +39,11 @@ contextBridge.exposeInMainWorld('api', {
   getHistoricalSessions: () => ipcRenderer.invoke('get-historical-sessions'),
   ollamaTags: () => ipcRenderer.invoke('ollama-tags'),
   ollamaChat: (payload: object) => ipcRenderer.invoke('ollama-chat', payload),
+  mcpGetConfig: () => ipcRenderer.invoke('mcp-get-config'),
+  mcpSaveConfig: (config: any) => ipcRenderer.invoke('mcp-save-config', config),
+  mcpGetServers: () => ipcRenderer.invoke('mcp-get-servers'),
+  mcpRestartServer: (name: string) => ipcRenderer.invoke('mcp-restart-server', name),
+  mcpCallTool: (serverName: string, toolName: string, args: any) => ipcRenderer.invoke('mcp-call-tool', serverName, toolName, args),
   memory: {
     store: (item: any) => ipcRenderer.invoke('memory-store', item),
     query: (q: string, scope?: string, limit?: number) => ipcRenderer.invoke('memory-query', q, scope, limit),
