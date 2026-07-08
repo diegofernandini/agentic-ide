@@ -19485,6 +19485,11 @@ function Dashboard({ models, sessions = [], rootPath }) {
   const [srvArgs, setSrvArgs] = reactExports.useState("");
   const [srvEnv, setSrvEnv] = reactExports.useState("");
   const [srvUrl, setSrvUrl] = reactExports.useState("");
+  const [srvToken, setSrvToken] = reactExports.useState("");
+  const [srvHeaderKey, setSrvHeaderKey] = reactExports.useState("Authorization");
+  const [showJsonEditor, setShowJsonEditor] = reactExports.useState(false);
+  const [jsonEditorValue, setJsonEditorValue] = reactExports.useState("");
+  const [jsonEditorError, setJsonEditorError] = reactExports.useState("");
   const [expandedLogs, setExpandedLogs] = reactExports.useState({});
   const [expandedTools, setExpandedTools] = reactExports.useState({});
   reactExports.useEffect(() => {
@@ -19492,7 +19497,12 @@ function Dashboard({ models, sessions = [], rootPath }) {
       const fetchConfig = async () => {
         try {
           const cfg = await window.api.mcpGetConfig();
-          setConfig(cfg || { mcpServers: {} });
+          const resolved = cfg || { mcpServers: {} };
+          setConfig(resolved);
+          setJsonEditorValue((prev) => {
+            if (prev === "") return JSON.stringify(resolved, null, 2);
+            return prev;
+          });
         } catch (e) {
           console.warn("Failed to load MCP config:", e);
         }
@@ -19516,14 +19526,27 @@ function Dashboard({ models, sessions = [], rootPath }) {
     setEditingServer(name);
     setSrvName(name);
     if (srvConfig.url) {
-      setSrvType("sse");
+      const transport = srvConfig.transport || "sse";
+      setSrvType(transport);
       setSrvUrl(srvConfig.url);
+      const headers = srvConfig.headers || {};
+      const headerEntries = Object.entries(headers);
+      if (headerEntries.length > 0) {
+        const [key, value] = headerEntries[0];
+        setSrvHeaderKey(key);
+        setSrvToken(value.startsWith("Bearer ") ? value.slice(7) : value);
+      } else {
+        setSrvHeaderKey("Authorization");
+        setSrvToken("");
+      }
       setSrvCommand("");
       setSrvArgs("");
       setSrvEnv("");
     } else {
       setSrvType("stdio");
       setSrvUrl("");
+      setSrvToken("");
+      setSrvHeaderKey("Authorization");
       setSrvCommand(srvConfig.command || "");
       setSrvArgs(Array.isArray(srvConfig.args) ? srvConfig.args.join(" ") : "");
       setSrvEnv(srvConfig.env ? JSON.stringify(srvConfig.env, null, 2) : "");
@@ -19562,6 +19585,29 @@ function Dashboard({ models, sessions = [], rootPath }) {
       console.error("Failed to restart server:", e);
     }
   };
+  const handleSaveJson = async () => {
+    setJsonEditorError("");
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonEditorValue);
+    } catch (e) {
+      setJsonEditorError(`Invalid JSON: ${e.message}`);
+      return;
+    }
+    if (!parsed.mcpServers || typeof parsed.mcpServers !== "object") {
+      setJsonEditorError('Config must have a top-level "mcpServers" object.');
+      return;
+    }
+    try {
+      await window.api.mcpSaveConfig(parsed);
+      setConfig(parsed);
+      setJsonEditorValue("");
+      setJsonEditorError("");
+      setShowJsonEditor(false);
+    } catch (e) {
+      setJsonEditorError(`Failed to save: ${e.message}`);
+    }
+  };
   const handleSaveServer = async (e) => {
     e.preventDefault();
     if (!srvName.trim()) return;
@@ -19581,8 +19627,14 @@ function Dashboard({ models, sessions = [], rootPath }) {
     const srvConfig = {
       disabled: config2.mcpServers[editingServer || srvName.trim()]?.disabled || false
     };
-    if (srvType === "sse") {
+    if (srvType === "sse" || srvType === "streamable-http") {
       srvConfig.url = srvUrl.trim();
+      srvConfig.transport = srvType;
+      if (srvToken.trim()) {
+        const key = srvHeaderKey.trim() || "Authorization";
+        const value = key === "Authorization" ? `Bearer ${srvToken.trim()}` : srvToken.trim();
+        srvConfig.headers = { [key]: value };
+      }
     } else {
       srvConfig.command = srvCommand.trim();
       const matches = srvArgs.match(/"[^"]+"|'[^']+'|\S+/g) || [];
@@ -19606,6 +19658,8 @@ function Dashboard({ models, sessions = [], rootPath }) {
     setSrvArgs("");
     setSrvEnv("");
     setSrvUrl("");
+    setSrvToken("");
+    setSrvHeaderKey("Authorization");
   };
   reactExports.useEffect(() => {
     if (activeTab === "historical") {
@@ -20141,6 +20195,7 @@ function Dashboard({ models, sessions = [], rootPath }) {
                   setSrvArgs(p2.preset.args);
                   setSrvEnv(p2.preset.env);
                   setSrvUrl("");
+                  setSrvToken("");
                   setShowForm(true);
                   setTimeout(() => {
                     document.getElementById("mcp-config-form-section")?.scrollIntoView({ behavior: "smooth" });
@@ -20223,7 +20278,8 @@ function Dashboard({ models, sessions = [], rootPath }) {
                     },
                     children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "stdio", children: "Stdio (Local Process)" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "sse", children: "SSE (Server-Sent Events)" })
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "sse", children: "SSE (Server-Sent Events)" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "streamable-http", children: "Streamable HTTP (2025)" })
                     ]
                   }
                 )
@@ -20294,26 +20350,74 @@ function Dashboard({ models, sessions = [], rootPath }) {
                   }
                 )
               ] })
-            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: "SSE Endpoint URL" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "input",
-                {
-                  type: "url",
-                  placeholder: "e.g. http://localhost:3012/sse",
-                  value: srvUrl,
-                  onChange: (e) => setSrvUrl(e.target.value),
-                  required: true,
-                  style: {
-                    padding: "8px 12px",
-                    background: "rgba(0,0,0,0.2)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "6px",
-                    color: "#fff",
-                    fontSize: "13px"
+            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "16px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: srvType === "streamable-http" ? "Streamable HTTP Endpoint URL" : "SSE Endpoint URL" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "url",
+                    placeholder: srvType === "streamable-http" ? "e.g. https://design.penpot.app/mcp/stream" : "e.g. http://localhost:3012/sse",
+                    value: srvUrl,
+                    onChange: (e) => setSrvUrl(e.target.value),
+                    required: true,
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(0,0,0,0.2)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px"
+                    }
                   }
-                }
-              )
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: [
+                  "Auth Header ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#555", fontWeight: 400, textTransform: "none" }, children: "(header name)" })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "e.g. Authorization or X-Figma-Token",
+                    value: srvHeaderKey,
+                    onChange: (e) => setSrvHeaderKey(e.target.value),
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(0,0,0,0.2)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px"
+                    }
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase" }, children: [
+                  "Token Value ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { color: "#555", fontWeight: 400, textTransform: "none" }, children: '(optional — "Bearer " prefix added automatically for Authorization)' })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "password",
+                    placeholder: "e.g. your access token",
+                    value: srvToken,
+                    onChange: (e) => setSrvToken(e.target.value),
+                    style: {
+                      padding: "8px 12px",
+                      background: "rgba(0,0,0,0.2)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "6px",
+                      color: "#fff",
+                      fontSize: "13px"
+                    }
+                  }
+                )
+              ] })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "12px", marginTop: "8px", justifyContent: "flex-end" }, children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -20364,38 +20468,161 @@ function Dashboard({ models, sessions = [], rootPath }) {
               mcpServers.length,
               ")"
             ] }),
-            !showForm && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "button",
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  onClick: () => {
+                    setJsonEditorValue(JSON.stringify(config2, null, 2));
+                    setJsonEditorError("");
+                    setShowJsonEditor((v3) => !v3);
+                    setShowForm(false);
+                  },
+                  style: {
+                    padding: "8px 14px",
+                    background: showJsonEditor ? "rgba(0,122,204,0.2)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${showJsonEditor ? "#007acc" : "rgba(255,255,255,0.1)"}`,
+                    borderRadius: "6px",
+                    color: showJsonEditor ? "#4fc3f7" : "#aaa",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  },
+                  children: [
+                    "{ }",
+                    " Edit JSON"
+                  ]
+                }
+              ),
+              !showForm && !showJsonEditor && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  onClick: () => {
+                    setEditingServer(null);
+                    setSrvName("");
+                    setSrvType("stdio");
+                    setSrvCommand("");
+                    setSrvArgs("");
+                    setSrvEnv("");
+                    setSrvUrl("");
+                    setSrvToken("");
+                    setSrvHeaderKey("Authorization");
+                    setShowForm(true);
+                  },
+                  style: {
+                    padding: "8px 16px",
+                    background: "#007acc",
+                    border: "none",
+                    borderRadius: "6px",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 13 }),
+                    " Add Connection"
+                  ]
+                }
+              )
+            ] })
+          ] }),
+          showJsonEditor && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(0,0,0,0.3)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "10px",
+            padding: "20px",
+            marginBottom: "24px"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: "0 0 12px 0", fontSize: "12px", color: "#888", lineHeight: 1.6 }, children: [
+              "Edit the raw config JSON. Supports all fields: ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "command" }),
+              ", ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "args" }),
+              ", ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "env" }),
+              ", ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "url" }),
+              ", ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "transport" }),
+              " (",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#ce9178" }, children: '"sse"' }),
+              " or ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#ce9178" }, children: '"streamable-http"' }),
+              "), ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "headers" }),
+              ", ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "disabled" }),
+              "."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "textarea",
               {
-                onClick: () => {
-                  setEditingServer(null);
-                  setSrvName("");
-                  setSrvType("stdio");
-                  setSrvCommand("");
-                  setSrvArgs("");
-                  setSrvEnv("");
-                  setSrvUrl("");
-                  setShowForm(true);
-                },
+                value: jsonEditorValue,
+                onChange: (e) => setJsonEditorValue(e.target.value),
+                spellCheck: false,
                 style: {
-                  padding: "8px 16px",
-                  background: "#007acc",
-                  border: "none",
+                  width: "100%",
+                  minHeight: "320px",
+                  padding: "14px",
+                  background: "rgba(0,0,0,0.4)",
+                  border: `1px solid ${jsonEditorError ? "#f44" : "rgba(255,255,255,0.08)"}`,
                   borderRadius: "6px",
-                  color: "#fff",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px"
-                },
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 13 }),
-                  " Add Connection"
-                ]
+                  color: "#d4d4d4",
+                  fontSize: "12.5px",
+                  fontFamily: 'ui-monospace, "Cascadia Code", Menlo, monospace',
+                  lineHeight: 1.6,
+                  resize: "vertical",
+                  boxSizing: "border-box"
+                }
               }
-            )
+            ),
+            jsonEditorError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "8px 0 0 0", fontSize: "12px", color: "#f88" }, children: jsonEditorError }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "10px", marginTop: "12px", justifyContent: "flex-end" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: () => {
+                    setShowJsonEditor(false);
+                    setJsonEditorError("");
+                    setJsonEditorValue("");
+                  },
+                  style: {
+                    padding: "7px 16px",
+                    background: "transparent",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "6px",
+                    color: "#aaa",
+                    fontSize: "12px",
+                    cursor: "pointer"
+                  },
+                  children: "Cancel"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: handleSaveJson,
+                  style: {
+                    padding: "7px 20px",
+                    background: "#007acc",
+                    border: "none",
+                    borderRadius: "6px",
+                    color: "#fff",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer"
+                  },
+                  children: "Save & Apply"
+                }
+              )
+            ] })
           ] }),
           mcpServers.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
             background: "rgba(255,255,255,0.02)",

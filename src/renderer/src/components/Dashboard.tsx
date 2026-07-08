@@ -37,11 +37,16 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
   const [editingServer, setEditingServer] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [srvName, setSrvName] = useState('')
-  const [srvType, setSrvType] = useState<'stdio' | 'sse'>('stdio')
+  const [srvType, setSrvType] = useState<'stdio' | 'sse' | 'streamable-http'>('stdio')
   const [srvCommand, setSrvCommand] = useState('')
   const [srvArgs, setSrvArgs] = useState('')
   const [srvEnv, setSrvEnv] = useState('')
   const [srvUrl, setSrvUrl] = useState('')
+  const [srvToken, setSrvToken] = useState('')
+  const [srvHeaderKey, setSrvHeaderKey] = useState('Authorization')
+  const [showJsonEditor, setShowJsonEditor] = useState(false)
+  const [jsonEditorValue, setJsonEditorValue] = useState('')
+  const [jsonEditorError, setJsonEditorError] = useState('')
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({})
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({})
 
@@ -51,7 +56,14 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
       const fetchConfig = async () => {
         try {
           const cfg = await window.api.mcpGetConfig()
-          setConfig(cfg || { mcpServers: {} })
+          const resolved = cfg || { mcpServers: {} }
+          setConfig(resolved)
+          // Only seed the JSON editor when it is closed — never overwrite
+          // edits the user is actively making
+          setJsonEditorValue(prev => {
+            if (prev === '') return JSON.stringify(resolved, null, 2)
+            return prev
+          })
         } catch (e) {
           console.warn('Failed to load MCP config:', e)
         }
@@ -77,14 +89,28 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
     setEditingServer(name)
     setSrvName(name)
     if (srvConfig.url) {
-      setSrvType('sse')
+      const transport = srvConfig.transport || 'sse'
+      setSrvType(transport as any)
       setSrvUrl(srvConfig.url)
+      // Restore token from the first header entry, preserving the actual key
+      const headers = srvConfig.headers || {}
+      const headerEntries = Object.entries(headers) as [string, string][]
+      if (headerEntries.length > 0) {
+        const [key, value] = headerEntries[0]
+        setSrvHeaderKey(key)
+        setSrvToken((value as string).startsWith('Bearer ') ? (value as string).slice(7) : (value as string))
+      } else {
+        setSrvHeaderKey('Authorization')
+        setSrvToken('')
+      }
       setSrvCommand('')
       setSrvArgs('')
       setSrvEnv('')
     } else {
       setSrvType('stdio')
       setSrvUrl('')
+      setSrvToken('')
+      setSrvHeaderKey('Authorization')
       setSrvCommand(srvConfig.command || '')
       setSrvArgs(Array.isArray(srvConfig.args) ? srvConfig.args.join(' ') : '')
       setSrvEnv(srvConfig.env ? JSON.stringify(srvConfig.env, null, 2) : '')
@@ -127,6 +153,30 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
     }
   }
 
+  const handleSaveJson = async () => {
+    setJsonEditorError('')
+    let parsed: any
+    try {
+      parsed = JSON.parse(jsonEditorValue)
+    } catch (e: any) {
+      setJsonEditorError(`Invalid JSON: ${e.message}`)
+      return
+    }
+    if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') {
+      setJsonEditorError('Config must have a top-level "mcpServers" object.')
+      return
+    }
+    try {
+      await window.api.mcpSaveConfig(parsed)
+      setConfig(parsed)
+      setJsonEditorValue('')
+      setJsonEditorError('')
+      setShowJsonEditor(false)
+    } catch (e: any) {
+      setJsonEditorError(`Failed to save: ${e.message}`)
+    }
+  }
+
   const handleSaveServer = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!srvName.trim()) return
@@ -151,8 +201,17 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
       disabled: config.mcpServers[editingServer || srvName.trim()]?.disabled || false
     }
 
-    if (srvType === 'sse') {
+    if (srvType === 'sse' || srvType === 'streamable-http') {
       srvConfig.url = srvUrl.trim()
+      srvConfig.transport = srvType
+      if (srvToken.trim()) {
+        const key = srvHeaderKey.trim() || 'Authorization'
+        // Only prepend "Bearer " for standard Authorization header
+        const value = key === 'Authorization'
+          ? `Bearer ${srvToken.trim()}`
+          : srvToken.trim()
+        srvConfig.headers = { [key]: value }
+      }
     } else {
       srvConfig.command = srvCommand.trim()
       const matches = srvArgs.match(/"[^"]+"|'[^']+'|\S+/g) || []
@@ -179,6 +238,8 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
     setSrvArgs('')
     setSrvEnv('')
     setSrvUrl('')
+    setSrvToken('')
+    setSrvHeaderKey('Authorization')
   }
 
 
@@ -824,6 +885,7 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                         setSrvArgs(p.preset.args)
                         setSrvEnv(p.preset.env)
                         setSrvUrl('')
+                        setSrvToken('')
                         setShowForm(true)
                         setTimeout(() => {
                           document.getElementById('mcp-config-form-section')?.scrollIntoView({ behavior: 'smooth' })
@@ -904,6 +966,7 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                       >
                         <option value="stdio">Stdio (Local Process)</option>
                         <option value="sse">SSE (Server-Sent Events)</option>
+                        <option value="streamable-http">Streamable HTTP (2025)</option>
                       </select>
                     </div>
                   </div>
@@ -967,23 +1030,65 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                       </div>
                     </>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>SSE Endpoint URL</label>
-                      <input
-                        type="url"
-                        placeholder="e.g. http://localhost:3012/sse"
-                        value={srvUrl}
-                        onChange={e => setSrvUrl(e.target.value)}
-                        required
-                        style={{
-                          padding: '8px 12px',
-                          background: 'rgba(0,0,0,0.2)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          borderRadius: '6px',
-                          color: '#fff',
-                          fontSize: '13px'
-                        }}
-                      />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>
+                          {srvType === 'streamable-http' ? 'Streamable HTTP Endpoint URL' : 'SSE Endpoint URL'}
+                        </label>
+                        <input
+                          type="url"
+                          placeholder={srvType === 'streamable-http' ? 'e.g. https://design.penpot.app/mcp/stream' : 'e.g. http://localhost:3012/sse'}
+                          value={srvUrl}
+                          onChange={e => setSrvUrl(e.target.value)}
+                          required
+                          style={{
+                            padding: '8px 12px',
+                            background: 'rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            fontSize: '13px'
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>
+                          Auth Header <span style={{ color: '#555', fontWeight: 400, textTransform: 'none' }}>(header name)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Authorization or X-Figma-Token"
+                          value={srvHeaderKey}
+                          onChange={e => setSrvHeaderKey(e.target.value)}
+                          style={{
+                            padding: '8px 12px',
+                            background: 'rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            fontSize: '13px'
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase' }}>
+                          Token Value <span style={{ color: '#555', fontWeight: 400, textTransform: 'none' }}>(optional — "Bearer " prefix added automatically for Authorization)</span>
+                        </label>
+                        <input
+                          type="password"
+                          placeholder="e.g. your access token"
+                          value={srvToken}
+                          onChange={e => setSrvToken(e.target.value)}
+                          style={{
+                            padding: '8px 12px',
+                            background: 'rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '6px',
+                            color: '#fff',
+                            fontSize: '13px'
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -1030,24 +1135,20 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                   <Database size={15} style={{ color: '#4ec9b0' }} />
                   Active Connections ({mcpServers.length})
                 </h2>
-                {!showForm && (
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <button
                     onClick={() => {
-                      setEditingServer(null)
-                      setSrvName('')
-                      setSrvType('stdio')
-                      setSrvCommand('')
-                      setSrvArgs('')
-                      setSrvEnv('')
-                      setSrvUrl('')
-                      setShowForm(true)
+                      setJsonEditorValue(JSON.stringify(config, null, 2))
+                      setJsonEditorError('')
+                      setShowJsonEditor(v => !v)
+                      setShowForm(false)
                     }}
                     style={{
-                      padding: '8px 16px',
-                      background: '#007acc',
-                      border: 'none',
+                      padding: '8px 14px',
+                      background: showJsonEditor ? 'rgba(0,122,204,0.2)' : 'rgba(255,255,255,0.06)',
+                      border: `1px solid ${showJsonEditor ? '#007acc' : 'rgba(255,255,255,0.1)'}`,
                       borderRadius: '6px',
-                      color: '#fff',
+                      color: showJsonEditor ? '#4fc3f7' : '#aaa',
                       fontSize: '12px',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -1056,10 +1157,108 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                       gap: '6px'
                     }}
                   >
-                    <Plus size={13} /> Add Connection
+                    {'{ }'} Edit JSON
                   </button>
-                )}
+                  {!showForm && !showJsonEditor && (
+                    <button
+                      onClick={() => {
+                        setEditingServer(null)
+                        setSrvName('')
+                        setSrvType('stdio')
+                        setSrvCommand('')
+                        setSrvArgs('')
+                        setSrvEnv('')
+                        setSrvUrl('')
+                        setSrvToken('')
+                        setSrvHeaderKey('Authorization')
+                        setShowForm(true)
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        background: '#007acc',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Plus size={13} /> Add Connection
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {showJsonEditor && (
+                <div style={{
+                  background: 'rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '10px',
+                  padding: '20px',
+                  marginBottom: '24px'
+                }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#888', lineHeight: 1.6 }}>
+                    Edit the raw config JSON. Supports all fields: <code style={{ color: '#4fc3f7' }}>command</code>, <code style={{ color: '#4fc3f7' }}>args</code>, <code style={{ color: '#4fc3f7' }}>env</code>, <code style={{ color: '#4fc3f7' }}>url</code>, <code style={{ color: '#4fc3f7' }}>transport</code> (<code style={{ color: '#ce9178' }}>"sse"</code> or <code style={{ color: '#ce9178' }}>"streamable-http"</code>), <code style={{ color: '#4fc3f7' }}>headers</code>, <code style={{ color: '#4fc3f7' }}>disabled</code>.
+                  </p>
+                  <textarea
+                    value={jsonEditorValue}
+                    onChange={e => setJsonEditorValue(e.target.value)}
+                    spellCheck={false}
+                    style={{
+                      width: '100%',
+                      minHeight: '320px',
+                      padding: '14px',
+                      background: 'rgba(0,0,0,0.4)',
+                      border: `1px solid ${jsonEditorError ? '#f44' : 'rgba(255,255,255,0.08)'}`,
+                      borderRadius: '6px',
+                      color: '#d4d4d4',
+                      fontSize: '12.5px',
+                      fontFamily: 'ui-monospace, "Cascadia Code", Menlo, monospace',
+                      lineHeight: 1.6,
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  {jsonEditorError && (
+                    <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#f88' }}>{jsonEditorError}</p>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '12px', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => { setShowJsonEditor(false); setJsonEditorError(''); setJsonEditorValue('') }}
+                      style={{
+                        padding: '7px 16px',
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '6px',
+                        color: '#aaa',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveJson}
+                      style={{
+                        padding: '7px 20px',
+                        background: '#007acc',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Save &amp; Apply
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {mcpServers.length === 0 ? (
                 <div style={{

@@ -241,10 +241,11 @@ class StdioMcpClient {
   }
 }
 class SseMcpClient {
-  constructor(name, url2, getWorkspaceRoot) {
+  constructor(name, url2, getWorkspaceRoot, headers) {
     this.name = name;
     this.url = url2;
     this.getWorkspaceRoot = getWorkspaceRoot;
+    this.extraHeaders = headers || {};
   }
   nextId = 1;
   pendingRequests = /* @__PURE__ */ new Map();
@@ -254,6 +255,7 @@ class SseMcpClient {
   errorMsg = "";
   sseRequest = null;
   postUrl = null;
+  extraHeaders = {};
   log(msg) {
     const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
     this.logs.push(`[${timestamp}] ${msg}`);
@@ -273,7 +275,8 @@ class SseMcpClient {
           headers: {
             "Accept": "text/event-stream",
             "Cache-Control": "no-cache",
-            "Connection": "keep-alive"
+            "Connection": "keep-alive",
+            ...this.extraHeaders
           }
         };
         this.sseRequest = requestModule.get(this.url, options, (res) => {
@@ -398,14 +401,25 @@ class SseMcpClient {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(body)
+        "Content-Length": Buffer.byteLength(body),
+        ...this.extraHeaders
       }
     };
     return new Promise((resolve, reject) => {
       const req = requestModule.request(url$1, options, (res) => {
-        res.on("data", () => {
+        let responseBody = "";
+        res.on("data", (chunk) => {
+          responseBody += chunk.toString();
         });
-        res.on("end", () => resolve());
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            const method = res.statusCode === 405 ? "HTTP 405 Method Not Allowed" : `HTTP ${res.statusCode}`;
+            const hint = res.statusCode === 405 ? " — The endpoint does not accept POST. Verify your MCP server URL points to the correct SSE/message endpoint, not a generic REST route." : res.statusCode === 400 ? " — The server rejected the payload. Ensure the endpoint speaks JSON-RPC 2.0 MCP protocol." : "";
+            reject(new Error(`${method}${hint} Body: ${responseBody.slice(0, 200)}`));
+          } else {
+            resolve();
+          }
+        });
       });
       req.on("error", (err) => reject(err));
       req.write(body);
@@ -422,6 +436,175 @@ class SseMcpClient {
       this.sseRequest = null;
     }
     this.connectionStatus = "disconnected";
+    for (const pending of this.pendingRequests.values()) {
+      pending.reject(new Error("Client disconnected"));
+    }
+    this.pendingRequests.clear();
+  }
+}
+class StreamableHttpMcpClient {
+  constructor(name, url2, headers) {
+    this.name = name;
+    this.url = url2;
+    this.extraHeaders = headers || {};
+  }
+  nextId = 1;
+  pendingRequests = /* @__PURE__ */ new Map();
+  logs = [];
+  connectionStatus = "disconnected";
+  tools = [];
+  errorMsg = "";
+  sessionId = null;
+  extraHeaders = {};
+  log(msg) {
+    const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
+    this.logs.push(`[${timestamp}] ${msg}`);
+    if (this.logs.length > 500) this.logs.shift();
+  }
+  async connect() {
+    this.connectionStatus = "connecting";
+    this.errorMsg = "";
+    this.tools = [];
+    this.sessionId = null;
+    this.log(`Connecting via Streamable HTTP: ${this.url}`);
+    try {
+      const initResult = await this.sendRequest("initialize", {
+        protocolVersion: "2025-03-26",
+        capabilities: { roots: { listChanged: true } },
+        clientInfo: { name: "agentic-ide", version: "1.0.0" }
+      });
+      this.log(`Initialize OK. Protocol: ${initResult?.protocolVersion}. Session: ${this.sessionId || "none"}`);
+      await this.sendNotification("notifications/initialized", {});
+      const toolsResult = await this.sendRequest("tools/list", {});
+      this.tools = toolsResult?.tools || [];
+      this.log(`Connected. Found ${this.tools.length} tools.`);
+      this.connectionStatus = "connected";
+    } catch (err) {
+      this.connectionStatus = "error";
+      this.errorMsg = err.message || String(err);
+      this.log(`[Error] Connection failed: ${this.errorMsg}`);
+      throw err;
+    }
+  }
+  sendRequest(method, params) {
+    const id = this.nextId++;
+    const payload = { jsonrpc: "2.0", id, method, params };
+    return this.post(payload, id);
+  }
+  async sendNotification(method, params) {
+    const payload = { jsonrpc: "2.0", method, params };
+    await this.post(payload, null);
+  }
+  post(payload, requestId) {
+    return new Promise((resolve, reject) => {
+      const parsedUrl = new url.URL(this.url);
+      const requestModule = parsedUrl.protocol === "https:" ? https__namespace : http__namespace;
+      const body = JSON.stringify(payload);
+      const headers = {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(body),
+        // Accept both a plain JSON response (stateless) and an SSE stream
+        "Accept": "application/json, text/event-stream",
+        ...this.extraHeaders
+      };
+      if (this.sessionId) {
+        headers["Mcp-Session-Id"] = this.sessionId;
+      }
+      this.log(`[POST] ${body}`);
+      this.log(`[Headers] ${JSON.stringify(this.extraHeaders)}`);
+      const req = requestModule.request(parsedUrl, { method: "POST", headers }, (res) => {
+        if (!this.sessionId && res.headers["mcp-session-id"]) {
+          this.sessionId = res.headers["mcp-session-id"];
+          this.log(`Session ID: ${this.sessionId}`);
+        }
+        if (res.statusCode && res.statusCode >= 400) {
+          let errBody = "";
+          res.on("data", (c) => {
+            errBody += c.toString();
+          });
+          res.on("end", () => {
+            const hint = res.statusCode === 405 ? " — wrong endpoint or method; verify the URL is the Streamable HTTP MCP endpoint." : res.statusCode === 400 ? " — payload rejected; check JSON-RPC structure." : "";
+            reject(new Error(`HTTP ${res.statusCode}${hint} Body: ${errBody.slice(0, 200)}`));
+          });
+          return;
+        }
+        const ct = res.headers["content-type"] || "";
+        if (ct.includes("text/event-stream")) {
+          let buffer = "";
+          res.on("data", (chunk) => {
+            buffer += chunk.toString();
+            let idx;
+            while ((idx = buffer.indexOf("\n")) !== -1) {
+              const line = buffer.slice(0, idx).trim();
+              buffer = buffer.slice(idx + 1);
+              if (line.startsWith("data:")) {
+                const data = line.slice(5).trim();
+                try {
+                  const msg = JSON.parse(data);
+                  this.log(`[SSE data] ${data}`);
+                  if (requestId !== null && msg.id === requestId) {
+                    if (msg.error) reject(msg.error);
+                    else resolve(msg.result);
+                  } else if (msg.id !== void 0) {
+                    const pending = this.pendingRequests.get(msg.id);
+                    if (pending) {
+                      this.pendingRequests.delete(msg.id);
+                      if (msg.error) pending.reject(msg.error);
+                      else pending.resolve(msg.result);
+                    }
+                  }
+                } catch {
+                }
+              }
+            }
+          });
+          res.on("end", () => {
+            if (requestId === null) resolve(void 0);
+          });
+        } else {
+          let raw = "";
+          res.on("data", (c) => {
+            raw += c.toString();
+          });
+          res.on("end", () => {
+            this.log(`[Response] ${raw.slice(0, 500)}`);
+            if (requestId === null) {
+              resolve(void 0);
+              return;
+            }
+            try {
+              const msg = JSON.parse(raw);
+              if (msg.error) reject(msg.error);
+              else resolve(msg.result);
+            } catch (e) {
+              reject(new Error(`Failed to parse response: ${e.message}. Body: ${raw.slice(0, 200)}`));
+            }
+          });
+        }
+      });
+      req.on("error", reject);
+      req.write(body);
+      req.end();
+    });
+  }
+  disconnect() {
+    this.log("Disconnecting Streamable HTTP client...");
+    if (this.sessionId) {
+      try {
+        const parsedUrl = new url.URL(this.url);
+        const requestModule = parsedUrl.protocol === "https:" ? https__namespace : http__namespace;
+        const headers = { ...this.extraHeaders, "Mcp-Session-Id": this.sessionId };
+        const req = requestModule.request(parsedUrl, { method: "DELETE", headers }, (res) => {
+          res.resume();
+        });
+        req.on("error", () => {
+        });
+        req.end();
+      } catch {
+      }
+    }
+    this.connectionStatus = "disconnected";
+    this.sessionId = null;
     for (const pending of this.pendingRequests.values()) {
       pending.reject(new Error("Client disconnected"));
     }
@@ -454,6 +637,47 @@ class McpManager {
           "sqlite-demo": {
             command: "npx",
             args: ["-y", "@modelcontextprotocol/server-sqlite", "--db", path__namespace.join(this.dataDir, "demo.db")],
+            disabled: true
+          },
+          // ----------------------------------------------------------------
+          // Figma MCP Bridge
+          // Runs a local stdio bridge that translates MCP tool calls into
+          // Figma REST API requests.
+          //
+          // Setup:
+          //   1. Get a personal access token from Figma account settings.
+          //   2. Replace YOUR_FIGMA_ACCESS_TOKEN below with that value.
+          //   3. Set "disabled": false to activate.
+          //
+          // Bridge used: @modelcontextprotocol/server-figma (community)
+          // Docs: https://github.com/GLips/Figma-Context-MCP
+          // ----------------------------------------------------------------
+          "figma": {
+            command: "npx",
+            args: ["-y", "figma-developer-mcp", "--figma-api-key", "YOUR_FIGMA_ACCESS_TOKEN", "--stdio"],
+            env: {},
+            disabled: true
+          },
+          // ----------------------------------------------------------------
+          // Penpot MCP Bridge
+          // Runs a local stdio bridge that translates MCP tool calls into
+          // Penpot REST API requests.
+          //
+          // Setup:
+          //   1. Start a Penpot instance (local or cloud: https://penpot.app).
+          //   2. Generate an access token in your Penpot profile settings.
+          //   3. Replace the env values below and set "disabled": false.
+          //
+          // Bridge used: penpot-mcp (community)
+          // Docs: https://github.com/montevive/penpot-mcp
+          // ----------------------------------------------------------------
+          "penpot": {
+            command: "npx",
+            args: ["-y", "penpot-mcp"],
+            env: {
+              "PENPOT_BASE_URL": "https://design.penpot.app",
+              "PENPOT_ACCESS_TOKEN": "YOUR_PENPOT_ACCESS_TOKEN"
+            },
             disabled: true
           }
         }
@@ -491,11 +715,17 @@ class McpManager {
     this.stopServer(name);
     let client;
     if (srvConfig.url) {
-      client = new SseMcpClient(name, srvConfig.url, () => this.workspaceRoot);
-    } else if (srvConfig.command && srvConfig.args) {
-      client = new StdioMcpClient(name, srvConfig.command, srvConfig.args, srvConfig.env, () => this.workspaceRoot);
+      const transport = srvConfig.transport || "sse";
+      console.log(`[MCP] Starting ${name}: transport=${transport} headers=${JSON.stringify(srvConfig.headers || {})}`);
+      if (transport === "streamable-http") {
+        client = new StreamableHttpMcpClient(name, srvConfig.url, srvConfig.headers);
+      } else {
+        client = new SseMcpClient(name, srvConfig.url, () => this.workspaceRoot, srvConfig.headers);
+      }
+    } else if (srvConfig.command) {
+      client = new StdioMcpClient(name, srvConfig.command, srvConfig.args || [], srvConfig.env, () => this.workspaceRoot);
     } else {
-      throw new Error(`Invalid server configuration for ${name}`);
+      throw new Error(`Invalid server configuration for ${name}: must have either "url" (SSE/Streamable-HTTP) or "command" (stdio)`);
     }
     this.servers.set(name, client);
     client.connect().catch(() => {
@@ -534,16 +764,20 @@ class McpManager {
         statuses.push({
           name,
           status: activeClient.connectionStatus,
-          type: activeClient instanceof SseMcpClient ? "sse" : "stdio",
+          type: activeClient instanceof SseMcpClient ? "sse" : activeClient instanceof StreamableHttpMcpClient ? "streamable-http" : "stdio",
           tools: activeClient.tools,
           logs: activeClient.logs,
           error: activeClient.errorMsg
         });
       } else {
+        let type = "stdio";
+        if (srvConfig.url) {
+          type = srvConfig.transport === "streamable-http" ? "streamable-http" : "sse";
+        }
         statuses.push({
           name,
           status: "disconnected",
-          type: srvConfig.url ? "sse" : "stdio",
+          type,
           tools: [],
           logs: srvConfig.disabled ? [`[SYSTEM] Server is disabled in configuration.`] : [],
           error: srvConfig.disabled ? "Disabled" : void 0
@@ -561,7 +795,7 @@ class McpManager {
   }
   logGlobal(msg) {
     for (const client of this.servers.values()) {
-      if (client instanceof StdioMcpClient || client instanceof SseMcpClient) {
+      if (client instanceof StdioMcpClient || client instanceof SseMcpClient || client instanceof StreamableHttpMcpClient) {
         const timestamp = (/* @__PURE__ */ new Date()).toLocaleTimeString();
         client.logs.push(`[${timestamp}] [IDE] ${msg}`);
       }
