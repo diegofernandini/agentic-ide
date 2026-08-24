@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ModelRouter, FREE_OPEN_MODEL_CATALOG } from './model-router'
+import { DeviceProfile, ModelRouter, FREE_OPEN_MODEL_CATALOG, getCatalogForDevice } from './model-router'
 
 describe('ModelRouter Engine', () => {
   const router = new ModelRouter()
@@ -49,5 +49,23 @@ describe('ModelRouter Engine', () => {
     const rec = router.selectModel('Implement a fast sorting algorithm in C++', installed)
     expect(rec.selectedModel).toBe('qwen2.5-coder:14b')
     expect(rec.isOptimal).toBe(true)
+  })
+
+  it('uses device memory to avoid models that will not fit', () => {
+    const compact: DeviceProfile = {
+      platform: 'darwin', architecture: 'arm64', cpuCores: 8,
+      memoryGiB: 16, modelMemoryBudgetGiB: 10, tier: 'standard'
+    }
+    const rec = router.selectModel('Implement a TypeScript feature', ['qwen3-coder:30b', 'qwen2.5-coder:7b'], 'qwen2.5-coder:7b', compact)
+    expect(rec.selectedModel).toBe('qwen2.5-coder:7b')
+    expect(rec.deviceProfile?.memoryGiB).toBe(16)
+  })
+
+  it('recommends smaller models for compact devices', () => {
+    const compact: DeviceProfile = {
+      platform: 'win32', architecture: 'x64', cpuCores: 4,
+      memoryGiB: 8, modelMemoryBudgetGiB: 5, tier: 'compact'
+    }
+    expect(getCatalogForDevice(compact)['code-generation'].primary).toBe('qwen2.5-coder:7b')
   })
 })

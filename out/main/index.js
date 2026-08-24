@@ -897,6 +897,47 @@ const FREE_OPEN_MODEL_CATALOG = {
     alternatives: ["mistral:7b", "gemma2:9b", "phi4:14b"]
   }
 };
+function getCatalogForDevice(profile) {
+  if (!profile) return FREE_OPEN_MODEL_CATALOG;
+  if (profile.memoryGiB >= 48) {
+    return {
+      "code-generation": { primary: "qwen3-coder:30b", alternatives: ["devstral:24b", "qwen2.5-coder:14b"] },
+      "code-review": { primary: "qwen3-coder:30b", alternatives: ["devstral:24b", "qwen2.5-coder:14b"] },
+      debugging: { primary: "deepseek-r1:32b", alternatives: ["qwen3-coder:30b", "deepseek-r1:14b"] },
+      reasoning: { primary: "deepseek-r1:32b", alternatives: ["qwen3.6:35b", "deepseek-r1:14b"] },
+      planning: { primary: "qwen3.6:35b", alternatives: ["llama3.3:70b", "phi4:14b"] },
+      "general-chat": { primary: "qwen3.6:35b", alternatives: ["llama3.3:70b", "phi4:14b"] }
+    };
+  }
+  if (profile.memoryGiB >= 32) {
+    return {
+      "code-generation": { primary: "qwen3-coder:30b", alternatives: ["devstral:24b", "qwen2.5-coder:14b"] },
+      "code-review": { primary: "devstral:24b", alternatives: ["qwen2.5-coder:14b", "qwen2.5-coder:7b"] },
+      debugging: { primary: "deepseek-r1:14b", alternatives: ["qwen2.5-coder:14b", "deepseek-r1:8b"] },
+      reasoning: { primary: "deepseek-r1:14b", alternatives: ["qwen3.6:27b", "deepseek-r1:8b"] },
+      planning: { primary: "qwen3.6:27b", alternatives: ["phi4:14b", "llama3.1:8b"] },
+      "general-chat": { primary: "qwen3.6:27b", alternatives: ["phi4:14b", "llama3.1:8b"] }
+    };
+  }
+  if (profile.memoryGiB >= 16) {
+    return {
+      "code-generation": { primary: "qwen2.5-coder:14b", alternatives: ["qwen2.5-coder:7b", "deepseek-coder:6.7b"] },
+      "code-review": { primary: "qwen2.5-coder:14b", alternatives: ["qwen2.5-coder:7b", "deepseek-coder:6.7b"] },
+      debugging: { primary: "deepseek-r1:14b", alternatives: ["deepseek-r1:8b", "qwen2.5-coder:7b"] },
+      reasoning: { primary: "deepseek-r1:14b", alternatives: ["deepseek-r1:8b", "llama3.1:8b"] },
+      planning: { primary: "phi4:14b", alternatives: ["llama3.1:8b", "qwen2.5-coder:7b"] },
+      "general-chat": { primary: "llama3.1:8b", alternatives: ["phi4:14b", "gemma2:9b"] }
+    };
+  }
+  return {
+    "code-generation": { primary: "qwen2.5-coder:7b", alternatives: ["qwen2.5-coder:3b", "deepseek-coder:1.3b"] },
+    "code-review": { primary: "qwen2.5-coder:7b", alternatives: ["qwen2.5-coder:3b", "deepseek-coder:1.3b"] },
+    debugging: { primary: "deepseek-r1:8b", alternatives: ["qwen2.5-coder:7b", "llama3.2:3b"] },
+    reasoning: { primary: "deepseek-r1:8b", alternatives: ["llama3.2:3b", "qwen2.5-coder:3b"] },
+    planning: { primary: "llama3.2:3b", alternatives: ["qwen2.5-coder:3b", "gemma2:2b"] },
+    "general-chat": { primary: "llama3.2:3b", alternatives: ["gemma2:2b", "qwen2.5-coder:3b"] }
+  };
+}
 const INTENT_PATTERNS = {
   "code-generation": [
     /\b(write|create|implement|build|generate|code|function|class|component|script|html|css|tsx?|jsx?|python|java|rust|golang|c\+\+)\b/i,
@@ -963,7 +1004,7 @@ class ModelRouter {
   /**
    * Score an installed model name against a target task category (0 - 100)
    */
-  scoreModelForTask(modelName, category) {
+  scoreModelForTask(modelName, category, device) {
     const name = modelName.toLowerCase();
     let score = 50;
     if (category === "code-generation" || category === "code-review") {
@@ -996,16 +1037,26 @@ class ModelRouter {
     if (name.includes("14b") || name.includes("13b") || name.includes("16b") || name.includes("32b") || name.includes("70b")) {
       score += 10;
     }
-    return Math.min(100, score);
+    const parameters = name.match(/(?:^|:|-)(\d+(?:\.\d+)?)b(?:$|[-:])/i);
+    if (parameters && device) {
+      const estimatedGiB = Number(parameters[1]) * 0.63;
+      if (estimatedGiB > device.modelMemoryBudgetGiB) score -= 75;
+    }
+    return Math.max(0, Math.min(100, score));
+  }
+  isModelSuitableForDevice(modelName, device) {
+    if (!device) return true;
+    const match = modelName.toLowerCase().match(/(?:^|:|-)(\d+(?:\.\d+)?)b(?:$|[-:])/i);
+    return !match || Number(match[1]) * 0.63 <= device.modelMemoryBudgetGiB;
   }
   /**
    * Select the best model from installed models for a prompt,
    * evaluating suitability threshold (>= 60) and catalog recommendations.
    */
-  selectModel(prompt, installedModels, fallbackModel = "llama3.1:latest") {
+  selectModel(prompt, installedModels, fallbackModel = "llama3.1:latest", device) {
     const { category, confidence } = this.classifyPrompt(prompt);
     if (!installedModels || installedModels.length === 0) {
-      const catalog2 = FREE_OPEN_MODEL_CATALOG[category];
+      const catalog2 = getCatalogForDevice(device)[category];
       return {
         taskCategory: category,
         confidence,
@@ -1013,20 +1064,21 @@ class ModelRouter {
         suitabilityScore: 30,
         isOptimal: false,
         recommendedModelToPull: catalog2.primary,
-        reason: `No installed models found. Recommended free open model: ${catalog2.primary}`
+        deviceProfile: device,
+        reason: `No installed models found. Recommended for this ${device?.tier || "default"} device: ${catalog2.primary}`
       };
     }
     let bestModel = installedModels[0];
     let bestScore = -1;
     for (const model of installedModels) {
-      const score = this.scoreModelForTask(model, category);
+      const score = this.scoreModelForTask(model, category, device);
       if (score > bestScore) {
         bestScore = score;
         bestModel = model;
       }
     }
     if (installedModels.includes(fallbackModel)) {
-      const fallbackScore = this.scoreModelForTask(fallbackModel, category);
+      const fallbackScore = this.scoreModelForTask(fallbackModel, category, device);
       if (fallbackScore > bestScore) {
         bestScore = fallbackScore;
         bestModel = fallbackModel;
@@ -1034,9 +1086,10 @@ class ModelRouter {
     }
     const SUITABILITY_THRESHOLD = 60;
     const isOptimal = bestScore >= SUITABILITY_THRESHOLD;
-    const catalog = FREE_OPEN_MODEL_CATALOG[category];
+    const catalog = getCatalogForDevice(device)[category];
     const recommendedModelToPull = isOptimal ? void 0 : catalog.primary;
     let reason = `Selected '${bestModel}' for ${category} (suitability score: ${bestScore}/100)`;
+    if (device) reason += ` on this ${device.tier} ${device.memoryGiB} GiB device`;
     if (!isOptimal) {
       reason += `. Installed models fall below suitability threshold. Consider pulling free open model '${catalog.primary}'.`;
     }
@@ -1047,7 +1100,8 @@ class ModelRouter {
       suitabilityScore: bestScore,
       isOptimal,
       recommendedModelToPull,
-      reason
+      reason,
+      deviceProfile: device
     };
   }
 }
@@ -2772,6 +2826,18 @@ electron.ipcMain.handle("mcp-host-save-config", (_e, config) => {
   return true;
 });
 const modelRouter = new ModelRouter();
+function getDeviceProfile() {
+  const memoryGiB = Math.max(1, Math.floor(os__namespace.totalmem() / 1024 ** 3));
+  const tier = memoryGiB >= 48 ? "workstation" : memoryGiB >= 32 ? "performance" : memoryGiB >= 16 ? "standard" : "compact";
+  return {
+    platform: process.platform,
+    architecture: process.arch,
+    cpuCores: os__namespace.cpus().length,
+    memoryGiB,
+    modelMemoryBudgetGiB: Math.max(2, Math.floor(memoryGiB * 0.65)),
+    tier
+  };
+}
 async function getInstalledOllamaModels() {
   return new Promise((resolve) => {
     const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
@@ -2798,7 +2864,56 @@ async function getInstalledOllamaModels() {
 }
 electron.ipcMain.handle("model-router-select", async (_e, prompt, installedModels, fallbackModel) => {
   const models = installedModels && installedModels.length > 0 ? installedModels : await getInstalledOllamaModels();
-  return modelRouter.selectModel(prompt, models, fallbackModel);
+  const device = getDeviceProfile();
+  const fallback = modelRouter.selectModel(prompt, models, fallbackModel, device);
+  const recommendedRouterModel = device.memoryGiB >= 48 ? "qwen3.6:35b" : device.memoryGiB >= 32 ? "qwen3.6:27b" : device.memoryGiB >= 16 ? "qwen3.6:9b" : "qwen3.6:4b";
+  const compatibleModels = models.filter((name) => modelRouter.isModelSuitableForDevice(name, device));
+  const routerModel = compatibleModels.find((name) => name.startsWith("qwen3.6:35b")) || compatibleModels.find((name) => name.startsWith("qwen3.6:"));
+  if (!routerModel || models.length === 0) {
+    return {
+      ...fallback,
+      usedLlmRouter: false,
+      recommendedRouterModel,
+      reason: routerModel ? fallback.reason : `${fallback.reason} Pull ${recommendedRouterModel} to enable LLM-powered Auto routing.`
+    };
+  }
+  const routingPrompt = [
+    "You are the model router for a local coding IDE. Select the best installed model for this request.",
+    'Return JSON only: {"taskCategory":"code-generation|code-review|debugging|planning|reasoning|general-chat","selectedModel":"exact installed model name","confidence":0-1,"reason":"short explanation"}.',
+    "Choose only a value from INSTALLED_MODELS. Prefer coding and tool-capable models for implementation, debugging, review, and repository tasks; prefer general/reasoning models for discussion and planning.",
+    `DEVICE: ${device.platform} ${device.architecture}, ${device.memoryGiB} GiB RAM, ${device.cpuCores} CPU cores. Maximum recommended model footprint: ${device.modelMemoryBudgetGiB} GiB.`,
+    `INSTALLED_MODELS_SAFE_FOR_DEVICE: ${JSON.stringify(compatibleModels)}`,
+    `USER_REQUEST: ${prompt.slice(0, 12e3)}`
+  ].join("\n");
+  try {
+    const result = await performOllamaChat({
+      model: routerModel,
+      stream: false,
+      format: "json",
+      options: { temperature: 0, num_predict: 180 },
+      messages: [{ role: "user", content: routingPrompt }]
+    });
+    if (result.statusCode >= 400) throw new Error(`Router returned ${result.statusCode}`);
+    const payload = JSON.parse(result.data);
+    const content = String(payload?.message?.content || "").trim();
+    const decision = JSON.parse(content.replace(/^```json\s*|\s*```$/g, ""));
+    if (!compatibleModels.includes(decision.selectedModel)) throw new Error("Router chose a model that is not compatible with this device");
+    return {
+      ...fallback,
+      taskCategory: typeof decision.taskCategory === "string" ? decision.taskCategory : fallback.taskCategory,
+      selectedModel: decision.selectedModel,
+      confidence: typeof decision.confidence === "number" ? Math.max(0, Math.min(1, decision.confidence)) : fallback.confidence,
+      reason: typeof decision.reason === "string" ? decision.reason.slice(0, 240) : fallback.reason,
+      suitabilityScore: 100,
+      isOptimal: true,
+      recommendedModelToPull: void 0,
+      usedLlmRouter: true,
+      routerModel
+    };
+  } catch (error) {
+    console.warn("LLM model router failed; using deterministic fallback:", error);
+    return { ...fallback, usedLlmRouter: false, routerModel, recommendedRouterModel };
+  }
 });
 electron.ipcMain.handle("ollama-pull-model", async (_e, modelName) => {
   return new Promise((resolve, reject) => {

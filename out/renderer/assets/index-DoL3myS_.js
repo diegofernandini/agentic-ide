@@ -9132,6 +9132,7 @@ function ChatPanel({
   model,
   models,
   onModelChange,
+  onModelsChange,
   rootPath,
   openFile,
   fileContent,
@@ -9227,9 +9228,10 @@ function ChatPanel({
     return /* @__PURE__ */ new Set();
   });
   const [routerRec, setRouterRec] = reactExports.useState(null);
+  const [isRouting, setIsRouting] = reactExports.useState(false);
   const [pullingModel, setPullingModel] = reactExports.useState(null);
   const [pullStatus, setPullStatus] = reactExports.useState(null);
-  const handlePullModel = async (modelName) => {
+  const handlePullModel = async (modelName, keepAuto = false) => {
     setPullingModel(modelName);
     setPullStatus(`Pulling free open model '${modelName}' from Ollama library...`);
     try {
@@ -9239,7 +9241,8 @@ function ChatPanel({
         if (window.api?.ollamaTags) {
           const updated = await window.api.ollamaTags();
           if (updated && updated.length > 0) {
-            onModelChange(modelName);
+            onModelsChange?.(updated);
+            if (!keepAuto) onModelChange(modelName);
           }
         }
       }
@@ -9722,8 +9725,9 @@ ${res.stderr?.trim() || "(no output)"}
       console.warn("Failed to retrieve MCP tools:", e);
     }
     const latestUserText = [...history].reverse().find((msg) => msg.role === "user")?.content || "";
-    if (window.api?.modelRouterSelect) {
+    if ((currentModel === "auto" || !currentModel) && window.api?.modelRouterSelect) {
       try {
+        setIsRouting(true);
         const fallback = currentModel === "auto" ? models[0] : currentModel;
         const rec = await window.api.modelRouterSelect(latestUserText, models, fallback);
         if (rec) {
@@ -9734,6 +9738,8 @@ ${res.stderr?.trim() || "(no output)"}
         }
       } catch (e) {
         console.warn("Model router error:", e);
+      } finally {
+        setIsRouting(false);
       }
     }
     if (currentModel === "auto") currentModel = models[0] || "llama3.1:latest";
@@ -10604,6 +10610,34 @@ Decide whether the best output is a screen or a diagram, use the correct Figma g
               }
             )
           ] }),
+          model === "auto" && routerRec?.recommendedRouterModel && !routerRec.usedLlmRouter && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(85, 214, 194, 0.08)",
+            border: "1px solid rgba(85, 214, 194, 0.24)",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            margin: "8px 12px 0",
+            fontSize: "12px",
+            color: "#a8e6dc",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              "✨ Install ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: routerRec.recommendedRouterModel }),
+              " to enable LLM-powered Auto routing."
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: () => handlePullModel(routerRec.recommendedRouterModel, true),
+                disabled: pullingModel !== null,
+                style: { background: "#177c70", color: "#fff", border: "none", borderRadius: "4px", padding: "4px 10px", fontSize: "11px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" },
+                children: pullingModel === routerRec.recommendedRouterModel ? "Pulling…" : `Pull ${routerRec.recommendedRouterModel}`
+              }
+            )
+          ] }),
           pullStatus && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
             background: "rgba(0, 122, 204, 0.15)",
             border: "1px solid rgba(0, 122, 204, 0.3)",
@@ -10714,9 +10748,25 @@ Decide whether the best output is a screen or a diagram, use the correct Figma g
                   value: model,
                   onChange: (e) => onModelChange(e.target.value),
                   children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "auto", children: "✨ Auto-Select (Smart Router)" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "auto", children: "✨ Auto" }),
                     models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
                   ]
+                }
+              ),
+              model === "auto" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "span",
+                {
+                  title: routerRec?.reason || "Auto chooses a model for every request",
+                  style: {
+                    maxWidth: "190px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    color: routerRec?.usedLlmRouter ? "#55d6c2" : "#a0a0a0",
+                    fontSize: "11px",
+                    lineHeight: "28px"
+                  },
+                  children: isRouting ? "✨ Choosing model…" : routerRec ? `✨ Auto → ${routerRec.selectedModel} · ${routerRec.taskCategory}` : "✨ Auto routing"
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -21995,7 +22045,7 @@ function App() {
         const names = (data.models || []).map((m2) => m2.name);
         if (names.length > 0) {
           setModels(names);
-          setModel(names[0]);
+          setModel("auto");
           return;
         }
       } catch {
@@ -22003,7 +22053,7 @@ function App() {
       try {
         const names = await window.api.ollamaTags();
         setModels(names);
-        if (names.length > 0) setModel(names[0]);
+        if (names.length > 0) setModel("auto");
       } catch {
       }
     };
@@ -22701,6 +22751,7 @@ function App() {
               model,
               models,
               onModelChange: setModel,
+              onModelsChange: setModels,
               rootPath,
               openFile,
               fileContent,

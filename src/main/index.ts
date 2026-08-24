@@ -5,11 +5,12 @@ import { join } from 'path'
 import { execFile, exec } from 'child_process'
 import { promisify } from 'util'
 import * as http from 'http'
+import * as os from 'os'
 import type { FSWatcher } from 'chokidar'
 import { McpManager } from './mcp'
 import { A2AManager } from './a2a'
 import { McpHostManager } from './mcp-server'
-import { ModelRouter } from './model-router'
+import { DeviceProfile, ModelRouter } from './model-router'
 
 const execFileAsync = promisify(execFile)
 const execAsync = promisify(exec)
@@ -854,6 +855,19 @@ ipcMain.handle('mcp-host-save-config', (_e, config) => {
 
 const modelRouter = new ModelRouter()
 
+function getDeviceProfile(): DeviceProfile {
+  const memoryGiB = Math.max(1, Math.floor(os.totalmem() / 1024 ** 3))
+  const tier = memoryGiB >= 48 ? 'workstation' : memoryGiB >= 32 ? 'performance' : memoryGiB >= 16 ? 'standard' : 'compact'
+  return {
+    platform: process.platform,
+    architecture: process.arch,
+    cpuCores: os.cpus().length,
+    memoryGiB,
+    modelMemoryBudgetGiB: Math.max(2, Math.floor(memoryGiB * 0.65)),
+    tier
+  }
+}
+
 async function getInstalledOllamaModels(): Promise<string[]> {
   return new Promise<string[]>((resolve) => {
     const req = http.get('http://127.0.0.1:11434/api/tags', { timeout: 5000 }, (res) => {
@@ -876,7 +890,66 @@ async function getInstalledOllamaModels(): Promise<string[]> {
 
 ipcMain.handle('model-router-select', async (_e, prompt: string, installedModels?: string[], fallbackModel?: string) => {
   const models = installedModels && installedModels.length > 0 ? installedModels : await getInstalledOllamaModels()
-  return modelRouter.selectModel(prompt, models, fallbackModel)
+  const device = getDeviceProfile()
+  const fallback = modelRouter.selectModel(prompt, models, fallbackModel, device)
+  const recommendedRouterModel = device.memoryGiB >= 48 ? 'qwen3.6:35b'
+    : device.memoryGiB >= 32 ? 'qwen3.6:27b'
+      : device.memoryGiB >= 16 ? 'qwen3.6:9b'
+        : 'qwen3.6:4b'
+
+  // Auto routing should remain usable without an additional download. When the
+  // dedicated router is available, ask it to select from *only* local models.
+  const compatibleModels = models.filter(name => modelRouter.isModelSuitableForDevice(name, device))
+  const routerModel = compatibleModels.find(name => name.startsWith('qwen3.6:35b'))
+    || compatibleModels.find(name => name.startsWith('qwen3.6:'))
+  if (!routerModel || models.length === 0) {
+    return {
+      ...fallback,
+      usedLlmRouter: false,
+      recommendedRouterModel,
+      reason: routerModel ? fallback.reason : `${fallback.reason} Pull ${recommendedRouterModel} to enable LLM-powered Auto routing.`
+    }
+  }
+
+  const routingPrompt = [
+    'You are the model router for a local coding IDE. Select the best installed model for this request.',
+    'Return JSON only: {"taskCategory":"code-generation|code-review|debugging|planning|reasoning|general-chat","selectedModel":"exact installed model name","confidence":0-1,"reason":"short explanation"}.',
+    'Choose only a value from INSTALLED_MODELS. Prefer coding and tool-capable models for implementation, debugging, review, and repository tasks; prefer general/reasoning models for discussion and planning.',
+    `DEVICE: ${device.platform} ${device.architecture}, ${device.memoryGiB} GiB RAM, ${device.cpuCores} CPU cores. Maximum recommended model footprint: ${device.modelMemoryBudgetGiB} GiB.`,
+    `INSTALLED_MODELS_SAFE_FOR_DEVICE: ${JSON.stringify(compatibleModels)}`,
+    `USER_REQUEST: ${prompt.slice(0, 12000)}`
+  ].join('\n')
+
+  try {
+    const result = await performOllamaChat({
+      model: routerModel,
+      stream: false,
+      format: 'json',
+      options: { temperature: 0, num_predict: 180 },
+      messages: [{ role: 'user', content: routingPrompt }]
+    })
+    if (result.statusCode >= 400) throw new Error(`Router returned ${result.statusCode}`)
+    const payload = JSON.parse(result.data)
+    const content = String(payload?.message?.content || '').trim()
+    const decision = JSON.parse(content.replace(/^```json\s*|\s*```$/g, ''))
+    if (!compatibleModels.includes(decision.selectedModel)) throw new Error('Router chose a model that is not compatible with this device')
+
+    return {
+      ...fallback,
+      taskCategory: typeof decision.taskCategory === 'string' ? decision.taskCategory : fallback.taskCategory,
+      selectedModel: decision.selectedModel,
+      confidence: typeof decision.confidence === 'number' ? Math.max(0, Math.min(1, decision.confidence)) : fallback.confidence,
+      reason: typeof decision.reason === 'string' ? decision.reason.slice(0, 240) : fallback.reason,
+      suitabilityScore: 100,
+      isOptimal: true,
+      recommendedModelToPull: undefined,
+      usedLlmRouter: true,
+      routerModel
+    }
+  } catch (error) {
+    console.warn('LLM model router failed; using deterministic fallback:', error)
+    return { ...fallback, usedLlmRouter: false, routerModel, recommendedRouterModel }
+  }
 })
 
 ipcMain.handle('ollama-pull-model', async (_e, modelName: string) => {
@@ -912,4 +985,3 @@ ipcMain.handle('ollama-pull-model', async (_e, modelName: string) => {
     req.end()
   })
 })
-

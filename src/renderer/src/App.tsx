@@ -171,7 +171,7 @@ export default function App() {
         const names: string[] = (data.models || []).map((m: { name: string }) => m.name)
         if (names.length > 0) {
           setModels(names)
-          setModel(names[0])
+          setModel('auto')
           return
         }
       } catch {}
@@ -179,7 +179,7 @@ export default function App() {
       try {
         const names = await window.api.ollamaTags()
         setModels(names)
-        if (names.length > 0) setModel(names[0])
+        if (names.length > 0) setModel('auto')
       } catch {}
     }
     loadModels()
@@ -892,6 +892,7 @@ export default function App() {
           model={model}
           models={models}
           onModelChange={setModel}
+          onModelsChange={setModels}
           rootPath={rootPath}
           openFile={openFile}
           fileContent={fileContent}

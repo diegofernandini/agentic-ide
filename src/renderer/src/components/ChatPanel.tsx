@@ -82,8 +82,11 @@ declare global {
         selectedModel: string
         suitabilityScore: number
         isOptimal: boolean
-        recommendedModelToPull?: string
-        reason: string
+      recommendedModelToPull?: string
+      reason: string
+      usedLlmRouter?: boolean
+      routerModel?: string
+      recommendedRouterModel?: string
       }>
       ollamaPullModel?: (modelName: string) => Promise<{ success: boolean; message?: string }>
     }
@@ -94,6 +97,7 @@ interface Props {
   model: string
   models: string[]
   onModelChange: (m: string) => void
+  onModelsChange?: (models: string[]) => void
   rootPath: string | null
   openFile: string | null
   fileContent: string
@@ -435,7 +439,7 @@ function ModeIcon({ mode }: { mode: AgentMode }) {
 }
 
 export default function ChatPanel({
-  model, models, onModelChange,
+  model, models, onModelChange, onModelsChange,
   rootPath, openFile, fileContent,
   onWriteFile, onRefreshTree, onOpenFile,
   onOpenDiff,
@@ -545,11 +549,15 @@ export default function ChatPanel({
     isOptimal: boolean
     recommendedModelToPull?: string
     reason: string
+    usedLlmRouter?: boolean
+    routerModel?: string
+    recommendedRouterModel?: string
   } | null>(null)
+  const [isRouting, setIsRouting] = useState(false)
   const [pullingModel, setPullingModel] = useState<string | null>(null)
   const [pullStatus, setPullStatus] = useState<string | null>(null)
 
-  const handlePullModel = async (modelName: string) => {
+  const handlePullModel = async (modelName: string, keepAuto = false) => {
     setPullingModel(modelName)
     setPullStatus(`Pulling free open model '${modelName}' from Ollama library...`)
     try {
@@ -559,7 +567,8 @@ export default function ChatPanel({
         if (window.api?.ollamaTags) {
           const updated = await window.api.ollamaTags()
           if (updated && updated.length > 0) {
-            onModelChange(modelName)
+            onModelsChange?.(updated)
+            if (!keepAuto) onModelChange(modelName)
           }
         }
       }
@@ -1046,8 +1055,9 @@ Rules:
     const latestUserText = [...history].reverse().find(msg => msg.role === 'user')?.content || ''
     
     // Dynamic Model Router & Task Evaluation
-    if (window.api?.modelRouterSelect) {
+    if ((currentModel === 'auto' || !currentModel) && window.api?.modelRouterSelect) {
       try {
+        setIsRouting(true)
         const fallback = currentModel === 'auto' ? models[0] : currentModel
         const rec = await window.api.modelRouterSelect(latestUserText, models, fallback)
         if (rec) {
@@ -1058,6 +1068,8 @@ Rules:
         }
       } catch (e) {
         console.warn('Model router error:', e)
+      } finally {
+        setIsRouting(false)
       }
     }
     if (currentModel === 'auto') currentModel = models[0] || 'llama3.1:latest'
@@ -2020,6 +2032,22 @@ Rules:
             </button>
           </div>
         )}
+        {model === 'auto' && routerRec?.recommendedRouterModel && !routerRec.usedLlmRouter && (
+          <div style={{
+            background: 'rgba(85, 214, 194, 0.08)', border: '1px solid rgba(85, 214, 194, 0.24)',
+            borderRadius: '8px', padding: '8px 12px', margin: '8px 12px 0', fontSize: '12px',
+            color: '#a8e6dc', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px'
+          }}>
+            <span>✨ Install <code>{routerRec.recommendedRouterModel}</code> to enable LLM-powered Auto routing.</span>
+            <button
+              onClick={() => handlePullModel(routerRec.recommendedRouterModel!, true)}
+              disabled={pullingModel !== null}
+              style={{ background: '#177c70', color: '#fff', border: 'none', borderRadius: '4px', padding: '4px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {pullingModel === routerRec.recommendedRouterModel ? 'Pulling…' : `Pull ${routerRec.recommendedRouterModel}`}
+            </button>
+          </div>
+        )}
         {pullStatus && (
           <div style={{
             background: 'rgba(0, 122, 204, 0.15)',
@@ -2132,9 +2160,25 @@ Rules:
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
             >
-              <option value="auto">✨ Auto-Select (Smart Router)</option>
+              <option value="auto">✨ Auto</option>
               {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
+
+            {model === 'auto' && (
+              <span
+                title={routerRec?.reason || 'Auto chooses a model for every request'}
+                style={{
+                  maxWidth: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  color: routerRec?.usedLlmRouter ? '#55d6c2' : '#a0a0a0', fontSize: '11px', lineHeight: '28px'
+                }}
+              >
+                {isRouting
+                  ? '✨ Choosing model…'
+                  : routerRec
+                    ? `✨ Auto → ${routerRec.selectedModel} · ${routerRec.taskCategory}`
+                    : '✨ Auto routing'}
+              </span>
+            )}
 
             <button 
               className={`chat-action-btn ${autopilot ? 'active' : ''}`} 

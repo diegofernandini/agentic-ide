@@ -16,6 +16,21 @@ export interface ModelRecommendation {
   isOptimal: boolean
   recommendedModelToPull?: string
   reason: string
+  /** True when Qwen3.6 made the selection instead of the deterministic fallback. */
+  usedLlmRouter?: boolean
+  routerModel?: string
+  recommendedRouterModel?: string
+  deviceProfile?: DeviceProfile
+}
+
+export interface DeviceProfile {
+  platform: string
+  architecture: string
+  cpuCores: number
+  memoryGiB: number
+  /** Conservative amount of memory reserved for a quantized Ollama model. */
+  modelMemoryBudgetGiB: number
+  tier: 'compact' | 'standard' | 'performance' | 'workstation'
 }
 
 // ─── Free Open Models Catalog (Ollama Library Open-Weights Models) ────────────
@@ -43,6 +58,49 @@ export const FREE_OPEN_MODEL_CATALOG: Record<TaskCategory, { primary: string; al
   'general-chat': {
     primary: 'llama3.1:8b',
     alternatives: ['mistral:7b', 'gemma2:9b', 'phi4:14b']
+  }
+}
+
+/** Pick download recommendations that leave room for the OS, editor, and context. */
+export function getCatalogForDevice(profile?: DeviceProfile): Record<TaskCategory, { primary: string; alternatives: string[] }> {
+  if (!profile) return FREE_OPEN_MODEL_CATALOG
+  if (profile.memoryGiB >= 48) {
+    return {
+      'code-generation': { primary: 'qwen3-coder:30b', alternatives: ['devstral:24b', 'qwen2.5-coder:14b'] },
+      'code-review': { primary: 'qwen3-coder:30b', alternatives: ['devstral:24b', 'qwen2.5-coder:14b'] },
+      debugging: { primary: 'deepseek-r1:32b', alternatives: ['qwen3-coder:30b', 'deepseek-r1:14b'] },
+      reasoning: { primary: 'deepseek-r1:32b', alternatives: ['qwen3.6:35b', 'deepseek-r1:14b'] },
+      planning: { primary: 'qwen3.6:35b', alternatives: ['llama3.3:70b', 'phi4:14b'] },
+      'general-chat': { primary: 'qwen3.6:35b', alternatives: ['llama3.3:70b', 'phi4:14b'] }
+    }
+  }
+  if (profile.memoryGiB >= 32) {
+    return {
+      'code-generation': { primary: 'qwen3-coder:30b', alternatives: ['devstral:24b', 'qwen2.5-coder:14b'] },
+      'code-review': { primary: 'devstral:24b', alternatives: ['qwen2.5-coder:14b', 'qwen2.5-coder:7b'] },
+      debugging: { primary: 'deepseek-r1:14b', alternatives: ['qwen2.5-coder:14b', 'deepseek-r1:8b'] },
+      reasoning: { primary: 'deepseek-r1:14b', alternatives: ['qwen3.6:27b', 'deepseek-r1:8b'] },
+      planning: { primary: 'qwen3.6:27b', alternatives: ['phi4:14b', 'llama3.1:8b'] },
+      'general-chat': { primary: 'qwen3.6:27b', alternatives: ['phi4:14b', 'llama3.1:8b'] }
+    }
+  }
+  if (profile.memoryGiB >= 16) {
+    return {
+      'code-generation': { primary: 'qwen2.5-coder:14b', alternatives: ['qwen2.5-coder:7b', 'deepseek-coder:6.7b'] },
+      'code-review': { primary: 'qwen2.5-coder:14b', alternatives: ['qwen2.5-coder:7b', 'deepseek-coder:6.7b'] },
+      debugging: { primary: 'deepseek-r1:14b', alternatives: ['deepseek-r1:8b', 'qwen2.5-coder:7b'] },
+      reasoning: { primary: 'deepseek-r1:14b', alternatives: ['deepseek-r1:8b', 'llama3.1:8b'] },
+      planning: { primary: 'phi4:14b', alternatives: ['llama3.1:8b', 'qwen2.5-coder:7b'] },
+      'general-chat': { primary: 'llama3.1:8b', alternatives: ['phi4:14b', 'gemma2:9b'] }
+    }
+  }
+  return {
+    'code-generation': { primary: 'qwen2.5-coder:7b', alternatives: ['qwen2.5-coder:3b', 'deepseek-coder:1.3b'] },
+    'code-review': { primary: 'qwen2.5-coder:7b', alternatives: ['qwen2.5-coder:3b', 'deepseek-coder:1.3b'] },
+    debugging: { primary: 'deepseek-r1:8b', alternatives: ['qwen2.5-coder:7b', 'llama3.2:3b'] },
+    reasoning: { primary: 'deepseek-r1:8b', alternatives: ['llama3.2:3b', 'qwen2.5-coder:3b'] },
+    planning: { primary: 'llama3.2:3b', alternatives: ['qwen2.5-coder:3b', 'gemma2:2b'] },
+    'general-chat': { primary: 'llama3.2:3b', alternatives: ['gemma2:2b', 'qwen2.5-coder:3b'] }
   }
 }
 
@@ -124,7 +182,7 @@ export class ModelRouter {
   /**
    * Score an installed model name against a target task category (0 - 100)
    */
-  scoreModelForTask(modelName: string, category: TaskCategory): number {
+  scoreModelForTask(modelName: string, category: TaskCategory, device?: DeviceProfile): number {
     const name = modelName.toLowerCase()
     let score = 50 // baseline for any installed Ollama model
 
@@ -162,7 +220,22 @@ export class ModelRouter {
       score += 10
     }
 
-    return Math.min(100, score)
+    const parameters = name.match(/(?:^|:|-)(\d+(?:\.\d+)?)b(?:$|[-:])/i)
+    if (parameters && device) {
+      // Q4 Ollama weights typically need ~0.63 GiB per billion parameters plus
+      // runtime/context overhead. Rejecting oversized models is preferable to
+      // suggesting a download that will make the editor unusable.
+      const estimatedGiB = Number(parameters[1]) * 0.63
+      if (estimatedGiB > device.modelMemoryBudgetGiB) score -= 75
+    }
+
+    return Math.max(0, Math.min(100, score))
+  }
+
+  isModelSuitableForDevice(modelName: string, device?: DeviceProfile): boolean {
+    if (!device) return true
+    const match = modelName.toLowerCase().match(/(?:^|:|-)(\d+(?:\.\d+)?)b(?:$|[-:])/i)
+    return !match || Number(match[1]) * 0.63 <= device.modelMemoryBudgetGiB
   }
 
   /**
@@ -172,12 +245,13 @@ export class ModelRouter {
   selectModel(
     prompt: string,
     installedModels: string[],
-    fallbackModel: string = 'llama3.1:latest'
+    fallbackModel: string = 'llama3.1:latest',
+    device?: DeviceProfile
   ): ModelRecommendation {
     const { category, confidence } = this.classifyPrompt(prompt)
 
     if (!installedModels || installedModels.length === 0) {
-      const catalog = FREE_OPEN_MODEL_CATALOG[category]
+      const catalog = getCatalogForDevice(device)[category]
       return {
         taskCategory: category,
         confidence,
@@ -185,7 +259,8 @@ export class ModelRouter {
         suitabilityScore: 30,
         isOptimal: false,
         recommendedModelToPull: catalog.primary,
-        reason: `No installed models found. Recommended free open model: ${catalog.primary}`
+        deviceProfile: device,
+        reason: `No installed models found. Recommended for this ${device?.tier || 'default'} device: ${catalog.primary}`
       }
     }
 
@@ -193,7 +268,7 @@ export class ModelRouter {
     let bestScore = -1
 
     for (const model of installedModels) {
-      const score = this.scoreModelForTask(model, category)
+      const score = this.scoreModelForTask(model, category, device)
       if (score > bestScore) {
         bestScore = score
         bestModel = model
@@ -202,7 +277,7 @@ export class ModelRouter {
 
     // If installed fallback is equal or better, ensure it's considered
     if (installedModels.includes(fallbackModel)) {
-      const fallbackScore = this.scoreModelForTask(fallbackModel, category)
+      const fallbackScore = this.scoreModelForTask(fallbackModel, category, device)
       if (fallbackScore > bestScore) {
         bestScore = fallbackScore
         bestModel = fallbackModel
@@ -211,10 +286,11 @@ export class ModelRouter {
 
     const SUITABILITY_THRESHOLD = 60
     const isOptimal = bestScore >= SUITABILITY_THRESHOLD
-    const catalog = FREE_OPEN_MODEL_CATALOG[category]
+    const catalog = getCatalogForDevice(device)[category]
     const recommendedModelToPull = isOptimal ? undefined : catalog.primary
 
     let reason = `Selected '${bestModel}' for ${category} (suitability score: ${bestScore}/100)`
+    if (device) reason += ` on this ${device.tier} ${device.memoryGiB} GiB device`
     if (!isOptimal) {
       reason += `. Installed models fall below suitability threshold. Consider pulling free open model '${catalog.primary}'.`
     }
@@ -226,7 +302,8 @@ export class ModelRouter {
       suitabilityScore: bestScore,
       isOptimal,
       recommendedModelToPull,
-      reason
+      reason,
+      deviceProfile: device
     }
   }
 }
