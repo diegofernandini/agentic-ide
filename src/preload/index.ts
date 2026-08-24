@@ -63,5 +63,21 @@ contextBridge.exposeInMainWorld('api', {
   },
   offFileChanged: () => {
     ipcRenderer.removeAllListeners('file-changed')
-  }
+  },
+  // ── A2A Protocol ──────────────────────────────────────────────────────────
+  a2aGetStatus: () => ipcRenderer.invoke('a2a-get-status'),
+  a2aGetConfig: () => ipcRenderer.invoke('a2a-get-config'),
+  a2aSaveConfig: (config: any) => ipcRenderer.invoke('a2a-save-config', config),
+  a2aGetLogs: () => ipcRenderer.invoke('a2a-get-logs'),
+  a2aDiscoverAgent: (url: string) => ipcRenderer.invoke('a2a-discover-agent', url),
+  a2aDelegateTask: (agentName: string, prompt: string, skill?: string) =>
+    ipcRenderer.invoke('a2a-delegate-task', agentName, prompt, skill),
+  // ── MCP Host Server ───────────────────────────────────────────────────────
+  mcpHostGetStatus: () => ipcRenderer.invoke('mcp-host-get-status'),
+  mcpHostGetConfig: () => ipcRenderer.invoke('mcp-host-get-config'),
+  mcpHostSaveConfig: (config: any) => ipcRenderer.invoke('mcp-host-save-config', config),
+  // ── Model Router & Model Management ─────────────────────────────────────
+  modelRouterSelect: (prompt: string, installedModels?: string[], fallbackModel?: string) =>
+    ipcRenderer.invoke('model-router-select', prompt, installedModels, fallbackModel),
+  ollamaPullModel: (modelName: string) => ipcRenderer.invoke('ollama-pull-model', modelName)
 })

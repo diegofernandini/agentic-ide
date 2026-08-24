@@ -30,6 +30,7 @@ const http = require("http");
 const readline = require("readline");
 const https = require("https");
 const url = require("url");
+const events = require("events");
 const pty = require("node-pty");
 const os = require("os");
 function _interopNamespaceDefault(e) {
@@ -119,25 +120,43 @@ class StdioMcpClient {
           this.log(`[Received] ${line}`);
           try {
             const msg = JSON.parse(line);
-            if (msg.id !== void 0) {
+            if (msg.method) {
+              if (msg.method === "workspace/roots" || msg.method === "roots/list") {
+                const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null;
+                const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path__namespace.basename(rootPath) }] : [];
+                if (msg.id !== void 0) {
+                  this.sendRaw({
+                    jsonrpc: "2.0",
+                    id: msg.id,
+                    result: { roots }
+                  });
+                }
+              } else if (msg.method === "ping") {
+                if (msg.id !== void 0) {
+                  this.sendRaw({
+                    jsonrpc: "2.0",
+                    id: msg.id,
+                    result: {}
+                  });
+                }
+              } else if (msg.id !== void 0) {
+                this.sendRaw({
+                  jsonrpc: "2.0",
+                  id: msg.id,
+                  error: { code: -32601, message: `Method not found: ${msg.method}` }
+                });
+              }
+            } else if (msg.id !== void 0) {
               const pending = this.pendingRequests.get(msg.id);
               if (pending) {
                 this.pendingRequests.delete(msg.id);
+                if (pending.timeout) clearTimeout(pending.timeout);
                 if (msg.error) {
                   pending.reject(msg.error);
                 } else {
                   pending.resolve(msg.result);
                 }
               }
-            } else if (msg.method === "workspace/roots" || msg.method === "roots/list") {
-              const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null;
-              const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path__namespace.basename(rootPath) }] : [];
-              const response = {
-                jsonrpc: "2.0",
-                id: msg.id,
-                result: { roots }
-              };
-              this.sendRaw(response);
             }
           } catch (err) {
             this.log(`[Error Parsing JSON-RPC] ${err.message}`);
@@ -147,6 +166,7 @@ class StdioMcpClient {
           this.connectionStatus = "disconnected";
           this.log(`Server process exited. Code: ${code}, Signal: ${signal}`);
           for (const pending of this.pendingRequests.values()) {
+            if (pending.timeout) clearTimeout(pending.timeout);
             pending.reject(new Error(`Server process exited with code ${code}`));
           }
           this.pendingRequests.clear();
@@ -165,7 +185,7 @@ class StdioMcpClient {
               },
               clientInfo: { name: "agentic-ide", version: "1.0.0" }
             });
-            this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`);
+            this.log(`Received initialize response. Protocol Version: ${initResult?.protocolVersion}`);
             this.sendNotification("notifications/initialized", {});
             this.log(`Sent initialized notification. Fetching tools...`);
             const toolsResult = await this.sendRequest("tools/list", {});
@@ -199,7 +219,7 @@ class StdioMcpClient {
     this.log(`[Sending] ${str}`);
     this.process.stdin.write(str + "\n");
   }
-  sendRequest(method, params) {
+  sendRequest(method, params, timeoutMs = 3e4) {
     return new Promise((resolve, reject) => {
       if (this.connectionStatus === "error" && !this.process) {
         return reject(new Error(`Server is in error state: ${this.errorMsg}`));
@@ -209,7 +229,13 @@ class StdioMcpClient {
       }
       const id = this.nextId++;
       const payload = { jsonrpc: "2.0", id, method, params };
-      this.pendingRequests.set(id, { resolve, reject });
+      const timer = setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id);
+          reject(new Error(`Request ${method} (id ${id}) timed out after ${timeoutMs}ms`));
+        }
+      }, timeoutMs);
+      this.pendingRequests.set(id, { resolve, reject, timeout: timer });
       this.sendRaw(payload);
     });
   }
@@ -235,6 +261,7 @@ class StdioMcpClient {
     }
     this.connectionStatus = "disconnected";
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout);
       pending.reject(new Error(`Client disconnected`));
     }
     this.pendingRequests.clear();
@@ -326,6 +353,18 @@ class SseMcpClient {
     this.log(`[Error] ${this.errorMsg}`);
     this.disconnect();
   }
+  sendNotificationResponse(id, result) {
+    if (!this.postUrl) return;
+    this.postMessage({ jsonrpc: "2.0", id, result }).catch((err) => {
+      this.log(`[Error sending RPC response] ${err.message}`);
+    });
+  }
+  sendNotificationError(id, code, message) {
+    if (!this.postUrl) return;
+    this.postMessage({ jsonrpc: "2.0", id, error: { code, message } }).catch((err) => {
+      this.log(`[Error sending RPC error] ${err.message}`);
+    });
+  }
   async handleEvent(event, data, resolveConnect, rejectConnect) {
     this.log(`[Event: ${event}] ${data}`);
     if (event === "endpoint") {
@@ -341,8 +380,8 @@ class SseMcpClient {
           },
           clientInfo: { name: "agentic-ide", version: "1.0.0" }
         });
-        this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`);
-        this.sendNotification("notifications/initialized", {});
+        this.log(`Received initialize response. Protocol Version: ${initResult?.protocolVersion}`);
+        await this.sendNotification("notifications/initialized", {});
         this.log("Sent initialized notification. Fetching tools...");
         const toolsResult = await this.sendRequest("tools/list", {});
         this.tools = toolsResult?.tools || [];
@@ -355,10 +394,25 @@ class SseMcpClient {
     } else if (event === "message") {
       try {
         const msg = JSON.parse(data);
-        if (msg.id !== void 0) {
+        if (msg.method) {
+          if (msg.method === "workspace/roots" || msg.method === "roots/list") {
+            const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null;
+            const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path__namespace.basename(rootPath) }] : [];
+            if (msg.id !== void 0) {
+              this.sendNotificationResponse(msg.id, { roots });
+            }
+          } else if (msg.method === "ping") {
+            if (msg.id !== void 0) {
+              this.sendNotificationResponse(msg.id, {});
+            }
+          } else if (msg.id !== void 0) {
+            this.sendNotificationError(msg.id, -32601, `Method not found: ${msg.method}`);
+          }
+        } else if (msg.id !== void 0) {
           const pending = this.pendingRequests.get(msg.id);
           if (pending) {
             this.pendingRequests.delete(msg.id);
+            if (pending.timeout) clearTimeout(pending.timeout);
             if (msg.error) {
               pending.reject(msg.error);
             } else {
@@ -371,26 +425,37 @@ class SseMcpClient {
       }
     }
   }
-  async sendRequest(method, params) {
+  sendRequest(method, params, timeoutMs = 3e4) {
     if (!this.postUrl) {
-      throw new Error("Message endpoint not established yet");
+      return Promise.reject(new Error("Message endpoint not established yet"));
     }
     const id = this.nextId++;
     const payload = { jsonrpc: "2.0", id, method, params };
     return new Promise((resolve, reject) => {
-      this.pendingRequests.set(id, { resolve, reject });
+      const timer = setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id);
+          reject(new Error(`Request ${method} (id ${id}) timed out after ${timeoutMs}ms`));
+        }
+      }, timeoutMs);
+      this.pendingRequests.set(id, { resolve, reject, timeout: timer });
       this.postMessage(payload).catch((err) => {
-        this.pendingRequests.delete(id);
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id);
+          clearTimeout(timer);
+        }
         reject(err);
       });
     });
   }
-  sendNotification(method, params) {
+  async sendNotification(method, params) {
     if (!this.postUrl) return;
     const payload = { jsonrpc: "2.0", method, params };
-    this.postMessage(payload).catch((err) => {
+    try {
+      await this.postMessage(payload);
+    } catch (err) {
       this.log(`[Error sending notification] ${err.message}`);
-    });
+    }
   }
   async postMessage(payload) {
     if (!this.postUrl) return;
@@ -437,6 +502,7 @@ class SseMcpClient {
     }
     this.connectionStatus = "disconnected";
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout);
       pending.reject(new Error("Client disconnected"));
     }
     this.pendingRequests.clear();
@@ -486,16 +552,16 @@ class StreamableHttpMcpClient {
       throw err;
     }
   }
-  sendRequest(method, params) {
+  sendRequest(method, params, timeoutMs = 3e4) {
     const id = this.nextId++;
     const payload = { jsonrpc: "2.0", id, method, params };
-    return this.post(payload, id);
+    return this.post(payload, id, timeoutMs);
   }
   async sendNotification(method, params) {
     const payload = { jsonrpc: "2.0", method, params };
     await this.post(payload, null);
   }
-  post(payload, requestId) {
+  post(payload, requestId, timeoutMs = 3e4) {
     return new Promise((resolve, reject) => {
       const parsedUrl = new url.URL(this.url);
       const requestModule = parsedUrl.protocol === "https:" ? https__namespace : http__namespace;
@@ -510,11 +576,30 @@ class StreamableHttpMcpClient {
       if (this.sessionId) {
         headers["Mcp-Session-Id"] = this.sessionId;
       }
+      let settled = false;
+      const timer = requestId !== null ? setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          try {
+            req.destroy();
+          } catch {
+          }
+          reject(new Error(`Request timed out after ${timeoutMs}ms`));
+        }
+      }, timeoutMs) : null;
+      const done = (err, result) => {
+        if (settled) return;
+        settled = true;
+        if (timer) clearTimeout(timer);
+        if (err) reject(err);
+        else resolve(result);
+      };
       this.log(`[POST] ${body}`);
       this.log(`[Headers] ${JSON.stringify(this.extraHeaders)}`);
       const req = requestModule.request(parsedUrl, { method: "POST", headers }, (res) => {
-        if (!this.sessionId && res.headers["mcp-session-id"]) {
-          this.sessionId = res.headers["mcp-session-id"];
+        const sessionHeaderKey = Object.keys(res.headers).find((k) => k.toLowerCase() === "mcp-session-id");
+        if (sessionHeaderKey && res.headers[sessionHeaderKey]) {
+          this.sessionId = res.headers[sessionHeaderKey];
           this.log(`Session ID: ${this.sessionId}`);
         }
         if (res.statusCode && res.statusCode >= 400) {
@@ -524,7 +609,7 @@ class StreamableHttpMcpClient {
           });
           res.on("end", () => {
             const hint = res.statusCode === 405 ? " — wrong endpoint or method; verify the URL is the Streamable HTTP MCP endpoint." : res.statusCode === 400 ? " — payload rejected; check JSON-RPC structure." : "";
-            reject(new Error(`HTTP ${res.statusCode}${hint} Body: ${errBody.slice(0, 200)}`));
+            done(new Error(`HTTP ${res.statusCode}${hint} Body: ${errBody.slice(0, 200)}`));
           });
           return;
         }
@@ -543,12 +628,13 @@ class StreamableHttpMcpClient {
                   const msg = JSON.parse(data);
                   this.log(`[SSE data] ${data}`);
                   if (requestId !== null && msg.id === requestId) {
-                    if (msg.error) reject(msg.error);
-                    else resolve(msg.result);
+                    if (msg.error) done(msg.error);
+                    else done(null, msg.result);
                   } else if (msg.id !== void 0) {
                     const pending = this.pendingRequests.get(msg.id);
                     if (pending) {
                       this.pendingRequests.delete(msg.id);
+                      if (pending.timeout) clearTimeout(pending.timeout);
                       if (msg.error) pending.reject(msg.error);
                       else pending.resolve(msg.result);
                     }
@@ -559,7 +645,8 @@ class StreamableHttpMcpClient {
             }
           });
           res.on("end", () => {
-            if (requestId === null) resolve(void 0);
+            if (requestId === null) done();
+            else if (!settled) done(new Error("SSE stream ended before response was received"));
           });
         } else {
           let raw = "";
@@ -569,20 +656,24 @@ class StreamableHttpMcpClient {
           res.on("end", () => {
             this.log(`[Response] ${raw.slice(0, 500)}`);
             if (requestId === null) {
-              resolve(void 0);
+              done();
+              return;
+            }
+            if (!raw || raw.trim() === "") {
+              done(null, void 0);
               return;
             }
             try {
               const msg = JSON.parse(raw);
-              if (msg.error) reject(msg.error);
-              else resolve(msg.result);
+              if (msg.error) done(msg.error);
+              else done(null, msg.result);
             } catch (e) {
-              reject(new Error(`Failed to parse response: ${e.message}. Body: ${raw.slice(0, 200)}`));
+              done(new Error(`Failed to parse response: ${e.message}. Body: ${raw.slice(0, 200)}`));
             }
           });
         }
       });
-      req.on("error", reject);
+      req.on("error", (err) => done(err));
       req.write(body);
       req.end();
     });
@@ -606,6 +697,7 @@ class StreamableHttpMcpClient {
     this.connectionStatus = "disconnected";
     this.sessionId = null;
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout);
       pending.reject(new Error("Client disconnected"));
     }
     this.pendingRequests.clear();
@@ -639,38 +731,12 @@ class McpManager {
             args: ["-y", "@modelcontextprotocol/server-sqlite", "--db", path__namespace.join(this.dataDir, "demo.db")],
             disabled: true
           },
-          // ----------------------------------------------------------------
-          // Figma MCP Bridge
-          // Runs a local stdio bridge that translates MCP tool calls into
-          // Figma REST API requests.
-          //
-          // Setup:
-          //   1. Get a personal access token from Figma account settings.
-          //   2. Replace YOUR_FIGMA_ACCESS_TOKEN below with that value.
-          //   3. Set "disabled": false to activate.
-          //
-          // Bridge used: @modelcontextprotocol/server-figma (community)
-          // Docs: https://github.com/GLips/Figma-Context-MCP
-          // ----------------------------------------------------------------
           "figma": {
             command: "npx",
             args: ["-y", "figma-developer-mcp", "--figma-api-key", "YOUR_FIGMA_ACCESS_TOKEN", "--stdio"],
             env: {},
             disabled: true
           },
-          // ----------------------------------------------------------------
-          // Penpot MCP Bridge
-          // Runs a local stdio bridge that translates MCP tool calls into
-          // Penpot REST API requests.
-          //
-          // Setup:
-          //   1. Start a Penpot instance (local or cloud: https://penpot.app).
-          //   2. Generate an access token in your Penpot profile settings.
-          //   3. Replace the env values below and set "disabled": false.
-          //
-          // Bridge used: penpot-mcp (community)
-          // Docs: https://github.com/montevive/penpot-mcp
-          // ----------------------------------------------------------------
           "penpot": {
             command: "npx",
             args: ["-y", "penpot-mcp"],
@@ -791,6 +857,9 @@ class McpManager {
     if (!client) {
       throw new Error(`MCP Server ${serverName} is not running or connected`);
     }
+    if (client.connectionStatus !== "connected") {
+      throw new Error(`MCP Server ${serverName} is not connected (status: ${client.connectionStatus})`);
+    }
     return client.sendRequest("tools/call", { name: toolName, arguments: args });
   }
   logGlobal(msg) {
@@ -800,6 +869,1095 @@ class McpManager {
         client.logs.push(`[${timestamp}] [IDE] ${msg}`);
       }
     }
+  }
+}
+const FREE_OPEN_MODEL_CATALOG = {
+  "code-generation": {
+    primary: "qwen2.5-coder:14b",
+    alternatives: ["qwen2.5-coder:7b", "codellama:13b", "starcoder2:7b", "deepseek-coder-v2:16b"]
+  },
+  "code-review": {
+    primary: "qwen2.5-coder:14b",
+    alternatives: ["qwen2.5-coder:7b", "codellama:13b", "deepseek-coder:6.7b"]
+  },
+  "debugging": {
+    primary: "deepseek-r1:14b",
+    alternatives: ["deepseek-r1:8b", "qwen2.5-coder:14b", "llama3.1:8b"]
+  },
+  "reasoning": {
+    primary: "deepseek-r1:14b",
+    alternatives: ["deepseek-r1:8b", "qwq:32b", "llama3.3:70b"]
+  },
+  "planning": {
+    primary: "llama3.1:8b",
+    alternatives: ["llama3.3:70b", "mistral-nemo:12b", "phi4:14b"]
+  },
+  "general-chat": {
+    primary: "llama3.1:8b",
+    alternatives: ["mistral:7b", "gemma2:9b", "phi4:14b"]
+  }
+};
+const INTENT_PATTERNS = {
+  "code-generation": [
+    /\b(write|create|implement|build|generate|code|function|class|component|script|html|css|tsx?|jsx?|python|java|rust|golang|c\+\+)\b/i,
+    /```[a-z0-9]*/i
+  ],
+  "code-review": [
+    /\b(review|audit|refactor|optimize|clean up|best practice|security|vulnerability|lint)\b/i
+  ],
+  "debugging": [
+    /\b(fix|bug|error|exception|stacktrace|crash|failing|issue|unexpected|typeerror|nullpointer)\b/i,
+    /Error:|Exception:|Traceback/i
+  ],
+  "reasoning": [
+    /\b(explain why|logic|math|algorithm|proof|deepseek|step-by-step|evaluate|analyze|why does)\b/i
+  ],
+  "planning": [
+    /\b(plan|design|architecture|roadmap|break down|steps|approach|schema|structure)\b/i
+  ],
+  "general-chat": [
+    /\b(hi|hello|what is|tell me|explain|summary|summarize|documentation|help)\b/i
+  ]
+};
+class ModelRouter {
+  /**
+   * Classify user prompt intent into a TaskCategory
+   */
+  classifyPrompt(prompt) {
+    if (!prompt || !prompt.trim()) {
+      return { category: "general-chat", confidence: 0.5 };
+    }
+    const scores = {
+      "code-generation": 0,
+      "code-review": 0,
+      "debugging": 0,
+      "reasoning": 0,
+      "planning": 0,
+      "general-chat": 0
+    };
+    for (const [category, patterns] of Object.entries(INTENT_PATTERNS)) {
+      for (const pattern of patterns) {
+        const matches = prompt.match(pattern);
+        if (matches) {
+          scores[category] += matches.length * 2;
+        }
+      }
+    }
+    if (/```[a-z0-9]*/i.test(prompt)) {
+      scores["code-generation"] += 3;
+    }
+    if (/error|exception|fail/i.test(prompt)) {
+      scores["debugging"] += 3;
+    }
+    let topCategory = "general-chat";
+    let maxScore = 0;
+    for (const [cat, score] of Object.entries(scores)) {
+      if (score > maxScore) {
+        maxScore = score;
+        topCategory = cat;
+      }
+    }
+    const confidence = maxScore > 0 ? Math.min(1, 0.5 + maxScore * 0.1) : 0.5;
+    return { category: topCategory, confidence };
+  }
+  /**
+   * Score an installed model name against a target task category (0 - 100)
+   */
+  scoreModelForTask(modelName, category) {
+    const name = modelName.toLowerCase();
+    let score = 50;
+    if (category === "code-generation" || category === "code-review") {
+      if (name.includes("coder") || name.includes("codellama") || name.includes("starcoder")) {
+        score += 40;
+      } else if (name.includes("qwen2.5") || name.includes("deepseek")) {
+        score += 25;
+      } else if (name.includes("llama3") || name.includes("mistral")) {
+        score += 15;
+      }
+    } else if (category === "debugging" || category === "reasoning") {
+      if (name.includes("deepseek-r1") || name.includes("qwq") || name.includes("r1")) {
+        score += 45;
+      } else if (name.includes("coder")) {
+        score += 30;
+      } else if (name.includes("llama3.3") || name.includes("llama3.1")) {
+        score += 20;
+      }
+    } else if (category === "planning") {
+      if (name.includes("llama3.3") || name.includes("llama3.1") || name.includes("mistral-nemo")) {
+        score += 35;
+      } else if (name.includes("qwen2.5")) {
+        score += 25;
+      }
+    } else {
+      if (name.includes("llama3.1") || name.includes("mistral") || name.includes("gemma")) {
+        score += 35;
+      }
+    }
+    if (name.includes("14b") || name.includes("13b") || name.includes("16b") || name.includes("32b") || name.includes("70b")) {
+      score += 10;
+    }
+    return Math.min(100, score);
+  }
+  /**
+   * Select the best model from installed models for a prompt,
+   * evaluating suitability threshold (>= 60) and catalog recommendations.
+   */
+  selectModel(prompt, installedModels, fallbackModel = "llama3.1:latest") {
+    const { category, confidence } = this.classifyPrompt(prompt);
+    if (!installedModels || installedModels.length === 0) {
+      const catalog2 = FREE_OPEN_MODEL_CATALOG[category];
+      return {
+        taskCategory: category,
+        confidence,
+        selectedModel: fallbackModel,
+        suitabilityScore: 30,
+        isOptimal: false,
+        recommendedModelToPull: catalog2.primary,
+        reason: `No installed models found. Recommended free open model: ${catalog2.primary}`
+      };
+    }
+    let bestModel = installedModels[0];
+    let bestScore = -1;
+    for (const model of installedModels) {
+      const score = this.scoreModelForTask(model, category);
+      if (score > bestScore) {
+        bestScore = score;
+        bestModel = model;
+      }
+    }
+    if (installedModels.includes(fallbackModel)) {
+      const fallbackScore = this.scoreModelForTask(fallbackModel, category);
+      if (fallbackScore > bestScore) {
+        bestScore = fallbackScore;
+        bestModel = fallbackModel;
+      }
+    }
+    const SUITABILITY_THRESHOLD = 60;
+    const isOptimal = bestScore >= SUITABILITY_THRESHOLD;
+    const catalog = FREE_OPEN_MODEL_CATALOG[category];
+    const recommendedModelToPull = isOptimal ? void 0 : catalog.primary;
+    let reason = `Selected '${bestModel}' for ${category} (suitability score: ${bestScore}/100)`;
+    if (!isOptimal) {
+      reason += `. Installed models fall below suitability threshold. Consider pulling free open model '${catalog.primary}'.`;
+    }
+    return {
+      taskCategory: category,
+      confidence,
+      selectedModel: bestModel,
+      suitabilityScore: bestScore,
+      isOptimal,
+      recommendedModelToPull,
+      reason
+    };
+  }
+}
+const modelRouter$2 = new ModelRouter();
+const DEFAULT_SKILL_MODEL_MAP = {
+  "code-generation": "qwen2.5-coder:14b",
+  "code-review": "qwen2.5-coder:14b",
+  "analysis": "qwen2.5:14b",
+  "chat": "llama3.1:latest",
+  "planning": "llama3.1:latest",
+  "design": "llama3.1:latest",
+  "default": "llama3.1:latest"
+};
+const AGENT_SKILLS = [
+  {
+    id: "code-generation",
+    name: "Code Generation",
+    description: "Generate, edit, and refactor code across languages and frameworks.",
+    tags: ["code", "programming", "refactor"],
+    examples: ["Write a React component for a login form", "Refactor this Python function to be async"]
+  },
+  {
+    id: "code-review",
+    name: "Code Review",
+    description: "Review code for bugs, security issues, and best practices.",
+    tags: ["review", "security", "quality"],
+    examples: ["Review this PR for security vulnerabilities", "Check this function for edge cases"]
+  },
+  {
+    id: "analysis",
+    name: "Project Analysis",
+    description: "Analyse codebases, explain architecture, and answer questions about a project.",
+    tags: ["analysis", "architecture", "explain"],
+    examples: ["Explain the architecture of this project", "What does this module do?"]
+  },
+  {
+    id: "planning",
+    name: "Task Planning",
+    description: "Break down features into implementation steps and create development plans.",
+    tags: ["planning", "tasks", "breakdown"],
+    examples: ["Plan the implementation of a user auth system", "Break this feature into subtasks"]
+  }
+];
+function makeId$1() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+function now() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function jsonResponse(res, status, body) {
+  const json = JSON.stringify(body);
+  res.writeHead(status, {
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(json),
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type"
+  });
+  res.end(json);
+}
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    req.on("data", (c) => {
+      body += c.toString();
+    });
+    req.on("end", () => resolve(body));
+    req.on("error", reject);
+  });
+}
+async function ollamaChat$1(model, prompt) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      model,
+      stream: false,
+      messages: [{ role: "user", content: prompt }]
+    });
+    const options = {
+      hostname: "127.0.0.1",
+      port: 11434,
+      path: "/api/chat",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload)
+      },
+      timeout: 6e5
+      // 10 min for large models
+    };
+    const req = http__namespace.request(options, (res) => {
+      let data = "";
+      res.on("data", (c) => {
+        data += c;
+      });
+      res.on("end", () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(json.message?.content || json.error || data);
+        } catch {
+          resolve(data);
+        }
+      });
+    });
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Ollama timed out"));
+    });
+    req.write(payload);
+    req.end();
+  });
+}
+class A2AServer extends events.EventEmitter {
+  constructor(config, dataDir2) {
+    super();
+    this.config = config;
+    this.dataDir = dataDir2;
+  }
+  server = null;
+  tasks = /* @__PURE__ */ new Map();
+  logs = [];
+  log(entry) {
+    const record = { id: makeId$1(), ...entry };
+    this.logs.unshift(record);
+    if (this.logs.length > 200) this.logs.pop();
+    this.emit("log", record);
+    return record;
+  }
+  resolveModel(prompt, metadata) {
+    const skill = metadata?.skill || "";
+    if (skill && this.config.skillModelMap[skill]) {
+      return this.config.skillModelMap[skill];
+    }
+    if (prompt && prompt.trim()) {
+      const rec = modelRouter$2.selectModel(prompt, [], this.config.defaultModel);
+      if (rec.selectedModel) return rec.selectedModel;
+    }
+    return this.config.skillModelMap["default"] || this.config.defaultModel;
+  }
+  buildAgentCard() {
+    return {
+      name: "Agentic IDE",
+      description: "A local AI-powered development environment with code generation, review, analysis, and planning capabilities.",
+      url: `http://localhost:${this.config.port}`,
+      version: "1.0.0",
+      capabilities: {
+        streaming: false,
+        pushNotifications: false,
+        stateTransitionHistory: true
+      },
+      skills: AGENT_SKILLS,
+      defaultInputModes: ["text"],
+      defaultOutputModes: ["text"]
+    };
+  }
+  async handleRequest(req, res) {
+    const url$1 = new url.URL(req.url || "/", `http://localhost:${this.config.port}`);
+    if (req.method === "OPTIONS") {
+      res.writeHead(204, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+      });
+      res.end();
+      return;
+    }
+    if (req.method === "GET" && url$1.pathname === "/.well-known/agent.json") {
+      jsonResponse(res, 200, this.buildAgentCard());
+      return;
+    }
+    if (req.method === "POST" && url$1.pathname === "/a2a") {
+      let body;
+      try {
+        body = JSON.parse(await readBody(req));
+      } catch {
+        jsonResponse(res, 400, { jsonrpc: "2.0", error: { code: -32700, message: "Parse error" }, id: null });
+        return;
+      }
+      const { method, params, id } = body;
+      try {
+        let result;
+        if (method === "tasks/send") {
+          result = await this.handleTaskSend(params);
+        } else if (method === "tasks/get") {
+          result = await this.handleTaskGet(params);
+        } else if (method === "tasks/cancel") {
+          result = await this.handleTaskCancel(params);
+        } else {
+          jsonResponse(res, 200, { jsonrpc: "2.0", error: { code: -32601, message: "Method not found" }, id });
+          return;
+        }
+        jsonResponse(res, 200, { jsonrpc: "2.0", result, id });
+      } catch (err) {
+        jsonResponse(res, 200, { jsonrpc: "2.0", error: { code: -32e3, message: err.message || String(err) }, id });
+      }
+      return;
+    }
+    jsonResponse(res, 404, { error: "Not found" });
+  }
+  async handleTaskSend(params) {
+    const taskId = params?.id || makeId$1();
+    const userMessage = params?.message || { role: "user", parts: [{ type: "text", text: "" }] };
+    const metadata = params?.metadata || {};
+    const prompt = userMessage.parts.map((p) => p.text).join("\n");
+    const model = this.resolveModel(metadata);
+    const skill = metadata?.skill || "default";
+    const task = {
+      id: taskId,
+      sessionId: params?.sessionId,
+      status: { state: "working", timestamp: now() },
+      history: [userMessage],
+      metadata
+    };
+    this.tasks.set(taskId, task);
+    const logEntry = this.log({
+      direction: "inbound",
+      skill,
+      model,
+      prompt,
+      status: "working",
+      startedAt: now()
+    });
+    setImmediate(async () => {
+      try {
+        const result = await ollamaChat$1(model, prompt);
+        const agentMessage = {
+          role: "agent",
+          parts: [{ type: "text", text: result }]
+        };
+        task.status = { state: "completed", message: agentMessage, timestamp: now() };
+        task.history = [...task.history || [], agentMessage];
+        task.artifacts = [{ index: 0, parts: [{ type: "text", text: result }] }];
+        logEntry.status = "completed";
+        logEntry.result = result.slice(0, 500);
+        logEntry.finishedAt = now();
+        this.emit("taskComplete", task);
+        this.emit("log", logEntry);
+      } catch (err) {
+        task.status = { state: "failed", timestamp: now() };
+        logEntry.status = "failed";
+        logEntry.error = err.message;
+        logEntry.finishedAt = now();
+        this.emit("taskFailed", task);
+        this.emit("log", logEntry);
+      }
+    });
+    return task;
+  }
+  async handleTaskGet(params) {
+    const task = this.tasks.get(params?.id);
+    if (!task) throw new Error(`Task ${params?.id} not found`);
+    return task;
+  }
+  async handleTaskCancel(params) {
+    const task = this.tasks.get(params?.id);
+    if (!task) throw new Error(`Task ${params?.id} not found`);
+    task.status = { state: "canceled", timestamp: now() };
+    return task;
+  }
+  start() {
+    return new Promise((resolve, reject) => {
+      this.server = http__namespace.createServer((req, res) => {
+        this.handleRequest(req, res).catch((err) => {
+          jsonResponse(res, 500, { error: err.message });
+        });
+      });
+      this.server.on("error", reject);
+      this.server.listen(this.config.port, "0.0.0.0", () => {
+        resolve();
+      });
+    });
+  }
+  stop() {
+    return new Promise((resolve) => {
+      if (this.server) {
+        this.server.close(() => resolve());
+        this.server = null;
+      } else {
+        resolve();
+      }
+    });
+  }
+  isRunning() {
+    return this.server !== null && this.server.listening;
+  }
+}
+class A2AClient {
+  constructor(config) {
+    this.config = config;
+  }
+  /** Fetch the Agent Card from a remote agent */
+  async discoverAgent(baseUrl) {
+    const url$1 = new url.URL("/.well-known/agent.json", baseUrl);
+    const mod = url$1.protocol === "https:" ? https__namespace : http__namespace;
+    return new Promise((resolve, reject) => {
+      mod.get(url$1.toString(), (res) => {
+        let data = "";
+        res.on("data", (c) => {
+          data += c;
+        });
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`Agent card fetch failed: HTTP ${res.statusCode}`));
+            return;
+          }
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            reject(new Error("Invalid agent card JSON"));
+          }
+        });
+      }).on("error", reject);
+    });
+  }
+  /** Send a task to a remote A2A agent and poll until complete */
+  async sendTask(agentUrl, prompt, skill, onStatusUpdate) {
+    const taskId = makeId$1();
+    const payload = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tasks/send",
+      params: {
+        id: taskId,
+        message: { role: "user", parts: [{ type: "text", text: prompt }] },
+        metadata: skill ? { skill } : {}
+      }
+    };
+    const sendResult = await this.postRpc(agentUrl, payload);
+    let task = sendResult.result;
+    const POLL_INTERVAL = 1500;
+    const MAX_POLLS = 400;
+    let polls = 0;
+    while ((task.status.state === "working" || task.status.state === "submitted") && polls < MAX_POLLS) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL));
+      const getResult = await this.postRpc(agentUrl, {
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tasks/get",
+        params: { id: taskId }
+      });
+      task = getResult.result;
+      if (onStatusUpdate) onStatusUpdate(task);
+      polls++;
+    }
+    return task;
+  }
+  postRpc(baseUrl, payload) {
+    const url$1 = new url.URL("/a2a", baseUrl);
+    const mod = url$1.protocol === "https:" ? https__namespace : http__namespace;
+    const body = JSON.stringify(payload);
+    return new Promise((resolve, reject) => {
+      const req = mod.request(url$1, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body)
+        },
+        timeout: 3e4
+      }, (res) => {
+        let data = "";
+        res.on("data", (c) => {
+          data += c;
+        });
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`A2A RPC error: HTTP ${res.statusCode}`));
+            return;
+          }
+          try {
+            resolve(JSON.parse(data));
+          } catch {
+            reject(new Error("Invalid JSON-RPC response"));
+          }
+        });
+      });
+      req.on("error", reject);
+      req.on("timeout", () => {
+        req.destroy();
+        reject(new Error("A2A request timed out"));
+      });
+      req.write(body);
+      req.end();
+    });
+  }
+}
+class A2AManager extends events.EventEmitter {
+  constructor(dataDir2) {
+    super();
+    this.dataDir = dataDir2;
+    this.configPath = path__namespace.join(dataDir2, "a2a-config.json");
+    this.config = this.loadConfig();
+    this.server = new A2AServer(this.config, dataDir2);
+    this.client = new A2AClient(this.config);
+    this.server.on("log", (entry) => this.emit("log", entry));
+    this.server.on("taskComplete", (task) => this.emit("taskComplete", task));
+  }
+  server;
+  client;
+  configPath;
+  config;
+  outboundLogs = [];
+  loadConfig() {
+    if (!fs__namespace.existsSync(this.dataDir)) fs__namespace.mkdirSync(this.dataDir, { recursive: true });
+    if (fs__namespace.existsSync(this.configPath)) {
+      try {
+        return JSON.parse(fs__namespace.readFileSync(this.configPath, "utf-8"));
+      } catch {
+      }
+    }
+    const defaults = {
+      port: 3100,
+      defaultModel: "llama3.1:latest",
+      skillModelMap: DEFAULT_SKILL_MODEL_MAP,
+      remoteAgents: [],
+      enabled: true
+    };
+    fs__namespace.writeFileSync(this.configPath, JSON.stringify(defaults, null, 2));
+    return defaults;
+  }
+  saveConfig(config) {
+    this.config = config;
+    fs__namespace.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
+    if (this.server.isRunning()) {
+      this.server.stop().then(() => {
+        this.server = new A2AServer(this.config, this.dataDir);
+        this.server.on("log", (e) => this.emit("log", e));
+        if (this.config.enabled) this.server.start().catch(console.error);
+      });
+    }
+  }
+  async start() {
+    if (!this.config.enabled) return;
+    await this.server.start();
+  }
+  async stop() {
+    await this.server.stop();
+  }
+  getStatus() {
+    return {
+      running: this.server.isRunning(),
+      port: this.config.port,
+      defaultModel: this.config.defaultModel,
+      skillModelMap: this.config.skillModelMap,
+      remoteAgents: this.config.remoteAgents,
+      enabled: this.config.enabled
+    };
+  }
+  getLogs() {
+    return [...this.server.logs, ...this.outboundLogs].sort(
+      (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    ).slice(0, 200);
+  }
+  /** Discover a remote agent's Agent Card */
+  async discoverAgent(url2) {
+    return this.client.discoverAgent(url2);
+  }
+  /** Delegate a task to a named remote agent */
+  async delegateTask(agentName, prompt, skill, onStatusUpdate) {
+    const agentConfig = this.config.remoteAgents.find(
+      (a) => a.name === agentName && !a.disabled
+    );
+    if (!agentConfig) throw new Error(`Remote agent "${agentName}" not found or disabled`);
+    const logEntry = {
+      id: makeId$1(),
+      direction: "outbound",
+      remoteAgent: agentName,
+      skill,
+      prompt,
+      status: "working",
+      startedAt: now()
+    };
+    this.outboundLogs.unshift(logEntry);
+    if (this.outboundLogs.length > 200) this.outboundLogs.pop();
+    this.emit("log", logEntry);
+    try {
+      const task = await this.client.sendTask(agentConfig.url, prompt, skill, onStatusUpdate);
+      logEntry.status = task.status.state;
+      logEntry.result = task.artifacts?.[0]?.parts?.[0]?.text?.slice(0, 500);
+      logEntry.finishedAt = now();
+      this.emit("log", logEntry);
+      return task;
+    } catch (err) {
+      logEntry.status = "failed";
+      logEntry.error = err.message;
+      logEntry.finishedAt = now();
+      this.emit("log", logEntry);
+      throw err;
+    }
+  }
+}
+const modelRouter$1 = new ModelRouter();
+const execAsync$1 = util.promisify(child_process.exec);
+const TOOLS = [
+  {
+    name: "read_file",
+    description: "Read the contents of a file in the currently open project.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: 'File path relative to the project root, e.g. "src/app.ts"' }
+      },
+      required: ["path"]
+    }
+  },
+  {
+    name: "write_file",
+    description: "Create or overwrite a file in the currently open project.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "File path relative to the project root" },
+        content: { type: "string", description: "Full file contents to write" }
+      },
+      required: ["path", "content"]
+    }
+  },
+  {
+    name: "list_files",
+    description: "List all tracked files in the currently open project.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filter: { type: "string", description: 'Optional glob-style substring filter, e.g. ".ts"' }
+      },
+      required: []
+    }
+  },
+  {
+    name: "run_command",
+    description: "Run a shell command in the project root directory and return stdout/stderr.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: 'Shell command to execute, e.g. "npm test"' },
+        timeout: { type: "string", description: "Optional timeout in milliseconds (default 60000)" }
+      },
+      required: ["command"]
+    }
+  },
+  {
+    name: "ask_agent",
+    description: "Send a prompt to the local Ollama agent (same model selected in the IDE) and return its reply.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        prompt: { type: "string", description: "The prompt to send to the agent" },
+        model: { type: "string", description: "Optional Ollama model name override" }
+      },
+      required: ["prompt"]
+    }
+  },
+  {
+    name: "get_project_info",
+    description: "Return information about the currently open project: workspace root, open file, and active model.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+      required: []
+    }
+  }
+];
+function makeId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+function jsonRpcResult(id, result) {
+  return JSON.stringify({ jsonrpc: "2.0", id, result });
+}
+function jsonRpcError(id, code, message) {
+  return JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } });
+}
+function sseEvent(event, data) {
+  return `event: ${event}
+data: ${data}
+
+`;
+}
+function walkDir(dir) {
+  const IGNORE = /* @__PURE__ */ new Set(["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv", ".DS_Store"]);
+  const results = [];
+  const walk = (d) => {
+    let entries;
+    try {
+      entries = fs__namespace.readdirSync(d, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      if (IGNORE.has(e.name)) continue;
+      const full = path__namespace.join(d, e.name);
+      if (e.isDirectory()) walk(full);
+      else results.push(full);
+    }
+  };
+  walk(dir);
+  return results;
+}
+async function ollamaChat(model, prompt) {
+  const httpModule = require("http");
+  const payload = JSON.stringify({ model, stream: false, messages: [{ role: "user", content: prompt }] });
+  return new Promise((resolve, reject) => {
+    const req = httpModule.request(
+      {
+        hostname: "127.0.0.1",
+        port: 11434,
+        path: "/api/chat",
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
+        timeout: 6e5
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (c) => {
+          data += c;
+        });
+        res.on("end", () => {
+          try {
+            resolve(JSON.parse(data).message?.content || data);
+          } catch {
+            resolve(data);
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Ollama timed out"));
+    });
+    req.write(payload);
+    req.end();
+  });
+}
+class McpHostServer extends events.EventEmitter {
+  constructor(config) {
+    super();
+    this.config = config;
+  }
+  server = null;
+  sessions = /* @__PURE__ */ new Map();
+  // State callbacks — set by index.ts after construction
+  getWorkspaceRoot = () => null;
+  getOpenFile = () => null;
+  getActiveModel = () => "llama3.1:latest";
+  // ── Request handler ────────────────────────────────────────────────────────
+  async handle(req, res) {
+    const url2 = new URL(req.url || "/", `http://localhost:${this.config.port}`);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+    if (req.method === "GET" && url2.pathname === "/sse") {
+      const sessionId = makeId();
+      const postPath = `/message?sessionId=${sessionId}`;
+      res.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      });
+      res.write(sseEvent("endpoint", postPath));
+      const session = {
+        id: sessionId,
+        res,
+        postUrl: postPath,
+        connectedAt: (/* @__PURE__ */ new Date()).toISOString()
+      };
+      this.sessions.set(sessionId, session);
+      this.emit("clientConnected", sessionId);
+      req.on("close", () => {
+        this.sessions.delete(sessionId);
+        this.emit("clientDisconnected", sessionId);
+      });
+      return;
+    }
+    if (req.method === "POST" && url2.pathname === "/message") {
+      const sessionId = url2.searchParams.get("sessionId") || "";
+      const session = this.sessions.get(sessionId);
+      if (!session) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Session not found" }));
+        return;
+      }
+      let body;
+      try {
+        const raw = await new Promise((resolve, reject) => {
+          let d = "";
+          req.on("data", (c) => {
+            d += c;
+          });
+          req.on("end", () => resolve(d));
+          req.on("error", reject);
+        });
+        body = JSON.parse(raw);
+      } catch {
+        res.writeHead(400);
+        res.end();
+        return;
+      }
+      res.writeHead(202);
+      res.end();
+      const response = await this.handleJsonRpc(body);
+      if (response && session.res.writable) {
+        session.res.write(sseEvent("message", response));
+      }
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found" }));
+  }
+  // ── JSON-RPC dispatcher ───────────────────────────────────────────────────
+  async handleJsonRpc(body) {
+    const { method, params, id } = body;
+    try {
+      if (method === "initialize") {
+        return jsonRpcResult(id, {
+          protocolVersion: "2024-11-05",
+          capabilities: { tools: { listChanged: false } },
+          serverInfo: { name: "agentic-ide", version: "1.0.0" }
+        });
+      }
+      if (method === "notifications/initialized") return null;
+      if (method === "tools/list") {
+        return jsonRpcResult(id, { tools: TOOLS });
+      }
+      if (method === "tools/call") {
+        const toolName = params?.name || "";
+        const args = params?.arguments || {};
+        const result = await this.executeTool(toolName, args);
+        return jsonRpcResult(id, {
+          content: [{ type: "text", text: result }]
+        });
+      }
+      return jsonRpcError(id, -32601, `Method not found: ${method}`);
+    } catch (err) {
+      return jsonRpcError(id, -32e3, err.message || String(err));
+    }
+  }
+  // ── Tool execution ────────────────────────────────────────────────────────
+  async executeTool(name, args) {
+    const root = this.getWorkspaceRoot();
+    switch (name) {
+      case "read_file": {
+        if (!root) throw new Error("No project folder is open in the IDE");
+        const filePath = args.path;
+        const abs = path__namespace.isAbsolute(filePath) ? filePath : path__namespace.join(root, filePath);
+        if (!abs.startsWith(root)) throw new Error("Path must be within the project root");
+        return fs__namespace.readFileSync(abs, "utf-8");
+      }
+      case "write_file": {
+        if (!root) throw new Error("No project folder is open in the IDE");
+        const filePath = args.path;
+        const abs = path__namespace.isAbsolute(filePath) ? filePath : path__namespace.join(root, filePath);
+        if (!abs.startsWith(root)) throw new Error("Path must be within the project root");
+        fs__namespace.mkdirSync(path__namespace.dirname(abs), { recursive: true });
+        fs__namespace.writeFileSync(abs, args.content, "utf-8");
+        this.emit("fileWritten", abs);
+        return `File written: ${filePath}`;
+      }
+      case "list_files": {
+        if (!root) throw new Error("No project folder is open in the IDE");
+        const filter = args.filter || "";
+        const files = walkDir(root).map((f) => f.replace(root + path__namespace.sep, "").replace(/\\/g, "/")).filter((f) => !filter || f.includes(filter));
+        return files.join("\n");
+      }
+      case "run_command": {
+        if (!root) throw new Error("No project folder is open in the IDE");
+        const command = args.command;
+        const timeout = parseInt(args.timeout) || 6e4;
+        try {
+          const { stdout, stderr } = await execAsync$1(command, { cwd: root, timeout, encoding: "utf-8" });
+          const out = [stdout?.trim(), stderr?.trim()].filter(Boolean).join("\n--- stderr ---\n");
+          return out || "(no output)";
+        } catch (err) {
+          return `Command failed: ${err.message}
+${err.stderr || ""}`;
+        }
+      }
+      case "ask_agent": {
+        const prompt = args.prompt;
+        let model = args.model;
+        if (!model) {
+          const rec = modelRouter$1.selectModel(prompt, [], this.getActiveModel());
+          model = rec.selectedModel || this.getActiveModel();
+        }
+        return await ollamaChat(model, prompt);
+      }
+      case "get_project_info": {
+        return JSON.stringify({
+          workspaceRoot: this.getWorkspaceRoot() || null,
+          openFile: this.getOpenFile() || null,
+          activeModel: this.getActiveModel(),
+          connectedClients: this.sessions.size,
+          tools: TOOLS.map((t) => t.name)
+        }, null, 2);
+      }
+      default:
+        throw new Error(`Unknown tool: ${name}`);
+    }
+  }
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  start() {
+    return new Promise((resolve, reject) => {
+      this.server = http__namespace.createServer((req, res) => {
+        this.handle(req, res).catch((err) => {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: err.message }));
+        });
+      });
+      this.server.on("error", reject);
+      this.server.listen(this.config.port, "0.0.0.0", () => resolve());
+    });
+  }
+  stop() {
+    return new Promise((resolve) => {
+      for (const session of this.sessions.values()) {
+        try {
+          session.res.end();
+        } catch {
+        }
+      }
+      this.sessions.clear();
+      if (this.server) {
+        this.server.close(() => resolve());
+        this.server = null;
+      } else {
+        resolve();
+      }
+    });
+  }
+  isRunning() {
+    return this.server !== null && this.server.listening;
+  }
+  getStatus() {
+    return {
+      running: this.isRunning(),
+      port: this.config.port,
+      connectedClients: this.sessions.size,
+      enabled: this.config.enabled,
+      tools: TOOLS
+    };
+  }
+}
+class McpHostManager extends events.EventEmitter {
+  constructor(dataDir2) {
+    super();
+    this.dataDir = dataDir2;
+    this.configPath = path__namespace.join(dataDir2, "mcp-host-config.json");
+    this.config = this.loadConfig();
+    this.server = new McpHostServer(this.config);
+    this.server.on("clientConnected", (id) => this.emit("clientConnected", id));
+    this.server.on("clientDisconnected", (id) => this.emit("clientDisconnected", id));
+    this.server.on("fileWritten", (p) => this.emit("fileWritten", p));
+  }
+  server;
+  configPath;
+  config;
+  loadConfig() {
+    if (!fs__namespace.existsSync(this.dataDir)) fs__namespace.mkdirSync(this.dataDir, { recursive: true });
+    if (fs__namespace.existsSync(this.configPath)) {
+      try {
+        return JSON.parse(fs__namespace.readFileSync(this.configPath, "utf-8"));
+      } catch {
+      }
+    }
+    const defaults = { port: 3101, enabled: true };
+    fs__namespace.writeFileSync(this.configPath, JSON.stringify(defaults, null, 2));
+    return defaults;
+  }
+  saveConfig(cfg) {
+    this.config = cfg;
+    fs__namespace.writeFileSync(this.configPath, JSON.stringify(cfg, null, 2));
+    if (this.server.isRunning()) {
+      this.server.stop().then(() => {
+        this.server = this.buildServer();
+        if (cfg.enabled) this.server.start().catch(console.error);
+      });
+    }
+  }
+  buildServer() {
+    const s = new McpHostServer(this.config);
+    s.on("clientConnected", (id) => this.emit("clientConnected", id));
+    s.on("clientDisconnected", (id) => this.emit("clientDisconnected", id));
+    s.on("fileWritten", (p) => this.emit("fileWritten", p));
+    s.getWorkspaceRoot = this.server.getWorkspaceRoot;
+    s.getOpenFile = this.server.getOpenFile;
+    s.getActiveModel = this.server.getActiveModel;
+    return s;
+  }
+  // Called by index.ts to keep the server aware of IDE state
+  setWorkspaceRoot(root) {
+    this.server.getWorkspaceRoot = () => root;
+  }
+  setOpenFile(file) {
+    this.server.getOpenFile = () => file;
+  }
+  setActiveModel(model) {
+    this.server.getActiveModel = () => model;
+  }
+  async start() {
+    if (!this.config.enabled) return;
+    await this.server.start();
+  }
+  async stop() {
+    await this.server.stop();
+  }
+  getStatus() {
+    return this.server.getStatus();
   }
 }
 const appSupportDir$1 = path__namespace.dirname(electron.app.getPath("userData"));
@@ -884,6 +2042,8 @@ function createWindow() {
 electron.app.whenReady().then(() => {
   createWindow();
   mcpManager.startAll().catch(console.error);
+  a2aManager.start().catch(console.error);
+  mcpHostManager.start().catch(console.error);
 });
 electron.app.on("window-all-closed", () => electron.app.quit());
 electron.app.on("before-quit", () => {
@@ -897,12 +2057,15 @@ electron.app.on("before-quit", () => {
     }
   }
   mcpManager.stopAll();
+  a2aManager.stop().catch(console.error);
+  mcpHostManager.stop().catch(console.error);
 });
 electron.ipcMain.handle("open-folder", async () => {
   const result = await electron.dialog.showOpenDialog({ properties: ["openDirectory"] });
   if (result.canceled) return null;
   const dirPath = result.filePaths[0];
   mcpManager.setWorkspaceRoot(dirPath);
+  mcpHostManager.setWorkspaceRoot(dirPath);
   const chokidar = await import("chokidar");
   if (currentWatcher) currentWatcher.close();
   currentWatcher = chokidar.watch(dirPath, {
@@ -932,6 +2095,7 @@ electron.ipcMain.handle("read-dir", async (_e, dirPath) => {
 });
 electron.ipcMain.handle("read-file", async (_e, filePath) => {
   try {
+    mcpHostManager.setOpenFile(filePath);
     return await fs__namespace.promises.readFile(filePath, "utf-8");
   } catch {
     return "";
@@ -1231,6 +2395,8 @@ const appSupportDir = path__namespace.dirname(electron.app.getPath("userData"));
 const dataDir = path__namespace.join(appSupportDir, "agentic-ide");
 const sessionsPath = path__namespace.join(dataDir, "sessions.json");
 const mcpManager = new McpManager(dataDir);
+const a2aManager = new A2AManager(dataDir);
+const mcpHostManager = new McpHostManager(dataDir);
 electron.ipcMain.handle("ollama-tags", async () => {
   return new Promise((resolve) => {
     const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
@@ -1255,9 +2421,26 @@ electron.ipcMain.handle("ollama-tags", async () => {
     });
   });
 });
-electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
+function performOllamaChat(payload) {
   return new Promise((resolve, reject) => {
-    const body = JSON.stringify(payload);
+    let body;
+    try {
+      body = JSON.stringify(payload);
+    } catch (err) {
+      return reject(new Error(`Failed to serialize payload: ${err.message}`));
+    }
+    const logPath = path__namespace.join(electron.app.getPath("userData"), "chat-debug.log");
+    const entry = JSON.stringify({
+      ts: (/* @__PURE__ */ new Date()).toISOString(),
+      model: payload.model,
+      messageCount: payload.messages?.length,
+      toolCount: payload.tools?.length || 0,
+      payloadBytes: Buffer.byteLength(body),
+      messages: payload.messages,
+      tools: payload.tools
+    }, null, 2) + "\n---\n";
+    fs__namespace.promises.appendFile(logPath, entry).catch(() => {
+    });
     const options = {
       hostname: "127.0.0.1",
       port: 11434,
@@ -1267,14 +2450,15 @@ electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(body)
       },
-      timeout: 12e4
+      timeout: 6e5
+      // 10 minutes
     };
     const req = http__namespace.request(options, (res) => {
       let data = "";
       res.on("data", (chunk) => {
         data += chunk;
       });
-      res.on("end", () => resolve(data));
+      res.on("end", () => resolve({ statusCode: res.statusCode || 200, data }));
     });
     req.on("error", reject);
     req.on("timeout", () => {
@@ -1284,6 +2468,38 @@ electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
     req.write(body);
     req.end();
   });
+}
+electron.ipcMain.handle("ollama-chat", async (_e, payload) => {
+  if (payload?.model) mcpHostManager.setActiveModel(payload.model);
+  try {
+    let result = await performOllamaChat(payload);
+    if (result.statusCode === 400 && payload && payload.tools) {
+      const shouldRetry = (() => {
+        try {
+          const parsed = JSON.parse(result.data);
+          const msg = parsed.error || "";
+          return msg.includes("does not support tools") || msg.includes("does not support tool") || msg.includes("find closing '}'") || msg.includes("looks like object") || msg.includes("parse");
+        } catch {
+          return true;
+        }
+      })();
+      if (shouldRetry) {
+        const fallbackPayload = { ...payload };
+        delete fallbackPayload.tools;
+        const logPath = path__namespace.join(electron.app.getPath("userData"), "chat-debug.log");
+        fs__namespace.promises.appendFile(logPath, `[RETRY without tools at ${(/* @__PURE__ */ new Date()).toISOString()}] original error: ${result.data.slice(0, 200)}
+`).catch(() => {
+        });
+        result = await performOllamaChat(fallbackPayload);
+      }
+    }
+    if (result.statusCode >= 400) {
+      throw new Error(`Ollama error (${result.statusCode}): ${result.data}`);
+    }
+    return result.data;
+  } catch (err) {
+    throw new Error(err.message || String(err));
+  }
 });
 electron.ipcMain.handle("memory-store", async (_e, item) => {
   try {
@@ -1323,6 +2539,7 @@ electron.ipcMain.handle("load-sessions", async () => {
     }
     if (ws) {
       mcpManager.setWorkspaceRoot(ws);
+      mcpHostManager.setWorkspaceRoot(ws);
     }
     return parsed;
   } catch {
@@ -1403,14 +2620,14 @@ const MAX_BACKUPS = 100;
 electron.ipcMain.handle("save-sessions", async (_e, data) => {
   try {
     if (!fs__namespace.existsSync(dataDir)) fs__namespace.mkdirSync(dataDir, { recursive: true });
-    const now = Date.now();
-    if (fs__namespace.existsSync(sessionsPath) && now - lastBackupTime >= BACKUP_THROTTLE_MS) {
+    const now2 = Date.now();
+    if (fs__namespace.existsSync(sessionsPath) && now2 - lastBackupTime >= BACKUP_THROTTLE_MS) {
       const backupDir = path__namespace.join(dataDir, "backups");
       if (!fs__namespace.existsSync(backupDir)) fs__namespace.mkdirSync(backupDir);
       const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
       const backupPath = path__namespace.join(backupDir, `sessions.${timestamp}.json`);
       await fs__namespace.promises.copyFile(sessionsPath, backupPath);
-      lastBackupTime = now;
+      lastBackupTime = now2;
       try {
         const files = await fs__namespace.promises.readdir(backupDir);
         const backupFiles = files.filter((f) => f.startsWith("sessions.")).sort();
@@ -1524,4 +2741,101 @@ electron.ipcMain.handle("mcp-restart-server", (_e, name) => {
 });
 electron.ipcMain.handle("mcp-call-tool", (_e, serverName, toolName, args) => {
   return mcpManager.callTool(serverName, toolName, args);
+});
+electron.ipcMain.handle("a2a-get-status", () => {
+  return a2aManager.getStatus();
+});
+electron.ipcMain.handle("a2a-get-config", () => {
+  return a2aManager.config;
+});
+electron.ipcMain.handle("a2a-save-config", (_e, config) => {
+  a2aManager.saveConfig(config);
+  return true;
+});
+electron.ipcMain.handle("a2a-get-logs", () => {
+  return a2aManager.getLogs();
+});
+electron.ipcMain.handle("a2a-discover-agent", async (_e, url2) => {
+  return a2aManager.discoverAgent(url2);
+});
+electron.ipcMain.handle("a2a-delegate-task", async (_e, agentName, prompt, skill) => {
+  return a2aManager.delegateTask(agentName, prompt, skill);
+});
+electron.ipcMain.handle("mcp-host-get-status", () => {
+  return mcpHostManager.getStatus();
+});
+electron.ipcMain.handle("mcp-host-get-config", () => {
+  return mcpHostManager.config;
+});
+electron.ipcMain.handle("mcp-host-save-config", (_e, config) => {
+  mcpHostManager.saveConfig(config);
+  return true;
+});
+const modelRouter = new ModelRouter();
+async function getInstalledOllamaModels() {
+  return new Promise((resolve) => {
+    const req = http__namespace.get("http://127.0.0.1:11434/api/tags", { timeout: 5e3 }, (res) => {
+      let body = "";
+      res.on("data", (chunk) => {
+        body += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const data = JSON.parse(body);
+          const names = (data.models || []).map((m) => m.name);
+          resolve(names);
+        } catch {
+          resolve([]);
+        }
+      });
+    });
+    req.on("error", () => resolve([]));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve([]);
+    });
+  });
+}
+electron.ipcMain.handle("model-router-select", async (_e, prompt, installedModels, fallbackModel) => {
+  const models = installedModels && installedModels.length > 0 ? installedModels : await getInstalledOllamaModels();
+  return modelRouter.selectModel(prompt, models, fallbackModel);
+});
+electron.ipcMain.handle("ollama-pull-model", async (_e, modelName) => {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({ name: modelName, stream: false });
+    const req = http__namespace.request(
+      {
+        hostname: "127.0.0.1",
+        port: 11434,
+        path: "/api/pull",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(payload)
+        },
+        timeout: 6e5
+        // 10 min for model download
+      },
+      (res) => {
+        let body = "";
+        res.on("data", (chunk) => {
+          body += chunk;
+        });
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`Pull failed with status ${res.statusCode}: ${body}`));
+          } else {
+            resolve({ success: true });
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.on("timeout", () => {
+      req.destroy();
+      reject(new Error("Model pull timed out"));
+    });
+    req.write(payload);
+    req.end();
+  });
 });

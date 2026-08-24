@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "sqlite-demo": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "--db",
+        "/Users/diegofernandiini/agentic-ide/scratch/test-mcp-dir/demo.db"
+      ],
+      "disabled": true
+    },
+    "figma": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "figma-developer-mcp",
+        "--figma-api-key",
+        "YOUR_FIGMA_ACCESS_TOKEN",
+        "--stdio"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "penpot": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "penpot-mcp"
+      ],
+      "env": {
+        "PENPOT_BASE_URL": "https://design.penpot.app",
+        "PENPOT_ACCESS_TOKEN": "YOUR_PENPOT_ACCESS_TOKEN"
+      },
+      "disabled": true
+    }
+  }
+}

@@ -35,7 +35,7 @@ export interface McpServerStatus {
 export class StdioMcpClient {
   private process: ChildProcess | null = null
   private nextId = 1
-  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void }>()
+  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void; timeout?: NodeJS.Timeout }>()
   public logs: string[] = []
   public connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error' = 'disconnected'
   public tools: any[] = []
@@ -106,25 +106,43 @@ export class StdioMcpClient {
           this.log(`[Received] ${line}`)
           try {
             const msg = JSON.parse(line)
-            if (msg.id !== undefined) {
+            if (msg.method) {
+              if (msg.method === 'workspace/roots' || msg.method === 'roots/list') {
+                const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null
+                const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path.basename(rootPath) }] : []
+                if (msg.id !== undefined) {
+                  this.sendRaw({
+                    jsonrpc: '2.0',
+                    id: msg.id,
+                    result: { roots }
+                  })
+                }
+              } else if (msg.method === 'ping') {
+                if (msg.id !== undefined) {
+                  this.sendRaw({
+                    jsonrpc: '2.0',
+                    id: msg.id,
+                    result: {}
+                  })
+                }
+              } else if (msg.id !== undefined) {
+                this.sendRaw({
+                  jsonrpc: '2.0',
+                  id: msg.id,
+                  error: { code: -32601, message: `Method not found: ${msg.method}` }
+                })
+              }
+            } else if (msg.id !== undefined) {
               const pending = this.pendingRequests.get(msg.id)
               if (pending) {
                 this.pendingRequests.delete(msg.id)
+                if (pending.timeout) clearTimeout(pending.timeout)
                 if (msg.error) {
                   pending.reject(msg.error)
                 } else {
                   pending.resolve(msg.result)
                 }
               }
-            } else if (msg.method === 'workspace/roots' || msg.method === 'roots/list') {
-              const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null
-              const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path.basename(rootPath) }] : []
-              const response = {
-                jsonrpc: '2.0',
-                id: msg.id,
-                result: { roots }
-              }
-              this.sendRaw(response)
             }
           } catch (err: any) {
             this.log(`[Error Parsing JSON-RPC] ${err.message}`)
@@ -135,6 +153,7 @@ export class StdioMcpClient {
           this.connectionStatus = 'disconnected'
           this.log(`Server process exited. Code: ${code}, Signal: ${signal}`)
           for (const pending of this.pendingRequests.values()) {
+            if (pending.timeout) clearTimeout(pending.timeout)
             pending.reject(new Error(`Server process exited with code ${code}`))
           }
           this.pendingRequests.clear()
@@ -156,7 +175,7 @@ export class StdioMcpClient {
               clientInfo: { name: 'agentic-ide', version: '1.0.0' }
             })
 
-            this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`)
+            this.log(`Received initialize response. Protocol Version: ${initResult?.protocolVersion}`)
             this.sendNotification('notifications/initialized', {})
             this.log(`Sent initialized notification. Fetching tools...`)
 
@@ -195,7 +214,7 @@ export class StdioMcpClient {
     this.process.stdin.write(str + '\n')
   }
 
-  sendRequest(method: string, params: any): Promise<any> {
+  sendRequest(method: string, params: any, timeoutMs: number = 30000): Promise<any> {
     return new Promise((resolve, reject) => {
       if (this.connectionStatus === 'error' && !this.process) {
         return reject(new Error(`Server is in error state: ${this.errorMsg}`))
@@ -205,7 +224,15 @@ export class StdioMcpClient {
       }
       const id = this.nextId++
       const payload = { jsonrpc: '2.0', id, method, params }
-      this.pendingRequests.set(id, { resolve, reject })
+
+      const timer = setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id)
+          reject(new Error(`Request ${method} (id ${id}) timed out after ${timeoutMs}ms`))
+        }
+      }, timeoutMs)
+
+      this.pendingRequests.set(id, { resolve, reject, timeout: timer })
       this.sendRaw(payload)
     })
   }
@@ -227,6 +254,7 @@ export class StdioMcpClient {
     }
     this.connectionStatus = 'disconnected'
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout)
       pending.reject(new Error(`Client disconnected`))
     }
     this.pendingRequests.clear()
@@ -238,7 +266,7 @@ export class StdioMcpClient {
 // ============================================================================
 export class SseMcpClient {
   private nextId = 1
-  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void }>()
+  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void; timeout?: NodeJS.Timeout }>()
   public logs: string[] = []
   public connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error' = 'disconnected'
   public tools: any[] = []
@@ -338,6 +366,20 @@ export class SseMcpClient {
     this.disconnect()
   }
 
+  private sendNotificationResponse(id: any, result: any) {
+    if (!this.postUrl) return
+    this.postMessage({ jsonrpc: '2.0', id, result }).catch((err) => {
+      this.log(`[Error sending RPC response] ${err.message}`)
+    })
+  }
+
+  private sendNotificationError(id: any, code: number, message: string) {
+    if (!this.postUrl) return
+    this.postMessage({ jsonrpc: '2.0', id, error: { code, message } }).catch((err) => {
+      this.log(`[Error sending RPC error] ${err.message}`)
+    })
+  }
+
   private async handleEvent(event: string, data: string, resolveConnect: () => void, rejectConnect: (err: any) => void) {
     this.log(`[Event: ${event}] ${data}`)
     if (event === 'endpoint') {
@@ -355,8 +397,8 @@ export class SseMcpClient {
           clientInfo: { name: 'agentic-ide', version: '1.0.0' }
         })
 
-        this.log(`Received initialize response. Protocol Version: ${initResult.protocolVersion}`)
-        this.sendNotification('notifications/initialized', {})
+        this.log(`Received initialize response. Protocol Version: ${initResult?.protocolVersion}`)
+        await this.sendNotification('notifications/initialized', {})
         this.log('Sent initialized notification. Fetching tools...')
 
         const toolsResult = await this.sendRequest('tools/list', {})
@@ -370,10 +412,25 @@ export class SseMcpClient {
     } else if (event === 'message') {
       try {
         const msg = JSON.parse(data)
-        if (msg.id !== undefined) {
+        if (msg.method) {
+          if (msg.method === 'workspace/roots' || msg.method === 'roots/list') {
+            const rootPath = this.getWorkspaceRoot ? this.getWorkspaceRoot() : null
+            const roots = rootPath ? [{ uri: `file://${rootPath}`, name: path.basename(rootPath) }] : []
+            if (msg.id !== undefined) {
+              this.sendNotificationResponse(msg.id, { roots })
+            }
+          } else if (msg.method === 'ping') {
+            if (msg.id !== undefined) {
+              this.sendNotificationResponse(msg.id, {})
+            }
+          } else if (msg.id !== undefined) {
+            this.sendNotificationError(msg.id, -32601, `Method not found: ${msg.method}`)
+          }
+        } else if (msg.id !== undefined) {
           const pending = this.pendingRequests.get(msg.id)
           if (pending) {
             this.pendingRequests.delete(msg.id)
+            if (pending.timeout) clearTimeout(pending.timeout)
             if (msg.error) {
               pending.reject(msg.error)
             } else {
@@ -387,28 +444,40 @@ export class SseMcpClient {
     }
   }
 
-  async sendRequest(method: string, params: any): Promise<any> {
+  sendRequest(method: string, params: any, timeoutMs: number = 30000): Promise<any> {
     if (!this.postUrl) {
-      throw new Error('Message endpoint not established yet')
+      return Promise.reject(new Error('Message endpoint not established yet'))
     }
     const id = this.nextId++
     const payload = { jsonrpc: '2.0', id, method, params }
 
     return new Promise((resolve, reject) => {
-      this.pendingRequests.set(id, { resolve, reject })
+      const timer = setTimeout(() => {
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id)
+          reject(new Error(`Request ${method} (id ${id}) timed out after ${timeoutMs}ms`))
+        }
+      }, timeoutMs)
+
+      this.pendingRequests.set(id, { resolve, reject, timeout: timer })
       this.postMessage(payload).catch((err) => {
-        this.pendingRequests.delete(id)
+        if (this.pendingRequests.has(id)) {
+          this.pendingRequests.delete(id)
+          clearTimeout(timer)
+        }
         reject(err)
       })
     })
   }
 
-  sendNotification(method: string, params: any) {
+  async sendNotification(method: string, params: any): Promise<void> {
     if (!this.postUrl) return
     const payload = { jsonrpc: '2.0', method, params }
-    this.postMessage(payload).catch((err) => {
+    try {
+      await this.postMessage(payload)
+    } catch (err: any) {
       this.log(`[Error sending notification] ${err.message}`)
-    })
+    }
   }
 
   private async postMessage(payload: any): Promise<void> {
@@ -458,6 +527,7 @@ export class SseMcpClient {
     }
     this.connectionStatus = 'disconnected'
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout)
       pending.reject(new Error('Client disconnected'))
     }
     this.pendingRequests.clear()
@@ -479,7 +549,7 @@ export class SseMcpClient {
 // ============================================================================
 export class StreamableHttpMcpClient {
   private nextId = 1
-  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void }>()
+  private pendingRequests = new Map<number, { resolve: (val: any) => void; reject: (err: any) => void; timeout?: NodeJS.Timeout }>()
   public logs: string[] = []
   public connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'error' = 'disconnected'
   public tools: any[] = []
@@ -533,10 +603,10 @@ export class StreamableHttpMcpClient {
     }
   }
 
-  sendRequest(method: string, params: any): Promise<any> {
+  sendRequest(method: string, params: any, timeoutMs: number = 30000): Promise<any> {
     const id = this.nextId++
     const payload = { jsonrpc: '2.0', id, method, params }
-    return this.post(payload, id)
+    return this.post(payload, id, timeoutMs)
   }
 
   async sendNotification(method: string, params: any): Promise<void> {
@@ -544,7 +614,7 @@ export class StreamableHttpMcpClient {
     await this.post(payload, null)
   }
 
-  private post(payload: any, requestId: number | null): Promise<any> {
+  private post(payload: any, requestId: number | null, timeoutMs: number = 30000): Promise<any> {
     return new Promise((resolve, reject) => {
       const parsedUrl = new URL(this.url)
       const requestModule = parsedUrl.protocol === 'https:' ? https : http
@@ -561,13 +631,31 @@ export class StreamableHttpMcpClient {
         headers['Mcp-Session-Id'] = this.sessionId
       }
 
+      let settled = false
+      const timer = requestId !== null ? setTimeout(() => {
+        if (!settled) {
+          settled = true
+          try { req.destroy() } catch {}
+          reject(new Error(`Request timed out after ${timeoutMs}ms`))
+        }
+      }, timeoutMs) : null
+
+      const done = (err?: any, result?: any) => {
+        if (settled) return
+        settled = true
+        if (timer) clearTimeout(timer)
+        if (err) reject(err)
+        else resolve(result)
+      }
+
       this.log(`[POST] ${body}`)
       this.log(`[Headers] ${JSON.stringify(this.extraHeaders)}`)
 
       const req = requestModule.request(parsedUrl, { method: 'POST', headers }, (res) => {
-        // Capture session ID from first response
-        if (!this.sessionId && res.headers['mcp-session-id']) {
-          this.sessionId = res.headers['mcp-session-id'] as string
+        // Capture session ID (case-insensitive search)
+        const sessionHeaderKey = Object.keys(res.headers).find(k => k.toLowerCase() === 'mcp-session-id')
+        if (sessionHeaderKey && res.headers[sessionHeaderKey]) {
+          this.sessionId = res.headers[sessionHeaderKey] as string
           this.log(`Session ID: ${this.sessionId}`)
         }
 
@@ -580,7 +668,7 @@ export class StreamableHttpMcpClient {
               : res.statusCode === 400
               ? ' — payload rejected; check JSON-RPC structure.'
               : ''
-            reject(new Error(`HTTP ${res.statusCode}${hint} Body: ${errBody.slice(0, 200)}`))
+            done(new Error(`HTTP ${res.statusCode}${hint} Body: ${errBody.slice(0, 200)}`))
           })
           return
         }
@@ -602,13 +690,13 @@ export class StreamableHttpMcpClient {
                   const msg = JSON.parse(data)
                   this.log(`[SSE data] ${data}`)
                   if (requestId !== null && msg.id === requestId) {
-                    if (msg.error) reject(msg.error)
-                    else resolve(msg.result)
+                    if (msg.error) done(msg.error)
+                    else done(null, msg.result)
                   } else if (msg.id !== undefined) {
-                    // Response to a different in-flight request
                     const pending = this.pendingRequests.get(msg.id)
                     if (pending) {
                       this.pendingRequests.delete(msg.id)
+                      if (pending.timeout) clearTimeout(pending.timeout)
                       if (msg.error) pending.reject(msg.error)
                       else pending.resolve(msg.result)
                     }
@@ -618,27 +706,32 @@ export class StreamableHttpMcpClient {
             }
           })
           res.on('end', () => {
-            if (requestId === null) resolve(undefined)
+            if (requestId === null) done()
+            else if (!settled) done(new Error('SSE stream ended before response was received'))
           })
         } else {
-          // Plain JSON response
+          // Plain JSON response or empty body
           let raw = ''
           res.on('data', (c) => { raw += c.toString() })
           res.on('end', () => {
             this.log(`[Response] ${raw.slice(0, 500)}`)
-            if (requestId === null) { resolve(undefined); return }
+            if (requestId === null) { done(); return }
+            if (!raw || raw.trim() === '') {
+              done(null, undefined)
+              return
+            }
             try {
               const msg = JSON.parse(raw)
-              if (msg.error) reject(msg.error)
-              else resolve(msg.result)
+              if (msg.error) done(msg.error)
+              else done(null, msg.result)
             } catch (e: any) {
-              reject(new Error(`Failed to parse response: ${e.message}. Body: ${raw.slice(0, 200)}`))
+              done(new Error(`Failed to parse response: ${e.message}. Body: ${raw.slice(0, 200)}`))
             }
           })
         }
       })
 
-      req.on('error', reject)
+      req.on('error', (err) => done(err))
       req.write(body)
       req.end()
     })
@@ -662,6 +755,7 @@ export class StreamableHttpMcpClient {
     this.connectionStatus = 'disconnected'
     this.sessionId = null
     for (const pending of this.pendingRequests.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout)
       pending.reject(new Error('Client disconnected'))
     }
     this.pendingRequests.clear()
@@ -702,38 +796,12 @@ export class McpManager {
             args: ["-y", "@modelcontextprotocol/server-sqlite", "--db", path.join(this.dataDir, "demo.db")],
             disabled: true
           },
-          // ----------------------------------------------------------------
-          // Figma MCP Bridge
-          // Runs a local stdio bridge that translates MCP tool calls into
-          // Figma REST API requests.
-          //
-          // Setup:
-          //   1. Get a personal access token from Figma account settings.
-          //   2. Replace YOUR_FIGMA_ACCESS_TOKEN below with that value.
-          //   3. Set "disabled": false to activate.
-          //
-          // Bridge used: @modelcontextprotocol/server-figma (community)
-          // Docs: https://github.com/GLips/Figma-Context-MCP
-          // ----------------------------------------------------------------
           "figma": {
             command: "npx",
             args: ["-y", "figma-developer-mcp", "--figma-api-key", "YOUR_FIGMA_ACCESS_TOKEN", "--stdio"],
             env: {},
             disabled: true
           },
-          // ----------------------------------------------------------------
-          // Penpot MCP Bridge
-          // Runs a local stdio bridge that translates MCP tool calls into
-          // Penpot REST API requests.
-          //
-          // Setup:
-          //   1. Start a Penpot instance (local or cloud: https://penpot.app).
-          //   2. Generate an access token in your Penpot profile settings.
-          //   3. Replace the env values below and set "disabled": false.
-          //
-          // Bridge used: penpot-mcp (community)
-          // Docs: https://github.com/montevive/penpot-mcp
-          // ----------------------------------------------------------------
           "penpot": {
             command: "npx",
             args: ["-y", "penpot-mcp"],
@@ -869,6 +937,9 @@ export class McpManager {
     const client = this.servers.get(serverName)
     if (!client) {
       throw new Error(`MCP Server ${serverName} is not running or connected`)
+    }
+    if (client.connectionStatus !== 'connected') {
+      throw new Error(`MCP Server ${serverName} is not connected (status: ${client.connectionStatus})`)
     }
     return client.sendRequest('tools/call', { name: toolName, arguments: args })
   }

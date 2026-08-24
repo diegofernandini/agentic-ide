@@ -7,6 +7,9 @@ import { promisify } from 'util'
 import * as http from 'http'
 import type { FSWatcher } from 'chokidar'
 import { McpManager } from './mcp'
+import { A2AManager } from './a2a'
+import { McpHostManager } from './mcp-server'
+import { ModelRouter } from './model-router'
 
 const execFileAsync = promisify(execFile)
 const execAsync = promisify(exec)
@@ -42,6 +45,8 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow()
   mcpManager.startAll().catch(console.error)
+  a2aManager.start().catch(console.error)
+  mcpHostManager.start().catch(console.error)
 })
 app.on('window-all-closed', () => app.quit())
 
@@ -54,6 +59,8 @@ app.on('before-quit', () => {
     try { term.kill() } catch {}
   }
   mcpManager.stopAll()
+  a2aManager.stop().catch(console.error)
+  mcpHostManager.stop().catch(console.error)
 })
 
 interface FileNode {
@@ -68,6 +75,7 @@ ipcMain.handle('open-folder', async () => {
   if (result.canceled) return null
   const dirPath = result.filePaths[0]
   mcpManager.setWorkspaceRoot(dirPath)
+  mcpHostManager.setWorkspaceRoot(dirPath)
   
   const chokidar = await import('chokidar')
   if (currentWatcher) currentWatcher.close()
@@ -100,6 +108,7 @@ ipcMain.handle('read-dir', async (_e, dirPath: string) => {
 
 ipcMain.handle('read-file', async (_e, filePath: string) => {
   try {
+    mcpHostManager.setOpenFile(filePath)
     return await fs.promises.readFile(filePath, 'utf-8')
   } catch {
     return ''
@@ -422,6 +431,8 @@ const dataDir = path.join(appSupportDir, 'agentic-ide')
 const sessionsPath = path.join(dataDir, 'sessions.json')
 
 const mcpManager = new McpManager(dataDir)
+const a2aManager = new A2AManager(dataDir)
+const mcpHostManager = new McpHostManager(dataDir)
 
 // Ollama proxy — runs in main process (Node.js) to avoid renderer CORS/security restrictions
 ipcMain.handle('ollama-tags', async () => {
@@ -444,9 +455,27 @@ ipcMain.handle('ollama-tags', async () => {
   })
 })
 
-ipcMain.handle('ollama-chat', async (_e, payload: object) => {
-  return new Promise<string>((resolve, reject) => {
-    const body = JSON.stringify(payload)
+function performOllamaChat(payload: any): Promise<{ statusCode: number; data: string }> {
+  return new Promise((resolve, reject) => {
+    let body: string
+    try {
+      body = JSON.stringify(payload)
+    } catch (err: any) {
+      return reject(new Error(`Failed to serialize payload: ${err.message}`))
+    }
+
+    // Write debug log to Application Support
+    const logPath = path.join(app.getPath('userData'), 'chat-debug.log')
+    const entry = JSON.stringify({
+      ts: new Date().toISOString(),
+      model: payload.model,
+      messageCount: payload.messages?.length,
+      toolCount: payload.tools?.length || 0,
+      payloadBytes: Buffer.byteLength(body),
+      messages: payload.messages,
+      tools: payload.tools
+    }, null, 2) + '\n---\n'
+    fs.promises.appendFile(logPath, entry).catch(() => {})
     const options = {
       hostname: '127.0.0.1',
       port: 11434,
@@ -456,18 +485,58 @@ ipcMain.handle('ollama-chat', async (_e, payload: object) => {
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(body)
       },
-      timeout: 120000
+      timeout: 600000  // 10 minutes
     }
     const req = http.request(options, (res) => {
       let data = ''
       res.on('data', chunk => { data += chunk })
-      res.on('end', () => resolve(data))
+      res.on('end', () => resolve({ statusCode: res.statusCode || 200, data }))
     })
     req.on('error', reject)
     req.on('timeout', () => { req.destroy(); reject(new Error('Ollama request timed out')) })
     req.write(body)
     req.end()
   })
+}
+
+ipcMain.handle('ollama-chat', async (_e, payload: any) => {
+  // Track the active model for the MCP host server
+  if (payload?.model) mcpHostManager.setActiveModel(payload.model)
+  try {
+    let result = await performOllamaChat(payload)
+    
+    // Fallback: If model doesn't support tools, retry without tools
+    if (result.statusCode === 400 && payload && payload.tools) {
+      const shouldRetry = (() => {
+        try {
+          const parsed = JSON.parse(result.data)
+          const msg: string = parsed.error || ''
+          // Retry on: tools not supported, or JSON parse errors caused by tool schemas
+          return msg.includes('does not support tools')
+            || msg.includes('does not support tool')
+            || msg.includes("find closing '}'")
+            || msg.includes('looks like object')
+            || msg.includes('parse')
+        } catch { return true }
+      })()
+      if (shouldRetry) {
+        const fallbackPayload = { ...payload }
+        delete fallbackPayload.tools
+        // Log the retry
+        const logPath = path.join(app.getPath('userData'), 'chat-debug.log')
+        fs.promises.appendFile(logPath, `[RETRY without tools at ${new Date().toISOString()}] original error: ${result.data.slice(0, 200)}\n`).catch(() => {})
+        result = await performOllamaChat(fallbackPayload)
+      }
+    }
+    
+    if (result.statusCode >= 400) {
+      throw new Error(`Ollama error (${result.statusCode}): ${result.data}`)
+    }
+    
+    return result.data
+  } catch (err: any) {
+    throw new Error(err.message || String(err))
+  }
 })
 
 // Memory service (simple file-backed)
@@ -502,6 +571,7 @@ ipcMain.handle('load-sessions', async () => {
     }
     if (ws) {
       mcpManager.setWorkspaceRoot(ws)
+      mcpHostManager.setWorkspaceRoot(ws)
     }
     return parsed
   } catch {}
@@ -737,3 +807,109 @@ ipcMain.handle('mcp-restart-server', (_e, name) => {
 ipcMain.handle('mcp-call-tool', (_e, serverName, toolName, args) => {
   return mcpManager.callTool(serverName, toolName, args)
 })
+
+// ─── A2A IPC Handlers ─────────────────────────────────────────────────────────
+
+ipcMain.handle('a2a-get-status', () => {
+  return a2aManager.getStatus()
+})
+
+ipcMain.handle('a2a-get-config', () => {
+  return a2aManager.config
+})
+
+ipcMain.handle('a2a-save-config', (_e, config) => {
+  a2aManager.saveConfig(config)
+  return true
+})
+
+ipcMain.handle('a2a-get-logs', () => {
+  return a2aManager.getLogs()
+})
+
+ipcMain.handle('a2a-discover-agent', async (_e, url: string) => {
+  return a2aManager.discoverAgent(url)
+})
+
+ipcMain.handle('a2a-delegate-task', async (_e, agentName: string, prompt: string, skill?: string) => {
+  return a2aManager.delegateTask(agentName, prompt, skill)
+})
+
+// ─── MCP Host Server IPC Handlers ────────────────────────────────────────────
+
+ipcMain.handle('mcp-host-get-status', () => {
+  return mcpHostManager.getStatus()
+})
+
+ipcMain.handle('mcp-host-get-config', () => {
+  return mcpHostManager.config
+})
+
+ipcMain.handle('mcp-host-save-config', (_e, config) => {
+  mcpHostManager.saveConfig(config)
+  return true
+})
+
+// ─── Model Router & Ollama Model Management Handlers ─────────────────────────
+
+const modelRouter = new ModelRouter()
+
+async function getInstalledOllamaModels(): Promise<string[]> {
+  return new Promise<string[]>((resolve) => {
+    const req = http.get('http://127.0.0.1:11434/api/tags', { timeout: 5000 }, (res) => {
+      let body = ''
+      res.on('data', chunk => { body += chunk })
+      res.on('end', () => {
+        try {
+          const data = JSON.parse(body)
+          const names: string[] = (data.models || []).map((m: { name: string }) => m.name)
+          resolve(names)
+        } catch {
+          resolve([])
+        }
+      })
+    })
+    req.on('error', () => resolve([]))
+    req.on('timeout', () => { req.destroy(); resolve([]) })
+  })
+}
+
+ipcMain.handle('model-router-select', async (_e, prompt: string, installedModels?: string[], fallbackModel?: string) => {
+  const models = installedModels && installedModels.length > 0 ? installedModels : await getInstalledOllamaModels()
+  return modelRouter.selectModel(prompt, models, fallbackModel)
+})
+
+ipcMain.handle('ollama-pull-model', async (_e, modelName: string) => {
+  return new Promise<{ success: boolean; message?: string }>((resolve, reject) => {
+    const payload = JSON.stringify({ name: modelName, stream: false })
+    const req = http.request(
+      {
+        hostname: '127.0.0.1',
+        port: 11434,
+        path: '/api/pull',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        },
+        timeout: 600000 // 10 min for model download
+      },
+      (res) => {
+        let body = ''
+        res.on('data', (chunk) => { body += chunk })
+        res.on('end', () => {
+          if (res.statusCode && res.statusCode >= 400) {
+            reject(new Error(`Pull failed with status ${res.statusCode}: ${body}`))
+          } else {
+            resolve({ success: true })
+          }
+        })
+      }
+    )
+    req.on('error', reject)
+    req.on('timeout', () => { req.destroy(); reject(new Error('Model pull timed out')) })
+    req.write(payload)
+    req.end()
+  })
+})
+

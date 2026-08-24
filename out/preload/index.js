@@ -63,5 +63,19 @@ electron.contextBridge.exposeInMainWorld("api", {
   },
   offFileChanged: () => {
     electron.ipcRenderer.removeAllListeners("file-changed");
-  }
+  },
+  // ── A2A Protocol ──────────────────────────────────────────────────────────
+  a2aGetStatus: () => electron.ipcRenderer.invoke("a2a-get-status"),
+  a2aGetConfig: () => electron.ipcRenderer.invoke("a2a-get-config"),
+  a2aSaveConfig: (config) => electron.ipcRenderer.invoke("a2a-save-config", config),
+  a2aGetLogs: () => electron.ipcRenderer.invoke("a2a-get-logs"),
+  a2aDiscoverAgent: (url) => electron.ipcRenderer.invoke("a2a-discover-agent", url),
+  a2aDelegateTask: (agentName, prompt, skill) => electron.ipcRenderer.invoke("a2a-delegate-task", agentName, prompt, skill),
+  // ── MCP Host Server ───────────────────────────────────────────────────────
+  mcpHostGetStatus: () => electron.ipcRenderer.invoke("mcp-host-get-status"),
+  mcpHostGetConfig: () => electron.ipcRenderer.invoke("mcp-host-get-config"),
+  mcpHostSaveConfig: (config) => electron.ipcRenderer.invoke("mcp-host-save-config", config),
+  // ── Model Router & Model Management ─────────────────────────────────────
+  modelRouterSelect: (prompt, installedModels, fallbackModel) => electron.ipcRenderer.invoke("model-router-select", prompt, installedModels, fallbackModel),
+  ollamaPullModel: (modelName) => electron.ipcRenderer.invoke("ollama-pull-model", modelName)
 });

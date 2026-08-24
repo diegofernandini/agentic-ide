@@ -410,8 +410,9 @@ describe('PBT Preservation: propiedades universales para inputs no afectados por
         fc.stringMatching(/^\/[a-zA-Z0-9_-]+$/),
         // filePath relativo
         fc.stringMatching(/^[a-zA-Z][a-zA-Z0-9/_-]*\.[a-z]{2,4}$/),
-        // contenido del archivo
-        fc.string({ minLength: 1, maxLength: 200 }),
+        // Contenido sin backticks — backtick characters corrupt the triple-fence regex
+        // used by buildWriteBlock to wrap content (the closing ``` would be consumed).
+        fc.stringMatching(/^[^`]{1,200}$/),
         async (rootPath, filePath, content) => {
           const onWriteFile = vi.fn()
           const openFile = `${rootPath}/${filePath}`

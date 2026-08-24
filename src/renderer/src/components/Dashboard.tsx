@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Folder, HardDrive, History, BarChart3, Database, Play, Square, Trash2, Edit3, Plus, Check, AlertCircle, Terminal, Settings, RefreshCw } from 'lucide-react'
+import { Folder, HardDrive, History, BarChart3, Database, Play, Square, Trash2, Edit3, Plus, Check, AlertCircle, Terminal, Settings, RefreshCw, Share2, Radio, Send, Globe } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -29,7 +29,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ models, sessions = [], rootPath }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<'project' | 'historical' | 'mcp'>('project')
+  const [activeTab, setActiveTab] = useState<'project' | 'historical' | 'mcp' | 'a2a' | 'mcp-host'>('project')
   const [historicalSessions, setHistoricalSessions] = useState<Session[]>([])
   const [loadingHistorical, setLoadingHistorical] = useState(false)
   const [mcpServers, setMcpServers] = useState<any[]>([])
@@ -47,6 +47,26 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
   const [showJsonEditor, setShowJsonEditor] = useState(false)
   const [jsonEditorValue, setJsonEditorValue] = useState('')
   const [jsonEditorError, setJsonEditorError] = useState('')
+
+  // A2A state
+  const [a2aStatus, setA2aStatus] = useState<any>(null)
+  const [a2aLogs, setA2aLogs] = useState<any[]>([])
+  const [a2aConfig, setA2aConfig] = useState<any>(null)
+  const [a2aDiscoverUrl, setA2aDiscoverUrl] = useState('')
+  const [a2aDiscoverResult, setA2aDiscoverResult] = useState<any>(null)
+  const [a2aDiscovering, setA2aDiscovering] = useState(false)
+  const [a2aDelegateAgent, setA2aDelegateAgent] = useState('')
+  const [a2aDelegatePrompt, setA2aDelegatePrompt] = useState('')
+  const [a2aDelegateSkill, setA2aDelegateSkill] = useState('default')
+  const [a2aDelegating, setA2aDelegating] = useState(false)
+  const [a2aDelegateResult, setA2aDelegateResult] = useState<any>(null)
+  const [a2aNewAgentName, setA2aNewAgentName] = useState('')
+  const [a2aNewAgentUrl, setA2aNewAgentUrl] = useState('')
+  const [a2aShowAddAgent, setA2aShowAddAgent] = useState(false)
+
+  // MCP Host Server state
+  const [mcpHostStatus, setMcpHostStatus] = useState<any>(null)
+  const [mcpHostConfig, setMcpHostConfig] = useState<any>(null)
   const [expandedLogs, setExpandedLogs] = useState<Record<string, boolean>>({})
   const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>({})
 
@@ -83,6 +103,44 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
       return () => clearInterval(interval)
     }
     return undefined
+  }, [activeTab])
+
+  // A2A polling
+  useEffect(() => {
+    if (activeTab !== 'a2a') return
+    const fetchA2A = async () => {
+      try {
+        const [status, logs, cfg] = await Promise.all([
+          (window.api as any).a2aGetStatus(),
+          (window.api as any).a2aGetLogs(),
+          (window.api as any).a2aGetConfig()
+        ])
+        setA2aStatus(status)
+        setA2aLogs(logs || [])
+        setA2aConfig(cfg)
+      } catch {}
+    }
+    fetchA2A()
+    const iv = setInterval(fetchA2A, 3000)
+    return () => clearInterval(iv)
+  }, [activeTab])
+
+  // MCP Host Server polling
+  useEffect(() => {
+    if (activeTab !== 'mcp-host') return
+    const fetch = async () => {
+      try {
+        const [status, cfg] = await Promise.all([
+          (window.api as any).mcpHostGetStatus(),
+          (window.api as any).mcpHostGetConfig()
+        ])
+        setMcpHostStatus(status)
+        setMcpHostConfig(cfg)
+      } catch {}
+    }
+    fetch()
+    const iv = setInterval(fetch, 3000)
+    return () => clearInterval(iv)
   }, [activeTab])
 
   const handleEditServer = (name: string, srvConfig: any) => {
@@ -446,7 +504,11 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
                 ? 'Real-time administrative overview of performance and token usage for the current workspace folder.'
                 : activeTab === 'historical'
                 ? 'Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects.'
-                : 'Connect and manage Model Context Protocol (MCP) servers to extend the agent with custom database, search, and browser tools.'
+                : activeTab === 'mcp'
+                ? 'Connect and manage Model Context Protocol (MCP) servers to extend the agent with custom database, search, and browser tools.'
+                : activeTab === 'a2a'
+                ? 'Agent-to-Agent (A2A) protocol — expose this IDE as an agent, discover remote agents, and delegate tasks between agents.'
+                : 'MCP Host Server — expose this IDE as an MCP tool provider so external agents (Claude Desktop, Cursor, etc.) can call its tools.'
               }
             </p>
           </div>
@@ -520,6 +582,32 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
             >
               <Database size={14} />
               MCP Connections
+            </button>
+            <button
+              onClick={() => setActiveTab('a2a')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
+                borderRadius: '6px', fontSize: '13px', fontWeight: 500,
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', border: 'none',
+                background: activeTab === 'a2a' ? '#007acc' : 'transparent',
+                color: activeTab === 'a2a' ? '#fff' : '#888', cursor: 'pointer'
+              }}
+            >
+              <Share2 size={14} />
+              A2A Protocol
+            </button>
+            <button
+              onClick={() => setActiveTab('mcp-host')}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px',
+                borderRadius: '6px', fontSize: '13px', fontWeight: 500,
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)', border: 'none',
+                background: activeTab === 'mcp-host' ? '#007acc' : 'transparent',
+                color: activeTab === 'mcp-host' ? '#fff' : '#888', cursor: 'pointer'
+              }}
+            >
+              <HardDrive size={14} />
+              MCP Host
             </button>
           </div>
         </header>
@@ -1506,6 +1594,388 @@ export default function Dashboard({ models, sessions = [], rootPath }: Dashboard
               )}
             </div>
           </>
+        )}
+
+        {/* ── A2A PROTOCOL TAB ────────────────────────────────────── */}
+        {activeTab === 'a2a' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+            {/* Server Status Card */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <Radio size={15} style={{ color: '#4ec9b0' }} />
+                  Local A2A Server
+                </h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                    background: a2aStatus?.running ? 'rgba(78,201,176,0.15)' : 'rgba(255,100,100,0.15)',
+                    color: a2aStatus?.running ? '#4ec9b0' : '#f88'
+                  }}>
+                    {a2aStatus?.running ? '● Running' : '○ Stopped'}
+                  </span>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                {[
+                  { label: 'Port', value: a2aStatus?.port ?? 3100 },
+                  { label: 'Default Model', value: a2aStatus?.defaultModel ?? 'llama3.1:latest' },
+                  { label: 'Agent Card', value: `http://localhost:${a2aStatus?.port ?? 3100}/.well-known/agent.json` },
+                  { label: 'RPC Endpoint', value: `http://localhost:${a2aStatus?.port ?? 3100}/a2a` }
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                    <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
+                    <div style={{ fontSize: '12px', color: '#ccc', fontFamily: 'monospace', wordBreak: 'break-all' }}>{String(value)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Skill → Model Routing */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+                <Settings size={15} style={{ color: '#007acc' }} />
+                Skill → Model Routing
+              </h2>
+              <p style={{ fontSize: '12px', color: '#666', margin: '0 0 14px 0', lineHeight: 1.5 }}>
+                Incoming A2A tasks carry an optional <code style={{ color: '#4fc3f7' }}>skill</code> tag. The table below maps each skill to the local Ollama model that handles it.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {Object.entries(a2aStatus?.skillModelMap ?? {
+                  'code-generation': 'qwen2.5-coder:14b',
+                  'code-review': 'qwen2.5-coder:14b',
+                  'analysis': 'qwen2.5:14b',
+                  'chat': 'llama3.1:latest',
+                  'planning': 'llama3.1:latest',
+                  'default': 'llama3.1:latest'
+                }).map(([skill, model]) => (
+                  <div key={skill} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '12px', color: '#aaa', fontFamily: 'monospace' }}>{skill}</span>
+                    <span style={{ fontSize: '12px', color: '#4fc3f7', fontFamily: 'monospace' }}>{String(model)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Remote Agents */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <Globe size={15} style={{ color: '#ce9178' }} />
+                  Remote Agents
+                </h2>
+                <button
+                  onClick={() => setA2aShowAddAgent(v => !v)}
+                  style={{ padding: '6px 14px', background: '#007acc', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Plus size={12} /> Add Agent
+                </button>
+              </div>
+
+              {a2aShowAddAgent && (
+                <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '16px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>Agent Name</label>
+                      <input type="text" placeholder="e.g. design-agent" value={a2aNewAgentName} onChange={e => setA2aNewAgentName(e.target.value)}
+                        style={{ width: '100%', padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px', boxSizing: 'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>Base URL</label>
+                      <input type="text" placeholder="e.g. http://192.168.1.5:3100" value={a2aNewAgentUrl} onChange={e => setA2aNewAgentUrl(e.target.value)}
+                        style={{ width: '100%', padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px', boxSizing: 'border-box' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button onClick={() => setA2aShowAddAgent(false)}
+                      style={{ padding: '6px 14px', background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button onClick={async () => {
+                      if (!a2aNewAgentName.trim() || !a2aNewAgentUrl.trim()) return
+                      if (!a2aConfig) return
+                      const newConfig = { ...a2aConfig, remoteAgents: [...(a2aConfig.remoteAgents || []), { name: a2aNewAgentName.trim(), url: a2aNewAgentUrl.trim() }] }
+                      await (window.api as any).a2aSaveConfig(newConfig)
+                      setA2aConfig(newConfig)
+                      setA2aNewAgentName('')
+                      setA2aNewAgentUrl('')
+                      setA2aShowAddAgent(false)
+                    }}
+                      style={{ padding: '6px 16px', background: '#007acc', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                      Save Agent
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {(a2aConfig?.remoteAgents || []).length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center', color: '#555', fontSize: '13px' }}>
+                  No remote agents configured. Add an agent URL to start delegating tasks.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(a2aConfig?.remoteAgents || []).map((agent: any) => (
+                    <div key={agent.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{agent.name}</div>
+                        <div style={{ fontSize: '11px', color: '#666', fontFamily: 'monospace', marginTop: '2px' }}>{agent.url}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={async () => {
+                          setA2aDiscoverUrl(agent.url)
+                          setA2aDiscovering(true)
+                          setA2aDiscoverResult(null)
+                          try {
+                            const card = await (window.api as any).a2aDiscoverAgent(agent.url)
+                            setA2aDiscoverResult(card)
+                          } catch (e: any) {
+                            setA2aDiscoverResult({ error: e.message })
+                          } finally { setA2aDiscovering(false) }
+                        }}
+                          style={{ padding: '5px 10px', background: 'rgba(0,122,204,0.15)', border: '1px solid rgba(0,122,204,0.3)', borderRadius: '5px', color: '#4fc3f7', fontSize: '11px', cursor: 'pointer' }}>
+                          Discover
+                        </button>
+                        <button onClick={async () => {
+                          if (!a2aConfig) return
+                          const newConfig = { ...a2aConfig, remoteAgents: a2aConfig.remoteAgents.filter((a: any) => a.name !== agent.name) }
+                          await (window.api as any).a2aSaveConfig(newConfig)
+                          setA2aConfig(newConfig)
+                        }}
+                          style={{ padding: '5px 10px', background: 'rgba(255,80,80,0.1)', border: '1px solid rgba(255,80,80,0.2)', borderRadius: '5px', color: '#f88', fontSize: '11px', cursor: 'pointer' }}>
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {a2aDiscoverResult && (
+                <div style={{ marginTop: '14px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px', padding: '14px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Agent Card</div>
+                  {a2aDiscoverResult.error
+                    ? <div style={{ color: '#f88', fontSize: '12px' }}>{a2aDiscoverResult.error}</div>
+                    : <>
+                        <div style={{ fontSize: '13px', color: '#fff', fontWeight: 600 }}>{a2aDiscoverResult.name}</div>
+                        <div style={{ fontSize: '12px', color: '#999', margin: '4px 0 10px' }}>{a2aDiscoverResult.description}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {(a2aDiscoverResult.skills || []).map((s: any) => (
+                            <span key={s.id} style={{ padding: '3px 10px', background: 'rgba(0,122,204,0.15)', border: '1px solid rgba(0,122,204,0.25)', borderRadius: '12px', fontSize: '11px', color: '#4fc3f7' }}>{s.name}</span>
+                          ))}
+                        </div>
+                      </>
+                  }
+                </div>
+              )}
+            </div>
+
+            {/* Delegate Task */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+                <Send size={15} style={{ color: '#007acc' }} />
+                Delegate Task to Remote Agent
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>Target Agent</label>
+                    <select value={a2aDelegateAgent} onChange={e => setA2aDelegateAgent(e.target.value)}
+                      style={{ width: '100%', padding: '7px 10px', background: 'rgba(30,30,30,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px' }}>
+                      <option value="">— select agent —</option>
+                      {(a2aConfig?.remoteAgents || []).filter((a: any) => !a.disabled).map((a: any) => (
+                        <option key={a.name} value={a.name}>{a.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>Skill</label>
+                    <select value={a2aDelegateSkill} onChange={e => setA2aDelegateSkill(e.target.value)}
+                      style={{ width: '100%', padding: '7px 10px', background: 'rgba(30,30,30,0.9)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px' }}>
+                      {['default', 'code-generation', 'code-review', 'analysis', 'planning', 'chat', 'design'].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '5px' }}>Prompt</label>
+                  <textarea value={a2aDelegatePrompt} onChange={e => setA2aDelegatePrompt(e.target.value)} rows={3} placeholder="What should the remote agent do?"
+                    style={{ width: '100%', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button disabled={!a2aDelegateAgent || !a2aDelegatePrompt.trim() || a2aDelegating}
+                    onClick={async () => {
+                      setA2aDelegating(true)
+                      setA2aDelegateResult(null)
+                      try {
+                        const task = await (window.api as any).a2aDelegateTask(a2aDelegateAgent, a2aDelegatePrompt, a2aDelegateSkill)
+                        setA2aDelegateResult(task)
+                      } catch (e: any) {
+                        setA2aDelegateResult({ error: e.message })
+                      } finally { setA2aDelegating(false) }
+                    }}
+                    style={{ padding: '8px 20px', background: a2aDelegating ? '#555' : '#007acc', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: a2aDelegating ? 'not-allowed' : 'pointer' }}>
+                    {a2aDelegating ? 'Delegating…' : 'Delegate Task'}
+                  </button>
+                </div>
+                {a2aDelegateResult && (
+                  <div style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${a2aDelegateResult.error ? 'rgba(255,80,80,0.3)' : 'rgba(78,201,176,0.3)'}`, borderRadius: '8px', padding: '14px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: '#888', marginBottom: '6px' }}>
+                      {a2aDelegateResult.error ? 'Error' : `Result · ${a2aDelegateResult.status?.state}`}
+                    </div>
+                    <pre style={{ fontSize: '12px', color: a2aDelegateResult.error ? '#f88' : '#d4d4d4', whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0 }}>
+                      {a2aDelegateResult.error
+                        ? a2aDelegateResult.error
+                        : a2aDelegateResult.artifacts?.[0]?.parts?.[0]?.text || JSON.stringify(a2aDelegateResult.status, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Task Log */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+                <BarChart3 size={15} style={{ color: '#888' }} />
+                Task Log
+              </h2>
+              {a2aLogs.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: '#555', fontSize: '13px' }}>No tasks yet. Inbound tasks (from remote agents) and outbound tasks (delegated by this IDE) will appear here.</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '400px', overflowY: 'auto' }}>
+                  {a2aLogs.map((log: any) => (
+                    <div key={log.id} style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: `3px solid ${log.direction === 'inbound' ? '#4ec9b0' : '#007acc'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: log.direction === 'inbound' ? '#4ec9b0' : '#4fc3f7' }}>{log.direction}</span>
+                        {log.remoteAgent && <span style={{ fontSize: '11px', color: '#888' }}>↔ {log.remoteAgent}</span>}
+                        {log.skill && <span style={{ fontSize: '10px', padding: '1px 7px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', color: '#999' }}>{log.skill}</span>}
+                        {log.model && <span style={{ fontSize: '10px', color: '#666', fontFamily: 'monospace' }}>{log.model}</span>}
+                        <span style={{ marginLeft: 'auto', fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: 600,
+                          background: log.status === 'completed' ? 'rgba(78,201,176,0.15)' : log.status === 'failed' ? 'rgba(255,80,80,0.15)' : 'rgba(255,200,0,0.1)',
+                          color: log.status === 'completed' ? '#4ec9b0' : log.status === 'failed' ? '#f88' : '#fc0' }}>{log.status}</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#bbb', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.prompt}</div>
+                      {log.error && <div style={{ fontSize: '11px', color: '#f88', marginTop: '3px' }}>{log.error}</div>}
+                      {log.finishedAt && <div style={{ fontSize: '10px', color: '#555', marginTop: '3px' }}>{new Date(log.startedAt).toLocaleTimeString()} → {new Date(log.finishedAt).toLocaleTimeString()}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ── MCP HOST SERVER TAB ─────────────────────────────────── */}
+        {activeTab === 'mcp-host' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+            {/* Status card */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <HardDrive size={15} style={{ color: '#4ec9b0' }} />
+                  MCP Host Server
+                </h2>
+                <span style={{
+                  padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+                  background: mcpHostStatus?.running ? 'rgba(78,201,176,0.15)' : 'rgba(255,100,100,0.15)',
+                  color: mcpHostStatus?.running ? '#4ec9b0' : '#f88'
+                }}>
+                  {mcpHostStatus?.running ? '● Running' : '○ Stopped'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                {[
+                  { label: 'SSE Endpoint', value: `http://localhost:${mcpHostStatus?.port ?? 3101}/sse` },
+                  { label: 'Connected Clients', value: mcpHostStatus?.connectedClients ?? 0 },
+                  { label: 'Tools Available', value: mcpHostStatus?.tools?.length ?? 6 },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '12px' }}>
+                    <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>{label}</div>
+                    <div style={{ fontSize: '12px', color: '#ccc', fontFamily: 'monospace', wordBreak: 'break-all' }}>{String(value)}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Claude Desktop / mcp.json config snippet */}
+              <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '8px', padding: '14px' }}>
+                <div style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Connect from Claude Desktop / any MCP client
+                </div>
+                <pre style={{ margin: 0, fontSize: '12px', color: '#d4d4d4', fontFamily: 'ui-monospace, monospace' }}>{JSON.stringify({
+                  mcpServers: {
+                    'agentic-ide': {
+                      url: `http://localhost:${mcpHostStatus?.port ?? 3101}/sse`
+                    }
+                  }
+                }, null, 2)}</pre>
+              </div>
+            </div>
+
+            {/* Tools list */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+                <Settings size={15} style={{ color: '#007acc' }} />
+                Exposed Tools
+              </h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {(mcpHostStatus?.tools ?? [
+                  { name: 'read_file',        description: 'Read a file from the open project' },
+                  { name: 'write_file',        description: 'Create or overwrite a file in the open project' },
+                  { name: 'list_files',        description: 'List all tracked files in the open project' },
+                  { name: 'run_command',       description: 'Execute a shell command in the project root' },
+                  { name: 'ask_agent',         description: 'Send a prompt to the local Ollama agent and return the reply' },
+                  { name: 'get_project_info',  description: 'Return workspace root, open file, and active model info' }
+                ]).map((tool: any) => (
+                  <div key={tool.name} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                    <code style={{ fontSize: '12px', color: '#4fc3f7', fontFamily: 'ui-monospace, monospace', whiteSpace: 'nowrap', marginTop: '1px' }}>{tool.name}</code>
+                    <span style={{ fontSize: '12px', color: '#888', lineHeight: 1.5 }}>{tool.description}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Enable / Port config */}
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '20px' }}>
+              <h2 style={{ fontSize: '15px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 16px 0' }}>
+                <Settings size={15} style={{ color: '#888' }} />
+                Configuration
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', alignItems: 'end' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Port</label>
+                  <input
+                    type="number"
+                    defaultValue={mcpHostConfig?.port ?? 3101}
+                    onBlur={async e => {
+                      const port = parseInt(e.target.value)
+                      if (!port || port < 1024 || port > 65535) return
+                      const newCfg = { ...(mcpHostConfig || {}), port }
+                      await (window.api as any).mcpHostSaveConfig(newCfg)
+                      setMcpHostConfig(newCfg)
+                    }}
+                    style={{ width: '100%', padding: '7px 10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', color: '#fff', fontSize: '12px', boxSizing: 'border-box' as const }}
+                  />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <label style={{ fontSize: '13px', color: '#ccc', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={mcpHostConfig?.enabled ?? true}
+                      onChange={async e => {
+                        const newCfg = { ...(mcpHostConfig || {}), enabled: e.target.checked }
+                        await (window.api as any).mcpHostSaveConfig(newCfg)
+                        setMcpHostConfig(newCfg)
+                      }}
+                    />
+                    Enable MCP Host Server
+                  </label>
+                </div>
+              </div>
+            </div>
+
+          </div>
         )}
       </div>
 

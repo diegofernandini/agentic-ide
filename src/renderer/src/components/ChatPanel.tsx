@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Plus, History, Trash2, Paperclip, Send, Zap, Copy, FilePlus, FileDiff, CheckCircle2, RotateCcw, X, Bot, ClipboardList, Bug, Layers, MessageCircleQuestion, Database } from 'lucide-react'
+import { filterMcpToolsForIntent } from './mcpToolFiltering'
+import { buildMcpToolGuidance } from './mcpToolGuidance'
+import { parsePlainTextToolCalls } from './ollamaToolCallParsing'
 
 interface ExecuteAction {
   command: string
@@ -73,6 +76,16 @@ declare global {
         query: (q: string, scope?: string, limit?: number) => Promise<any[]>
         all: () => Promise<any[]>
       }
+      modelRouterSelect?: (prompt: string, installedModels?: string[], fallbackModel?: string) => Promise<{
+        taskCategory: string
+        confidence: number
+        selectedModel: string
+        suitabilityScore: number
+        isOptimal: boolean
+        recommendedModelToPull?: string
+        reason: string
+      }>
+      ollamaPullModel?: (modelName: string) => Promise<{ success: boolean; message?: string }>
     }
   }
 }
@@ -502,6 +515,10 @@ export default function ChatPanel({
   const autopilotRef = useRef(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  // Keep a ref to the latest model value so async send() always uses the current selection
+  const modelRef = useRef(model)
+  useEffect(() => { modelRef.current = model }, [model])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [historySearch, setHistorySearch] = useState('')
@@ -521,6 +538,41 @@ export default function ChatPanel({
     return new Set()
   })
 
+  const [routerRec, setRouterRec] = useState<{
+    taskCategory: string
+    selectedModel: string
+    suitabilityScore: number
+    isOptimal: boolean
+    recommendedModelToPull?: string
+    reason: string
+  } | null>(null)
+  const [pullingModel, setPullingModel] = useState<string | null>(null)
+  const [pullStatus, setPullStatus] = useState<string | null>(null)
+
+  const handlePullModel = async (modelName: string) => {
+    setPullingModel(modelName)
+    setPullStatus(`Pulling free open model '${modelName}' from Ollama library...`)
+    try {
+      if (window.api?.ollamaPullModel) {
+        await window.api.ollamaPullModel(modelName)
+        setPullStatus(`Successfully pulled '${modelName}'!`)
+        if (window.api?.ollamaTags) {
+          const updated = await window.api.ollamaTags()
+          if (updated && updated.length > 0) {
+            onModelChange(modelName)
+          }
+        }
+      }
+    } catch (err: any) {
+      setPullStatus(`Pull failed: ${err.message}`)
+    } finally {
+      setTimeout(() => {
+        setPullingModel(null)
+        setPullStatus(null)
+      }, 5000)
+    }
+  }
+
   useEffect(() => {
     _dbg('alwaysAllowedCommands -> save')
     localStorage.setItem('alwaysAllowedCommands', JSON.stringify(Array.from(alwaysAllowedCommands)))
@@ -531,17 +583,37 @@ export default function ChatPanel({
       try {
         const stored = await window.api.loadSessions()
         if (Array.isArray(stored) && stored.length > 0) {
-          setSessions(stored)
+          // Sanitize loaded sessions — strip any messages with corrupt tool_call arguments
+          // (malformed JSON in arguments causes Ollama 400 errors on every subsequent send)
+          const sanitizeSessions = (sessions: Session[]): Session[] => {
+            return sessions.map(s => ({
+              ...s,
+              messages: (s.messages || []).filter((msg: any) => {
+                if (!msg.tool_calls) return true
+                return msg.tool_calls.every((tc: any) => {
+                  try {
+                    if (tc.function?.arguments && typeof tc.function.arguments === 'string') {
+                      JSON.parse(tc.function.arguments)
+                    }
+                    return true
+                  } catch {
+                    return false // drop messages with corrupt tool_call arguments
+                  }
+                })
+              })
+            }))
+          }
+          setSessions(sanitizeSessions(stored))
           setActiveId(stored[0].id)
         }
       } catch (e) {
         console.warn('Failed to load stored sessions:', e)
       }
+      // Set the guard AFTER the async load completes so the save effect
+      // never fires before sessions are restored from disk
+      hasLoadedRef.current = true
     }
     loadStoredSessions()
-
-    // Mark that initial load is complete. App now centrally loads persisted sessions.
-    hasLoadedRef.current = true
   }, [])
 
   useEffect(() => {
@@ -716,7 +788,7 @@ export default function ChatPanel({
     .filter(s => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(historySearch.toLowerCase()))
     .sort((a, b) => b.lastActive - a.lastActive)
 
-  async function buildSystemPrompt(mode?: AgentMode): Promise<string> {
+  async function buildSystemPrompt(activeMcpTools: any[], mode?: AgentMode): Promise<string> {
     const sessionMode = mode ?? activeSession.mode
     let sys = `You are an expert agentic coding assistant.`
 
@@ -870,6 +942,8 @@ Rules:
     sys += `\n\n⚠️ PROJECT ROOT (all file paths MUST be relative to this directory): ${rootPath}`
     sys += `\n✅ CORRECT: \`\`\`write:src/app.py  — resolves to ${rootPath}/src/app.py`
     sys += `\n❌ WRONG: absolute paths, paths starting with /tmp, or paths outside the project root`
+    sys += buildMcpToolGuidance(activeMcpTools)
+
     try {
       const IGNORE = ['node_modules', '.git', 'dist', 'out', '.next', '__pycache__', '.venv', 'venv']
       const files = await window.api.listFiles(rootPath)
@@ -925,7 +999,8 @@ Rules:
   }
 
   async function send(overrideHistory?: Message[]) {
-    if (!overrideHistory && (!input.trim() || loading || !model)) return
+    let currentModel = modelRef.current || model
+    if (!overrideHistory && (!input.trim() || loading || !currentModel)) return
     
     let history: Message[]
     if (overrideHistory) {
@@ -968,7 +1043,28 @@ Rules:
       console.warn('Failed to retrieve MCP tools:', e)
     }
 
-    const ollamaTools = activeMcpTools.map(t => ({
+    const latestUserText = [...history].reverse().find(msg => msg.role === 'user')?.content || ''
+    
+    // Dynamic Model Router & Task Evaluation
+    if (window.api?.modelRouterSelect) {
+      try {
+        const fallback = currentModel === 'auto' ? models[0] : currentModel
+        const rec = await window.api.modelRouterSelect(latestUserText, models, fallback)
+        if (rec) {
+          setRouterRec(rec)
+          if (currentModel === 'auto' || !currentModel) {
+            currentModel = rec.selectedModel || fallback || 'llama3.1:latest'
+          }
+        }
+      } catch (e) {
+        console.warn('Model router error:', e)
+      }
+    }
+    if (currentModel === 'auto') currentModel = models[0] || 'llama3.1:latest'
+
+    const { tools: filteredMcpTools } = filterMcpToolsForIntent(activeMcpTools, latestUserText)
+
+    const ollamaTools = filteredMcpTools.map(t => ({
       type: 'function',
       function: {
         name: `mcp__${t.serverName}__${t.name}`,
@@ -978,10 +1074,36 @@ Rules:
     }))
 
     try {
-      const systemPrompt = await buildSystemPrompt()
+      const systemPrompt = await buildSystemPrompt(filteredMcpTools)
+      // Build clean message history — strip any messages with corrupt tool_call arguments
+      // (malformed JSON in arguments causes Ollama 400 "can't find closing '}'" errors)
+      const sanitizeMessages = (msgs: any[]): any[] => {
+        return msgs.filter(msg => {
+          if (!msg.tool_calls) return true
+          // Validate every tool_call argument is parseable JSON
+          return msg.tool_calls.every((tc: any) => {
+            try {
+              if (tc.function?.arguments) {
+                const args = tc.function.arguments
+                if (typeof args === 'string') JSON.parse(args)
+              }
+              return true
+            } catch {
+              return false // drop messages with corrupt tool_calls
+            }
+          })
+        }).map(msg => {
+          // Also sanitize content — ensure no raw control characters
+          if (msg.content && typeof msg.content === 'string') {
+            return { ...msg, content: msg.content.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '') }
+          }
+          return msg
+        })
+      }
+
       const chatMessages = [
         { role: 'system', content: systemPrompt },
-        ...history.map(msg => {
+        ...sanitizeMessages(history.map(msg => {
           if (msg.role === 'user') {
             if (msg.images) {
               return {
@@ -1006,7 +1128,7 @@ Rules:
             }
           }
           return { role: msg.role, content: msg.content }
-        })
+        }))
       ]
 
       let assistantText = ''
@@ -1162,7 +1284,7 @@ Rules:
       }
 
       const chatPayload: any = {
-        model,
+        model: currentModel,
         stream: true,
         messages: chatMessages
       }
@@ -1171,7 +1293,7 @@ Rules:
       }
 
       if (window.api && typeof window.api.ollamaChat === 'function') {
-        const body = await window.api.ollamaChat(chatPayload)
+        const body = await ollamaChatWithTimeout(chatPayload, 120000)
         const text = String(body || '')
         await processBodyLines(text)
 
@@ -1179,11 +1301,15 @@ Rules:
           await tryParseFullJson(text)
         }
       } else {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 120000)
         const res = await fetch('http://localhost:11434/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(chatPayload)
+          body: JSON.stringify(chatPayload),
+          signal: controller.signal
         })
+        clearTimeout(timeout)
         if (!res.ok) throw new Error(`Ollama error: ${res.status}`)
 
         const reader = res.body!.getReader()
@@ -1222,7 +1348,23 @@ Rules:
         }
       }
 
-      // If tool calls were requested, execute them and trigger agent loop recursively
+      // Some Ollama models emit tool calls as plain-text JSON instead of
+      // structured `tool_calls`, often only after the stream finishes.
+      if (toolCalls.length === 0) {
+        const plainTextToolCalls = parsePlainTextToolCalls(assistantText)
+        if (plainTextToolCalls.length > 0) {
+          toolCalls.push(...plainTextToolCalls.map(tc => ({
+            id: `call_${Math.random().toString(36).substr(2, 9)}`,
+            type: 'function',
+            function: {
+              name: tc.name,
+              arguments: tc.arguments
+            }
+          })))
+          assistantText = ''
+        }
+      }
+
       if (toolCalls.length > 0) {
         const resolvedToolCalls = toolCalls.map(tc => {
           let parsedArgs = {}
@@ -1249,9 +1391,9 @@ Rules:
           const updated = [...prev]
           updated[updated.length - 1] = {
             role: 'assistant',
-            content: assistantText,
+            content: assistantText || `Using ${resolvedToolCalls.length} tool${resolvedToolCalls.length === 1 ? '' : 's'}...`,
             tool_calls: resolvedToolCalls,
-            model,
+            model: currentModel,
             elapsed: Math.round((Date.now() - startTimeRef.current) / 1000)
           }
           return updated
@@ -1259,7 +1401,7 @@ Rules:
 
         const nextMessages = [...history, {
           role: 'assistant',
-          content: assistantText,
+          content: assistantText || `Using ${resolvedToolCalls.length} tool${resolvedToolCalls.length === 1 ? '' : 's'}...`,
           tool_calls: resolvedToolCalls
         } as Message]
 
@@ -1281,7 +1423,7 @@ Rules:
             } as Message])
 
             try {
-              const res = await window.api.mcpCallTool(serverName, toolName, args)
+              const res = await callMcpToolWithTimeout(serverName, toolName, args)
               resultText = typeof res === 'string' ? res : JSON.stringify(res, null, 2)
               try {
                 const parsedRes = typeof res === 'string' ? JSON.parse(res) : res
@@ -1294,6 +1436,11 @@ Rules:
                   resultText = parsedRes.text
                 }
               } catch {}
+              // Truncate very large tool results to avoid overwhelming the model context
+              const MAX_TOOL_RESULT = 12000
+              if (resultText.length > MAX_TOOL_RESULT) {
+                resultText = resultText.slice(0, MAX_TOOL_RESULT) + `\n\n[... truncated ${resultText.length - MAX_TOOL_RESULT} chars ...]`
+              }
             } catch (err: any) {
               resultText = `Error calling tool: ${err.message || String(err)}`
             }
@@ -1318,6 +1465,9 @@ Rules:
       }
 
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000)
+      if (!assistantText.trim() && streamWrites.length === 0 && streamExecutes.length === 0) {
+        assistantText = 'The model returned no visible text output.'
+      }
       const blocks = (streamWrites.length > 0 || streamExecutes.length > 0) 
         ? { writes: streamWrites, executes: streamExecutes } 
         : await processBlocks(assistantText)
@@ -1331,7 +1481,7 @@ Rules:
           elapsed,
           promptTokens,
           responseTokens,
-          model
+          model: currentModel
         }
         return updated
       })
@@ -1613,6 +1763,58 @@ Rules:
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
+  function injectQuickPrompt(prompt: string) {
+    setInput(prompt)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  async function callMcpToolWithTimeout(serverName: string, toolName: string, args: any, timeoutMs = 90000) {
+    return await Promise.race([
+      window.api.mcpCallTool(serverName, toolName, args),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Tool ${serverName}.${toolName} timed out after ${Math.round(timeoutMs / 1000)}s`)), timeoutMs)
+      })
+    ])
+  }
+
+  async function ollamaChatWithTimeout(chatPayload: any, timeoutMs = 120000) {
+    if (!window.api || typeof window.api.ollamaChat !== 'function') return ''
+    return await Promise.race([
+      window.api.ollamaChat(chatPayload),
+      new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error(`Ollama request timed out after ${Math.round(timeoutMs / 1000)}s`)),
+          timeoutMs
+        )
+      })
+    ])
+  }
+
+  function buildVisualPrompt(kind: 'diagram' | 'screen' | 'current-file') {
+    if (kind === 'diagram') {
+      if (openFile && rootPath) {
+        const rel = openFile.replace(rootPath + '/', '')
+        return `Generate a diagram directly from my IDE using Figma. Prefer the Figma diagram-generation workflow, not raw file data tools.\n\nUse the current file \`${rel}\` as context and create a user flow or architecture-style diagram based on its functionality. Summarize the result briefly after creating it.`
+      }
+      return `Generate a diagram directly from my IDE using Figma. Prefer the Figma diagram-generation workflow, not raw file data tools.\n\nCreate a user flow or architecture-style diagram from the current project context, and summarize the result briefly after creating it.`
+    }
+
+    if (kind === 'screen') {
+      if (openFile && rootPath) {
+        const rel = openFile.replace(rootPath + '/', '')
+        return `Create a screen directly from my IDE using Figma. Prefer Figma screen/design-generation tools, not raw file data tools.\n\nUse the current file \`${rel}\` as the source of truth. Reuse the design system if available, then generate the most appropriate screen or component and summarize what you created.`
+      }
+      return `Create a screen directly from my IDE using Figma. Prefer Figma screen/design-generation tools, not raw file data tools.\n\nUse the current workspace context, reuse the design system if available, and summarize what you created.`
+    }
+
+    if (openFile && rootPath) {
+      const rel = openFile.replace(rootPath + '/', '')
+      return `Send the current file to Figma from my IDE.\n\nUse \`${rel}\` as the source and decide whether it should become a screen or a diagram. Prefer the correct Figma generation workflow, reuse the design system if available, and summarize the result briefly.`
+    }
+
+    return `Send the current project context to Figma from my IDE.\n\nDecide whether the best output is a screen or a diagram, use the correct Figma generation workflow, and summarize the result briefly.`
+  }
+
   function isModelMultimodal(name: string): boolean {
     if (!name) return false
     const n = name.toLowerCase()
@@ -1782,6 +1984,55 @@ Rules:
       </div>
 
       <div className="chat-input-container">
+        {routerRec && !routerRec.isOptimal && routerRec.recommendedModelToPull && (
+          <div style={{
+            background: 'rgba(255, 170, 0, 0.1)',
+            border: '1px solid rgba(255, 170, 0, 0.3)',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            margin: '8px 12px 0 12px',
+            fontSize: '12px',
+            color: '#ffcc00',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px'
+          }}>
+            <span>
+              💡 <strong>Task Router ({routerRec.taskCategory}):</strong> Installed models scored {routerRec.suitabilityScore}/100. Recommended free open model: <code>{routerRec.recommendedModelToPull}</code>
+            </span>
+            <button
+              onClick={() => handlePullModel(routerRec.recommendedModelToPull!)}
+              disabled={pullingModel !== null}
+              style={{
+                background: '#007acc',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {pullingModel === routerRec.recommendedModelToPull ? 'Pulling...' : `Pull ${routerRec.recommendedModelToPull}`}
+            </button>
+          </div>
+        )}
+        {pullStatus && (
+          <div style={{
+            background: 'rgba(0, 122, 204, 0.15)',
+            border: '1px solid rgba(0, 122, 204, 0.3)',
+            borderRadius: '6px',
+            padding: '6px 12px',
+            margin: '4px 12px 0 12px',
+            fontSize: '11px',
+            color: '#4fc3f7'
+          }}>
+            ℹ️ {pullStatus}
+          </div>
+        )}
         {rootPath && (
           <div className="chat-workspace-indicator">
             <span className="chat-workspace-dot" />
@@ -1815,6 +2066,7 @@ Rules:
             </div>
           )}
           <textarea
+            ref={inputRef}
             className="chat-input"
             placeholder="Ask anything, @ to mention..."
             value={input}
@@ -1824,6 +2076,41 @@ Rules:
             rows={Math.min(10, input.split('\n').length || 1)}
             style={{ height: 'auto' }}
           />
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+            <button
+              className="chat-action-btn"
+              onClick={() => injectQuickPrompt(buildVisualPrompt('diagram'))}
+              data-tooltip="Generate Diagram: Create a flow or architecture diagram in Figma"
+              data-tooltip-position="top"
+              type="button"
+              style={{ width: 'auto', padding: '0 10px', gap: '6px' }}
+            >
+              <Layers size={13} strokeWidth={1.8} />
+              <span>Diagram</span>
+            </button>
+            <button
+              className="chat-action-btn"
+              onClick={() => injectQuickPrompt(buildVisualPrompt('screen'))}
+              data-tooltip="Create Screen: Generate a screen or component in Figma"
+              data-tooltip-position="top"
+              type="button"
+              style={{ width: 'auto', padding: '0 10px', gap: '6px' }}
+            >
+              <FilePlus size={13} strokeWidth={1.8} />
+              <span>Screen</span>
+            </button>
+            <button
+              className="chat-action-btn"
+              onClick={() => injectQuickPrompt(buildVisualPrompt('current-file'))}
+              data-tooltip="Send Current File: Use the open file as the source for a Figma visual"
+              data-tooltip-position="top"
+              type="button"
+              style={{ width: 'auto', padding: '0 10px', gap: '6px' }}
+            >
+              <FileDiff size={13} strokeWidth={1.8} />
+              <span>{openFile ? 'From Current File' : 'From Workspace'}</span>
+            </button>
+          </div>
           <div className="chat-input-footer">
             <button className="chat-action-btn" onClick={() => fileInputRef.current?.click()} data-tooltip="Attach File: Select and upload a file or image" data-tooltip-position="top">
               <Paperclip size={14} strokeWidth={1.8} />
@@ -1845,6 +2132,7 @@ Rules:
               value={model}
               onChange={(e) => onModelChange(e.target.value)}
             >
+              <option value="auto">✨ Auto-Select (Smart Router)</option>
               {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
 

@@ -7093,20 +7093,20 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$C = [
+const __iconNode$I = [
   ["path", { d: "M8 3 4 7l4 4", key: "9rb6wj" }],
   ["path", { d: "M4 7h16", key: "6tx8e3" }],
   ["path", { d: "m16 21 4-4-4-4", key: "siv7j2" }],
   ["path", { d: "M20 17H4", key: "h6l3hr" }]
 ];
-const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$C);
+const ArrowLeftRight = createLucideIcon("arrow-left-right", __iconNode$I);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$B = [
+const __iconNode$H = [
   [
     "path",
     { d: "M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1", key: "ezmyqa" }
@@ -7119,49 +7119,62 @@ const __iconNode$B = [
     }
   ]
 ];
-const Braces = createLucideIcon("braces", __iconNode$B);
+const Braces = createLucideIcon("braces", __iconNode$H);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$A = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$A);
+const __iconNode$G = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$G);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$z = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
-const ChevronLeft = createLucideIcon("chevron-left", __iconNode$z);
+const __iconNode$F = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$F);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$y = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$y);
+const __iconNode$E = [["path", { d: "m15 18-6-6 6-6", key: "1wnfg3" }]];
+const ChevronLeft = createLucideIcon("chevron-left", __iconNode$E);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$x = [
+const __iconNode$D = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$D);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$C = [
   ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const CircleCheck = createLucideIcon("circle-check", __iconNode$x);
+const CircleCheck = createLucideIcon("circle-check", __iconNode$C);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$w = [
+const __iconNode$B = [
   ["rect", { width: "8", height: "4", x: "8", y: "2", rx: "1", ry: "1", key: "tgr4d6" }],
   [
     "path",
@@ -7175,7 +7188,96 @@ const __iconNode$w = [
   ["path", { d: "M8 11h.01", key: "1dfujw" }],
   ["path", { d: "M8 16h.01", key: "18s6g9" }]
 ];
-const ClipboardList = createLucideIcon("clipboard-list", __iconNode$w);
+const ClipboardList = createLucideIcon("clipboard-list", __iconNode$B);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$A = [
+  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
+  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
+  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+];
+const Database = createLucideIcon("database", __iconNode$A);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$z = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
+  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }]
+];
+const FileCode = createLucideIcon("file-code", __iconNode$z);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$y = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M9 10h6", key: "9gxzsh" }],
+  ["path", { d: "M12 13V7", key: "h0r20n" }],
+  ["path", { d: "M9 17h6", key: "r8uit2" }]
+];
+const FileDiff = createLucideIcon("file-diff", __iconNode$y);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$x = [
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["circle", { cx: "10", cy: "12", r: "2", key: "737tya" }],
+  ["path", { d: "m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22", key: "wt3hpn" }]
+];
+const FileImage = createLucideIcon("file-image", __iconNode$x);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$w = [
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M4 12v6", key: "bg1pfk" }],
+  ["path", { d: "M4 14h2", key: "1sf9f8" }],
+  [
+    "path",
+    {
+      d: "M9.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v4",
+      key: "d56i0q"
+    }
+  ],
+  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
+];
+const FileKey = createLucideIcon("file-key", __iconNode$w);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7183,11 +7285,18 @@ const ClipboardList = createLucideIcon("clipboard-list", __iconNode$w);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$v = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
+  [
+    "path",
+    {
+      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
+      key: "1oefj6"
+    }
+  ],
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
+  ["path", { d: "M9 15h6", key: "cctwl0" }],
+  ["path", { d: "M12 18v-6", key: "17g6i2" }]
 ];
-const Database = createLucideIcon("database", __iconNode$v);
+const FilePlus = createLucideIcon("file-plus", __iconNode$v);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7203,10 +7312,11 @@ const __iconNode$u = [
     }
   ],
   ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 12.5 8 15l2 2.5", key: "1tg20x" }],
-  ["path", { d: "m14 12.5 2 2.5-2 2.5", key: "yinavb" }]
+  ["path", { d: "M10 9H8", key: "b1mrlr" }],
+  ["path", { d: "M16 13H8", key: "t4e002" }],
+  ["path", { d: "M16 17H8", key: "z1uh3a" }]
 ];
-const FileCode = createLucideIcon("file-code", __iconNode$u);
+const FileText = createLucideIcon("file-text", __iconNode$u);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7214,18 +7324,17 @@ const FileCode = createLucideIcon("file-code", __iconNode$u);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$t = [
+  ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z",
+      key: "1970lx"
     }
   ],
-  ["path", { d: "M9 10h6", key: "9gxzsh" }],
-  ["path", { d: "M12 13V7", key: "h0r20n" }],
-  ["path", { d: "M9 17h6", key: "r8uit2" }]
+  ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
 ];
-const FileDiff = createLucideIcon("file-diff", __iconNode$t);
+const Files = createLucideIcon("files", __iconNode$t);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7240,11 +7349,9 @@ const __iconNode$s = [
       key: "1oefj6"
     }
   ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["circle", { cx: "10", cy: "12", r: "2", key: "737tya" }],
-  ["path", { d: "m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22", key: "wt3hpn" }]
+  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }]
 ];
-const FileImage = createLucideIcon("file-image", __iconNode$s);
+const File = createLucideIcon("file", __iconNode$s);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7252,19 +7359,15 @@ const FileImage = createLucideIcon("file-image", __iconNode$s);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$r = [
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M4 12v6", key: "bg1pfk" }],
-  ["path", { d: "M4 14h2", key: "1sf9f8" }],
   [
     "path",
     {
-      d: "M9.65 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v4",
-      key: "d56i0q"
+      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
+      key: "usdka0"
     }
-  ],
-  ["circle", { cx: "4", cy: "20", r: "2", key: "6kqj1y" }]
+  ]
 ];
-const FileKey = createLucideIcon("file-key", __iconNode$r);
+const FolderOpen = createLucideIcon("folder-open", __iconNode$r);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7275,15 +7378,12 @@ const __iconNode$q = [
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+      key: "1kt360"
     }
-  ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M9 15h6", key: "cctwl0" }],
-  ["path", { d: "M12 18v-6", key: "17g6i2" }]
+  ]
 ];
-const FilePlus = createLucideIcon("file-plus", __iconNode$q);
+const Folder = createLucideIcon("folder", __iconNode$q);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7291,19 +7391,11 @@ const FilePlus = createLucideIcon("file-plus", __iconNode$q);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$p = [
-  [
-    "path",
-    {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
-    }
-  ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }],
-  ["path", { d: "M10 9H8", key: "b1mrlr" }],
-  ["path", { d: "M16 13H8", key: "t4e002" }],
-  ["path", { d: "M16 17H8", key: "z1uh3a" }]
+  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
+  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
+  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
 ];
-const FileText = createLucideIcon("file-text", __iconNode$p);
+const GitBranch = createLucideIcon("git-branch", __iconNode$p);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7311,17 +7403,11 @@ const FileText = createLucideIcon("file-text", __iconNode$p);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$o = [
-  ["path", { d: "M15 2h-4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8", key: "14sh0y" }],
-  [
-    "path",
-    {
-      d: "M16.706 2.706A2.4 2.4 0 0 0 15 2v5a1 1 0 0 0 1 1h5a2.4 2.4 0 0 0-.706-1.706z",
-      key: "1970lx"
-    }
-  ],
-  ["path", { d: "M5 7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h8a2 2 0 0 0 1.732-1", key: "l4dndm" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20", key: "13o1zl" }],
+  ["path", { d: "M2 12h20", key: "9i4pu4" }]
 ];
-const Files = createLucideIcon("files", __iconNode$o);
+const Globe = createLucideIcon("globe", __iconNode$o);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7329,16 +7415,18 @@ const Files = createLucideIcon("files", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
+  ["path", { d: "M10 16h.01", key: "1bzywj" }],
   [
     "path",
     {
-      d: "M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z",
-      key: "1oefj6"
+      d: "M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+      key: "18tbho"
     }
   ],
-  ["path", { d: "M14 2v5a1 1 0 0 0 1 1h5", key: "wfsgrz" }]
+  ["path", { d: "M21.946 12.013H2.054", key: "zqlbp7" }],
+  ["path", { d: "M6 16h.01", key: "1pmjb7" }]
 ];
-const File = createLucideIcon("file", __iconNode$n);
+const HardDrive = createLucideIcon("hard-drive", __iconNode$n);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7346,15 +7434,11 @@ const File = createLucideIcon("file", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  [
-    "path",
-    {
-      d: "m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2",
-      key: "usdka0"
-    }
-  ]
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
+  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
 ];
-const FolderOpen = createLucideIcon("folder-open", __iconNode$m);
+const History = createLucideIcon("history", __iconNode$m);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7365,12 +7449,26 @@ const __iconNode$l = [
   [
     "path",
     {
-      d: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
-      key: "1kt360"
+      d: "M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
+      key: "zw3jo"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12",
+      key: "1wduqc"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17",
+      key: "kqbvx6"
     }
   ]
 ];
-const Folder = createLucideIcon("folder", __iconNode$l);
+const Layers = createLucideIcon("layers", __iconNode$l);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7378,11 +7476,12 @@ const Folder = createLucideIcon("folder", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["path", { d: "M15 6a9 9 0 0 0-9 9V3", key: "1cii5b" }],
-  ["circle", { cx: "18", cy: "6", r: "3", key: "1h7g24" }],
-  ["circle", { cx: "6", cy: "18", r: "3", key: "fqmcym" }]
+  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
+  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
+  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
+  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
 ];
-const GitBranch = createLucideIcon("git-branch", __iconNode$k);
+const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$k);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7390,11 +7489,11 @@ const GitBranch = createLucideIcon("git-branch", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }],
-  ["path", { d: "M12 7v5l4 2", key: "1fdv2h" }]
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
 ];
-const History = createLucideIcon("history", __iconNode$j);
+const LogOut = createLucideIcon("log-out", __iconNode$j);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7402,31 +7501,6 @@ const History = createLucideIcon("history", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["rect", { width: "7", height: "9", x: "3", y: "3", rx: "1", key: "10lvy0" }],
-  ["rect", { width: "7", height: "5", x: "14", y: "3", rx: "1", key: "16une8" }],
-  ["rect", { width: "7", height: "9", x: "14", y: "12", rx: "1", key: "1hutg5" }],
-  ["rect", { width: "7", height: "5", x: "3", y: "16", rx: "1", key: "ldoo1y" }]
-];
-const LayoutDashboard = createLucideIcon("layout-dashboard", __iconNode$i);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$h = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
-];
-const LogOut = createLucideIcon("log-out", __iconNode$h);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$g = [
   [
     "path",
     {
@@ -7435,14 +7509,14 @@ const __iconNode$g = [
     }
   ]
 ];
-const Paperclip = createLucideIcon("paperclip", __iconNode$g);
+const Paperclip = createLucideIcon("paperclip", __iconNode$i);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$f = [
+const __iconNode$h = [
   ["path", { d: "M13 21h8", key: "1jsn5i" }],
   [
     "path",
@@ -7452,7 +7526,32 @@ const __iconNode$f = [
     }
   ]
 ];
-const PenLine = createLucideIcon("pen-line", __iconNode$f);
+const PenLine = createLucideIcon("pen-line", __iconNode$h);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$g = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$g);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [
+  ["path", { d: "M16.247 7.761a6 6 0 0 1 0 8.478", key: "1fwjs5" }],
+  ["path", { d: "M19.075 4.933a10 10 0 0 1 0 14.134", key: "ehdyv1" }],
+  ["path", { d: "M4.925 19.067a10 10 0 0 1 0-14.134", key: "1q22gi" }],
+  ["path", { d: "M7.753 16.239a6 6 0 0 1 0-8.478", key: "r2q7qm" }],
+  ["circle", { cx: "12", cy: "12", r: "2", key: "1c9p78" }]
+];
+const Radio = createLucideIcon("radio", __iconNode$f);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7460,10 +7559,12 @@ const PenLine = createLucideIcon("pen-line", __iconNode$f);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$e = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Plus = createLucideIcon("plus", __iconNode$e);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$e);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7471,19 +7572,6 @@ const Plus = createLucideIcon("plus", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$d);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
   ["path", { d: "M14 4a1 1 0 0 1 1-1", key: "dhj8ez" }],
   ["path", { d: "M15 10a1 1 0 0 1-1-1", key: "1mnyi5" }],
   ["path", { d: "M21 4a1 1 0 0 0-1-1", key: "sfs9ap" }],
@@ -7492,7 +7580,18 @@ const __iconNode$c = [
   ["path", { d: "M6 10V5a2 2 0 0 1 2-2h2", key: "15xut4" }],
   ["rect", { x: "3", y: "14", width: "7", height: "7", rx: "1", key: "1bkyp8" }]
 ];
-const Replace = createLucideIcon("replace", __iconNode$c);
+const Replace = createLucideIcon("replace", __iconNode$d);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
+  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
+];
+const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$c);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7500,17 +7599,6 @@ const Replace = createLucideIcon("replace", __iconNode$c);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$b = [
-  ["path", { d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", key: "1357e3" }],
-  ["path", { d: "M3 3v5h5", key: "1xhq8a" }]
-];
-const RotateCcw = createLucideIcon("rotate-ccw", __iconNode$b);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$a = [
   [
     "path",
     {
@@ -7521,7 +7609,18 @@ const __iconNode$a = [
   ["path", { d: "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7", key: "1ydtos" }],
   ["path", { d: "M7 3v4a1 1 0 0 0 1 1h7", key: "t51u73" }]
 ];
-const Save = createLucideIcon("save", __iconNode$a);
+const Save = createLucideIcon("save", __iconNode$b);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
+  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
+  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
+];
+const Search = createLucideIcon("search", __iconNode$a);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7529,17 +7628,6 @@ const Save = createLucideIcon("save", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["path", { d: "m21 21-4.34-4.34", key: "14j7rj" }],
-  ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
-];
-const Search = createLucideIcon("search", __iconNode$9);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$8 = [
   [
     "path",
     {
@@ -7549,7 +7637,20 @@ const __iconNode$8 = [
   ],
   ["path", { d: "m21.854 2.147-10.94 10.939", key: "12cjpa" }]
 ];
-const Send = createLucideIcon("send", __iconNode$8);
+const Send = createLucideIcon("send", __iconNode$9);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["path", { d: "M14 17H5", key: "gfn3mx" }],
+  ["path", { d: "M19 7h-9", key: "6i9tg" }],
+  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
+  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
+];
+const Settings2 = createLucideIcon("settings-2", __iconNode$8);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -7557,19 +7658,6 @@ const Send = createLucideIcon("send", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "M14 17H5", key: "gfn3mx" }],
-  ["path", { d: "M19 7h-9", key: "6i9tg" }],
-  ["circle", { cx: "17", cy: "17", r: "3", key: "18b49y" }],
-  ["circle", { cx: "7", cy: "7", r: "3", key: "dfmy0x" }]
-];
-const Settings2 = createLucideIcon("settings-2", __iconNode$7);
-/**
- * @license lucide-react v1.16.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$6 = [
   [
     "path",
     {
@@ -7579,7 +7667,21 @@ const __iconNode$6 = [
   ],
   ["circle", { cx: "12", cy: "12", r: "3", key: "1v7zrd" }]
 ];
-const Settings = createLucideIcon("settings", __iconNode$6);
+const Settings = createLucideIcon("settings", __iconNode$7);
+/**
+ * @license lucide-react v1.16.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  ["circle", { cx: "18", cy: "5", r: "3", key: "gq8acd" }],
+  ["circle", { cx: "6", cy: "12", r: "3", key: "w7nqdw" }],
+  ["circle", { cx: "18", cy: "19", r: "3", key: "1xt0gg" }],
+  ["line", { x1: "8.59", x2: "15.42", y1: "13.51", y2: "17.49", key: "47mynk" }],
+  ["line", { x1: "15.41", x2: "8.59", y1: "6.51", y2: "10.49", key: "1n3mei" }]
+];
+const Share2 = createLucideIcon("share-2", __iconNode$6);
 /**
  * @license lucide-react v1.16.0 - ISC
  *
@@ -8621,6 +8723,140 @@ function Editor({ path, content, onChange, onSave, onSaveAs, sessions, onRestore
     ] });
   })() });
 }
+function isFigmaTool(tool) {
+  return /figma/i.test(tool.serverName);
+}
+function detectIntent(text) {
+  const value = text.toLowerCase();
+  const diagramIntent = /\b(diagram|flowchart|flow chart|user flow|workflow|architecture|sequence diagram|erd|entity relationship|timeline|figjam)\b/.test(value);
+  const screenIntent = /\b(screen|mockup|mock-up|ui|page|layout|component|modal|dialog|sidebar|dashboard|landing page|wireframe)\b/.test(value);
+  const visualIntent = /\b(figma|figjam|design|visual)\b/.test(value);
+  if (diagramIntent) return "diagram";
+  if (screenIntent) return "screen";
+  if (visualIntent) return "visual";
+  return "general";
+}
+function allowDiagramTool(tool) {
+  return /generate_diagram/i.test(tool.name);
+}
+function allowScreenTool(tool) {
+  return /use_figma|generate_figma_design|search_design_system|get_libraries|create_new_file/i.test(tool.name);
+}
+function allowVisualTool(tool) {
+  return allowDiagramTool(tool) || allowScreenTool(tool);
+}
+function filterMcpToolsForIntent(tools, userText) {
+  const intent = detectIntent(userText);
+  if (intent === "general") return { intent, tools };
+  const nonFigmaTools = tools.filter((tool) => !isFigmaTool(tool));
+  const figmaTools = tools.filter(isFigmaTool);
+  let allowedFigmaTools;
+  if (intent === "diagram") {
+    allowedFigmaTools = figmaTools.filter(allowDiagramTool);
+  } else if (intent === "screen") {
+    allowedFigmaTools = figmaTools.filter(allowScreenTool);
+  } else {
+    allowedFigmaTools = figmaTools.filter(allowVisualTool);
+  }
+  if (allowedFigmaTools.length === 0) {
+    return { intent, tools };
+  }
+  return {
+    intent,
+    tools: [...nonFigmaTools, ...allowedFigmaTools]
+  };
+}
+function hasTool(tools, predicate) {
+  return tools.some(predicate);
+}
+function fromServer(tools, serverPattern) {
+  return tools.filter((tool) => serverPattern.test(tool.serverName));
+}
+function buildMcpToolGuidance(activeMcpTools) {
+  if (activeMcpTools.length === 0) return "";
+  const lines = [];
+  const figmaTools = fromServer(activeMcpTools, /figma/i);
+  if (figmaTools.length > 0) {
+    const hasDiagramTool = hasTool(figmaTools, (t2) => /generate_diagram/i.test(t2.name));
+    const hasUseFigmaTool = hasTool(figmaTools, (t2) => /use_figma/i.test(t2.name));
+    const hasGenerateDesignTool = hasTool(figmaTools, (t2) => /generate_figma_design/i.test(t2.name));
+    const hasSearchDesignSystemTool = hasTool(figmaTools, (t2) => /search_design_system/i.test(t2.name));
+    const hasReadOnlyDataTool = hasTool(figmaTools, (t2) => /get_figma_data|get_design_context|get_screenshot|get_metadata/i.test(t2.name));
+    lines.push("[CONNECTED MCP GUIDANCE]");
+    lines.push("Figma tools are connected. When the user asks to create or update visuals directly from the IDE, prefer MCP tool calls over plain-text advice.");
+    if (hasDiagramTool) {
+      lines.push("- For diagrams, user flows, flowcharts, architecture diagrams, sequence diagrams, timelines, or FigJam-style visuals, call the Figma `generate_diagram` tool.");
+    }
+    if (hasUseFigmaTool || hasGenerateDesignTool) {
+      lines.push("- For screens, pages, mockups, components, or layouts, call Figma visual-generation tools such as `use_figma` or `generate_figma_design`.");
+    }
+    if (hasSearchDesignSystemTool) {
+      lines.push("- If creating a screen in Figma, search the design system first and reuse existing components/tokens when possible.");
+    }
+    if (hasReadOnlyDataTool) {
+      lines.push("- Do NOT use raw Figma read tools like `get_figma_data` as the primary action when the user wants a diagram or screen generated. Reserve read tools for extracting context from an existing file or node before generating/updating a visual.");
+    }
+    lines.push("- If the user provides a Figma URL, extract the file key and node id and use them as tool arguments.");
+    lines.push("- After tool execution, summarize the result briefly instead of dumping raw tool output.");
+  }
+  return lines.length > 0 ? `
+
+${lines.join("\n")}` : "";
+}
+function hasOwn(obj, key) {
+  return !!obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, key);
+}
+function normalizeToolCallItem(item) {
+  if (!item || typeof item !== "object") return null;
+  let name;
+  let args;
+  if (item.type === "function" && item.function && typeof item.function === "object") {
+    name = item.function.name;
+    if (hasOwn(item.function, "arguments")) args = item.function.arguments;
+  } else {
+    name = item.name;
+    if (hasOwn(item, "arguments")) args = item.arguments;
+  }
+  if (typeof name !== "string" || !name.startsWith("mcp__")) return null;
+  if (args === void 0) return null;
+  return {
+    name,
+    arguments: typeof args === "string" ? args : JSON.stringify(args)
+  };
+}
+function tryParseCandidate(candidate) {
+  const parsed = JSON.parse(candidate);
+  const items = Array.isArray(parsed) ? parsed : [parsed];
+  return items.map(normalizeToolCallItem).filter((item) => item !== null);
+}
+function getJsonCandidates(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+  const candidates = /* @__PURE__ */ new Set([trimmed]);
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  if (fenced?.[1]) candidates.add(fenced[1].trim());
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    candidates.add(trimmed.slice(firstBrace, lastBrace + 1).trim());
+  }
+  const firstBracket = trimmed.indexOf("[");
+  const lastBracket = trimmed.lastIndexOf("]");
+  if (firstBracket !== -1 && lastBracket > firstBracket) {
+    candidates.add(trimmed.slice(firstBracket, lastBracket + 1).trim());
+  }
+  return [...candidates];
+}
+function parsePlainTextToolCalls(text) {
+  for (const candidate of getJsonCandidates(text)) {
+    try {
+      const parsed = tryParseCandidate(candidate);
+      if (parsed.length > 0) return parsed;
+    } catch {
+    }
+  }
+  return [];
+}
 const AGENT_MODES = ["agent", "plan", "debug", "multitask", "ask"];
 function newSession(count, mode = "agent", workspace = null) {
   const now = Date.now();
@@ -8966,6 +9202,11 @@ function ChatPanel({
   const autopilotRef = reactExports.useRef(true);
   const bottomRef = reactExports.useRef(null);
   const fileInputRef = reactExports.useRef(null);
+  const inputRef = reactExports.useRef(null);
+  const modelRef = reactExports.useRef(model);
+  reactExports.useEffect(() => {
+    modelRef.current = model;
+  }, [model]);
   const [editingId, setEditingId] = reactExports.useState(null);
   const [editingName, setEditingName] = reactExports.useState("");
   const [historySearch, setHistorySearch] = reactExports.useState("");
@@ -8985,6 +9226,32 @@ function ChatPanel({
     }
     return /* @__PURE__ */ new Set();
   });
+  const [routerRec, setRouterRec] = reactExports.useState(null);
+  const [pullingModel, setPullingModel] = reactExports.useState(null);
+  const [pullStatus, setPullStatus] = reactExports.useState(null);
+  const handlePullModel = async (modelName) => {
+    setPullingModel(modelName);
+    setPullStatus(`Pulling free open model '${modelName}' from Ollama library...`);
+    try {
+      if (window.api?.ollamaPullModel) {
+        await window.api.ollamaPullModel(modelName);
+        setPullStatus(`Successfully pulled '${modelName}'!`);
+        if (window.api?.ollamaTags) {
+          const updated = await window.api.ollamaTags();
+          if (updated && updated.length > 0) {
+            onModelChange(modelName);
+          }
+        }
+      }
+    } catch (err) {
+      setPullStatus(`Pull failed: ${err.message}`);
+    } finally {
+      setTimeout(() => {
+        setPullingModel(null);
+        setPullStatus(null);
+      }, 5e3);
+    }
+  };
   reactExports.useEffect(() => {
     _dbg("alwaysAllowedCommands -> save");
     localStorage.setItem("alwaysAllowedCommands", JSON.stringify(Array.from(alwaysAllowedCommands)));
@@ -8994,15 +9261,33 @@ function ChatPanel({
       try {
         const stored = await window.api.loadSessions();
         if (Array.isArray(stored) && stored.length > 0) {
-          setSessions(stored);
+          const sanitizeSessions = (sessions2) => {
+            return sessions2.map((s15) => ({
+              ...s15,
+              messages: (s15.messages || []).filter((msg) => {
+                if (!msg.tool_calls) return true;
+                return msg.tool_calls.every((tc2) => {
+                  try {
+                    if (tc2.function?.arguments && typeof tc2.function.arguments === "string") {
+                      JSON.parse(tc2.function.arguments);
+                    }
+                    return true;
+                  } catch {
+                    return false;
+                  }
+                });
+              })
+            }));
+          };
+          setSessions(sanitizeSessions(stored));
           setActiveId(stored[0].id);
         }
       } catch (e) {
         console.warn("Failed to load stored sessions:", e);
       }
+      hasLoadedRef.current = true;
     };
     loadStoredSessions();
-    hasLoadedRef.current = true;
   }, []);
   reactExports.useEffect(() => {
     _dbg("sessions changed -> persistence (compare ignoring lastActive)");
@@ -9150,7 +9435,7 @@ function ChatPanel({
     setEditingId(null);
   }
   const filteredHistory = sessions.filter((s15) => (showDeleted || !s15.isDeleted) && s15.name.toLowerCase().includes(historySearch.toLowerCase())).sort((a, b2) => b2.lastActive - a.lastActive);
-  async function buildSystemPrompt(mode) {
+  async function buildSystemPrompt(activeMcpTools, mode) {
     const sessionMode = activeSession.mode;
     let sys = `You are an expert agentic coding assistant.`;
     if (sessionMode === "ask") {
@@ -9326,6 +9611,7 @@ ${fileContent.slice(0, 4e3)}
 ✅ CORRECT: \`\`\`write:src/app.py  — resolves to ${rootPath}/src/app.py`;
     sys += `
 ❌ WRONG: absolute paths, paths starting with /tmp, or paths outside the project root`;
+    sys += buildMcpToolGuidance(activeMcpTools);
     try {
       const IGNORE = ["node_modules", ".git", "dist", "out", ".next", "__pycache__", ".venv", "venv"];
       const files = await window.api.listFiles(rootPath);
@@ -9396,7 +9682,8 @@ ${res.stderr?.trim() || "(no output)"}
     });
   }
   async function send(overrideHistory) {
-    if (!overrideHistory && (!input.trim() || loading || !model)) return;
+    let currentModel = modelRef.current || model;
+    if (!overrideHistory && (!input.trim() || loading || !currentModel)) return;
     let history;
     if (overrideHistory) {
       history = overrideHistory;
@@ -9434,7 +9721,24 @@ ${res.stderr?.trim() || "(no output)"}
     } catch (e) {
       console.warn("Failed to retrieve MCP tools:", e);
     }
-    const ollamaTools = activeMcpTools.map((t2) => ({
+    const latestUserText = [...history].reverse().find((msg) => msg.role === "user")?.content || "";
+    if (window.api?.modelRouterSelect) {
+      try {
+        const fallback = currentModel === "auto" ? models[0] : currentModel;
+        const rec = await window.api.modelRouterSelect(latestUserText, models, fallback);
+        if (rec) {
+          setRouterRec(rec);
+          if (currentModel === "auto" || !currentModel) {
+            currentModel = rec.selectedModel || fallback || "llama3.1:latest";
+          }
+        }
+      } catch (e) {
+        console.warn("Model router error:", e);
+      }
+    }
+    if (currentModel === "auto") currentModel = models[0] || "llama3.1:latest";
+    const { tools: filteredMcpTools } = filterMcpToolsForIntent(activeMcpTools, latestUserText);
+    const ollamaTools = filteredMcpTools.map((t2) => ({
       type: "function",
       function: {
         name: `mcp__${t2.serverName}__${t2.name}`,
@@ -9443,10 +9747,31 @@ ${res.stderr?.trim() || "(no output)"}
       }
     }));
     try {
-      const systemPrompt = await buildSystemPrompt();
+      const systemPrompt = await buildSystemPrompt(filteredMcpTools);
+      const sanitizeMessages = (msgs) => {
+        return msgs.filter((msg) => {
+          if (!msg.tool_calls) return true;
+          return msg.tool_calls.every((tc2) => {
+            try {
+              if (tc2.function?.arguments) {
+                const args = tc2.function.arguments;
+                if (typeof args === "string") JSON.parse(args);
+              }
+              return true;
+            } catch {
+              return false;
+            }
+          });
+        }).map((msg) => {
+          if (msg.content && typeof msg.content === "string") {
+            return { ...msg, content: msg.content.replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, "") };
+          }
+          return msg;
+        });
+      };
       const chatMessages = [
         { role: "system", content: systemPrompt },
-        ...history.map((msg) => {
+        ...sanitizeMessages(history.map((msg) => {
           if (msg.role === "user") {
             if (msg.images) {
               return {
@@ -9471,7 +9796,7 @@ ${res.stderr?.trim() || "(no output)"}
             };
           }
           return { role: msg.role, content: msg.content };
-        })
+        }))
       ];
       let assistantText = "";
       const activeIdAtSend = activeId;
@@ -9611,7 +9936,7 @@ ${res.stderr?.trim() || "(no output)"}
         }
       };
       const chatPayload = {
-        model,
+        model: currentModel,
         stream: true,
         messages: chatMessages
       };
@@ -9619,18 +9944,22 @@ ${res.stderr?.trim() || "(no output)"}
         chatPayload.tools = ollamaTools;
       }
       if (window.api && typeof window.api.ollamaChat === "function") {
-        const body = await window.api.ollamaChat(chatPayload);
+        const body = await ollamaChatWithTimeout(chatPayload, 12e4);
         const text = String(body || "");
         await processBodyLines(text);
         if (!assistantText) {
           await tryParseFullJson(text);
         }
       } else {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12e4);
         const res = await fetch("http://localhost:11434/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(chatPayload)
+          body: JSON.stringify(chatPayload),
+          signal: controller.signal
         });
+        clearTimeout(timeout);
         if (!res.ok) throw new Error(`Ollama error: ${res.status}`);
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -9665,6 +9994,20 @@ ${res.stderr?.trim() || "(no output)"}
           }
         }
       }
+      if (toolCalls.length === 0) {
+        const plainTextToolCalls = parsePlainTextToolCalls(assistantText);
+        if (plainTextToolCalls.length > 0) {
+          toolCalls.push(...plainTextToolCalls.map((tc2) => ({
+            id: `call_${Math.random().toString(36).substr(2, 9)}`,
+            type: "function",
+            function: {
+              name: tc2.name,
+              arguments: tc2.arguments
+            }
+          })));
+          assistantText = "";
+        }
+      }
       if (toolCalls.length > 0) {
         const resolvedToolCalls = toolCalls.map((tc2) => {
           let parsedArgs = {};
@@ -9688,16 +10031,16 @@ ${res.stderr?.trim() || "(no output)"}
           const updated = [...prev];
           updated[updated.length - 1] = {
             role: "assistant",
-            content: assistantText,
+            content: assistantText || `Using ${resolvedToolCalls.length} tool${resolvedToolCalls.length === 1 ? "" : "s"}...`,
             tool_calls: resolvedToolCalls,
-            model,
+            model: currentModel,
             elapsed: Math.round((Date.now() - startTimeRef.current) / 1e3)
           };
           return updated;
         });
         const nextMessages = [...history, {
           role: "assistant",
-          content: assistantText,
+          content: assistantText || `Using ${resolvedToolCalls.length} tool${resolvedToolCalls.length === 1 ? "" : "s"}...`,
           tool_calls: resolvedToolCalls
         }];
         for (const tc2 of resolvedToolCalls) {
@@ -9715,7 +10058,7 @@ ${res.stderr?.trim() || "(no output)"}
               toolStatus: "running"
             }]);
             try {
-              const res = await window.api.mcpCallTool(serverName, toolName, args);
+              const res = await callMcpToolWithTimeout(serverName, toolName, args);
               resultText = typeof res === "string" ? res : JSON.stringify(res, null, 2);
               try {
                 const parsedRes = typeof res === "string" ? JSON.parse(res) : res;
@@ -9725,6 +10068,12 @@ ${res.stderr?.trim() || "(no output)"}
                   resultText = parsedRes.text;
                 }
               } catch {
+              }
+              const MAX_TOOL_RESULT = 12e3;
+              if (resultText.length > MAX_TOOL_RESULT) {
+                resultText = resultText.slice(0, MAX_TOOL_RESULT) + `
+
+[... truncated ${resultText.length - MAX_TOOL_RESULT} chars ...]`;
               }
             } catch (err) {
               resultText = `Error calling tool: ${err.message || String(err)}`;
@@ -9747,6 +10096,9 @@ ${res.stderr?.trim() || "(no output)"}
         return;
       }
       const elapsed = Math.round((Date.now() - startTimeRef.current) / 1e3);
+      if (!assistantText.trim() && streamWrites.length === 0 && streamExecutes.length === 0) {
+        assistantText = "The model returned no visible text output.";
+      }
       const blocks = streamWrites.length > 0 || streamExecutes.length > 0 ? { writes: streamWrites, executes: streamExecutes } : await processBlocks(assistantText);
       setMessages((prev) => {
         const updated = [...prev];
@@ -9757,7 +10109,7 @@ ${res.stderr?.trim() || "(no output)"}
           elapsed,
           promptTokens,
           responseTokens,
-          model
+          model: currentModel
         };
         return updated;
       });
@@ -10009,6 +10361,63 @@ ${ev.target?.result}
       send();
     }
   }
+  function injectQuickPrompt(prompt) {
+    setInput(prompt);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }
+  async function callMcpToolWithTimeout(serverName, toolName, args, timeoutMs = 9e4) {
+    return await Promise.race([
+      window.api.mcpCallTool(serverName, toolName, args),
+      new Promise((_2, reject) => {
+        setTimeout(() => reject(new Error(`Tool ${serverName}.${toolName} timed out after ${Math.round(timeoutMs / 1e3)}s`)), timeoutMs);
+      })
+    ]);
+  }
+  async function ollamaChatWithTimeout(chatPayload, timeoutMs = 12e4) {
+    if (!window.api || typeof window.api.ollamaChat !== "function") return "";
+    return await Promise.race([
+      window.api.ollamaChat(chatPayload),
+      new Promise((_2, reject) => {
+        setTimeout(
+          () => reject(new Error(`Ollama request timed out after ${Math.round(timeoutMs / 1e3)}s`)),
+          timeoutMs
+        );
+      })
+    ]);
+  }
+  function buildVisualPrompt(kind) {
+    if (kind === "diagram") {
+      if (openFile && rootPath) {
+        const rel = openFile.replace(rootPath + "/", "");
+        return `Generate a diagram directly from my IDE using Figma. Prefer the Figma diagram-generation workflow, not raw file data tools.
+
+Use the current file \`${rel}\` as context and create a user flow or architecture-style diagram based on its functionality. Summarize the result briefly after creating it.`;
+      }
+      return `Generate a diagram directly from my IDE using Figma. Prefer the Figma diagram-generation workflow, not raw file data tools.
+
+Create a user flow or architecture-style diagram from the current project context, and summarize the result briefly after creating it.`;
+    }
+    if (kind === "screen") {
+      if (openFile && rootPath) {
+        const rel = openFile.replace(rootPath + "/", "");
+        return `Create a screen directly from my IDE using Figma. Prefer Figma screen/design-generation tools, not raw file data tools.
+
+Use the current file \`${rel}\` as the source of truth. Reuse the design system if available, then generate the most appropriate screen or component and summarize what you created.`;
+      }
+      return `Create a screen directly from my IDE using Figma. Prefer Figma screen/design-generation tools, not raw file data tools.
+
+Use the current workspace context, reuse the design system if available, and summarize what you created.`;
+    }
+    if (openFile && rootPath) {
+      const rel = openFile.replace(rootPath + "/", "");
+      return `Send the current file to Figma from my IDE.
+
+Use \`${rel}\` as the source and decide whether it should become a screen or a diagram. Prefer the correct Figma generation workflow, reuse the design system if available, and summarize the result briefly.`;
+    }
+    return `Send the current project context to Figma from my IDE.
+
+Decide whether the best output is a screen or a diagram, use the correct Figma generation workflow, and summarize the result briefly.`;
+  }
   function isModelMultimodal(name) {
     if (!name) return false;
     const n2 = name.toLowerCase();
@@ -10150,6 +10559,63 @@ ${ev.target?.result}
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { ref: bottomRef })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-container", children: [
+          routerRec && !routerRec.isOptimal && routerRec.recommendedModelToPull && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(255, 170, 0, 0.1)",
+            border: "1px solid rgba(255, 170, 0, 0.3)",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            margin: "8px 12px 0 12px",
+            fontSize: "12px",
+            color: "#ffcc00",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "8px"
+          }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+              "💡 ",
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("strong", { children: [
+                "Task Router (",
+                routerRec.taskCategory,
+                "):"
+              ] }),
+              " Installed models scored ",
+              routerRec.suitabilityScore,
+              "/100. Recommended free open model: ",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: routerRec.recommendedModelToPull })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                onClick: () => handlePullModel(routerRec.recommendedModelToPull),
+                disabled: pullingModel !== null,
+                style: {
+                  background: "#007acc",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "4px 10px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap"
+                },
+                children: pullingModel === routerRec.recommendedModelToPull ? "Pulling..." : `Pull ${routerRec.recommendedModelToPull}`
+              }
+            )
+          ] }),
+          pullStatus && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+            background: "rgba(0, 122, 204, 0.15)",
+            border: "1px solid rgba(0, 122, 204, 0.3)",
+            borderRadius: "6px",
+            padding: "6px 12px",
+            margin: "4px 12px 0 12px",
+            fontSize: "11px",
+            color: "#4fc3f7"
+          }, children: [
+            "ℹ️ ",
+            pullStatus
+          ] }),
           rootPath && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-workspace-indicator", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-workspace-dot" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "chat-workspace-path", title: rootPath, children: rootPath.split("/").pop() })
@@ -10171,6 +10637,7 @@ ${ev.target?.result}
             /* @__PURE__ */ jsxRuntimeExports.jsx(
               "textarea",
               {
+                ref: inputRef,
                 className: "chat-input",
                 placeholder: "Ask anything, @ to mention...",
                 value: input,
@@ -10181,6 +10648,53 @@ ${ev.target?.result}
                 style: { height: "auto" }
               }
             ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  className: "chat-action-btn",
+                  onClick: () => injectQuickPrompt(buildVisualPrompt("diagram")),
+                  "data-tooltip": "Generate Diagram: Create a flow or architecture diagram in Figma",
+                  "data-tooltip-position": "top",
+                  type: "button",
+                  style: { width: "auto", padding: "0 10px", gap: "6px" },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Layers, { size: 13, strokeWidth: 1.8 }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Diagram" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  className: "chat-action-btn",
+                  onClick: () => injectQuickPrompt(buildVisualPrompt("screen")),
+                  "data-tooltip": "Create Screen: Generate a screen or component in Figma",
+                  "data-tooltip-position": "top",
+                  type: "button",
+                  style: { width: "auto", padding: "0 10px", gap: "6px" },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(FilePlus, { size: 13, strokeWidth: 1.8 }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Screen" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  className: "chat-action-btn",
+                  onClick: () => injectQuickPrompt(buildVisualPrompt("current-file")),
+                  "data-tooltip": "Send Current File: Use the open file as the source for a Figma visual",
+                  "data-tooltip-position": "top",
+                  type: "button",
+                  style: { width: "auto", padding: "0 10px", gap: "6px" },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(FileDiff, { size: 13, strokeWidth: 1.8 }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: openFile ? "From Current File" : "From Workspace" })
+                  ]
+                }
+              )
+            ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "chat-input-footer", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "chat-action-btn", onClick: () => fileInputRef.current?.click(), "data-tooltip": "Attach File: Select and upload a file or image", "data-tooltip-position": "top", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Paperclip, { size: 14, strokeWidth: 1.8 }) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("input", { type: "file", ref: fileInputRef, style: { display: "none" }, onChange: handleFileAttach }),
@@ -10193,13 +10707,16 @@ ${ev.target?.result}
                   children: AGENT_MODES.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2.toUpperCase() }, m2))
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "select",
                 {
                   className: "chat-select chat-select--model",
                   value: model,
                   onChange: (e) => onModelChange(e.target.value),
-                  children: models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "auto", children: "✨ Auto-Select (Smart Router)" }),
+                    models.map((m2) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: m2, children: m2 }, m2))
+                  ]
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -19490,6 +20007,22 @@ function Dashboard({ models, sessions = [], rootPath }) {
   const [showJsonEditor, setShowJsonEditor] = reactExports.useState(false);
   const [jsonEditorValue, setJsonEditorValue] = reactExports.useState("");
   const [jsonEditorError, setJsonEditorError] = reactExports.useState("");
+  const [a2aStatus, setA2aStatus] = reactExports.useState(null);
+  const [a2aLogs, setA2aLogs] = reactExports.useState([]);
+  const [a2aConfig, setA2aConfig] = reactExports.useState(null);
+  const [a2aDiscoverUrl, setA2aDiscoverUrl] = reactExports.useState("");
+  const [a2aDiscoverResult, setA2aDiscoverResult] = reactExports.useState(null);
+  const [a2aDiscovering, setA2aDiscovering] = reactExports.useState(false);
+  const [a2aDelegateAgent, setA2aDelegateAgent] = reactExports.useState("");
+  const [a2aDelegatePrompt, setA2aDelegatePrompt] = reactExports.useState("");
+  const [a2aDelegateSkill, setA2aDelegateSkill] = reactExports.useState("default");
+  const [a2aDelegating, setA2aDelegating] = reactExports.useState(false);
+  const [a2aDelegateResult, setA2aDelegateResult] = reactExports.useState(null);
+  const [a2aNewAgentName, setA2aNewAgentName] = reactExports.useState("");
+  const [a2aNewAgentUrl, setA2aNewAgentUrl] = reactExports.useState("");
+  const [a2aShowAddAgent, setA2aShowAddAgent] = reactExports.useState(false);
+  const [mcpHostStatus, setMcpHostStatus] = reactExports.useState(null);
+  const [mcpHostConfig, setMcpHostConfig] = reactExports.useState(null);
   const [expandedLogs, setExpandedLogs] = reactExports.useState({});
   const [expandedTools, setExpandedTools] = reactExports.useState({});
   reactExports.useEffect(() => {
@@ -19521,6 +20054,42 @@ function Dashboard({ models, sessions = [], rootPath }) {
       return () => clearInterval(interval);
     }
     return void 0;
+  }, [activeTab]);
+  reactExports.useEffect(() => {
+    if (activeTab !== "a2a") return;
+    const fetchA2A = async () => {
+      try {
+        const [status, logs, cfg] = await Promise.all([
+          window.api.a2aGetStatus(),
+          window.api.a2aGetLogs(),
+          window.api.a2aGetConfig()
+        ]);
+        setA2aStatus(status);
+        setA2aLogs(logs || []);
+        setA2aConfig(cfg);
+      } catch {
+      }
+    };
+    fetchA2A();
+    const iv = setInterval(fetchA2A, 3e3);
+    return () => clearInterval(iv);
+  }, [activeTab]);
+  reactExports.useEffect(() => {
+    if (activeTab !== "mcp-host") return;
+    const fetch2 = async () => {
+      try {
+        const [status, cfg] = await Promise.all([
+          window.api.mcpHostGetStatus(),
+          window.api.mcpHostGetConfig()
+        ]);
+        setMcpHostStatus(status);
+        setMcpHostConfig(cfg);
+      } catch {
+      }
+    };
+    fetch2();
+    const iv = setInterval(fetch2, 3e3);
+    return () => clearInterval(iv);
   }, [activeTab]);
   const handleEditServer = (name, srvConfig) => {
     setEditingServer(name);
@@ -19803,7 +20372,7 @@ function Dashboard({ models, sessions = [], rootPath }) {
             "System ",
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 600 }, children: "Analytics" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "14px", lineHeight: 1.6 }, children: activeTab === "project" ? "Real-time administrative overview of performance and token usage for the current workspace folder." : activeTab === "historical" ? "Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects." : "Connect and manage Model Context Protocol (MCP) servers to extend the agent with custom database, search, and browser tools." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "#888", fontSize: "14px", lineHeight: 1.6 }, children: activeTab === "project" ? "Real-time administrative overview of performance and token usage for the current workspace folder." : activeTab === "historical" ? "Aggregated analytics and deduplicated historical usage including Time Machine backups across all workspace projects." : activeTab === "mcp" ? "Connect and manage Model Context Protocol (MCP) servers to extend the agent with custom database, search, and browser tools." : activeTab === "a2a" ? "Agent-to-Agent (A2A) protocol — expose this IDE as an agent, discover remote agents, and delegate tasks between agents." : "MCP Host Server — expose this IDE as an MCP tool provider so external agents (Claude Desktop, Cursor, etc.) can call its tools." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
           display: "flex",
@@ -19883,6 +20452,54 @@ function Dashboard({ models, sessions = [], rootPath }) {
               children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(Database, { size: 14 }),
                 "MCP Connections"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setActiveTab("a2a"),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 500,
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "none",
+                background: activeTab === "a2a" ? "#007acc" : "transparent",
+                color: activeTab === "a2a" ? "#fff" : "#888",
+                cursor: "pointer"
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { size: 14 }),
+                "A2A Protocol"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "button",
+            {
+              onClick: () => setActiveTab("mcp-host"),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: 500,
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                border: "none",
+                background: activeTab === "mcp-host" ? "#007acc" : "transparent",
+                color: activeTab === "mcp-host" ? "#fff" : "#888",
+                cursor: "pointer"
+              },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(HardDrive, { size: 14 }),
+                "MCP Host"
               ]
             }
           )
@@ -20855,6 +21472,381 @@ function Dashboard({ models, sessions = [], rootPath }) {
               ] })
             ] }, svr.name);
           }) })
+        ] })
+      ] }),
+      activeTab === "a2a" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "24px" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: 0 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Radio, { size: 15, style: { color: "#4ec9b0" } }),
+              "Local A2A Server"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", alignItems: "center", gap: "8px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+              padding: "3px 10px",
+              borderRadius: "20px",
+              fontSize: "11px",
+              fontWeight: 600,
+              background: a2aStatus?.running ? "rgba(78,201,176,0.15)" : "rgba(255,100,100,0.15)",
+              color: a2aStatus?.running ? "#4ec9b0" : "#f88"
+            }, children: a2aStatus?.running ? "● Running" : "○ Stopped" }) })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }, children: [
+            { label: "Port", value: a2aStatus?.port ?? 3100 },
+            { label: "Default Model", value: a2aStatus?.defaultModel ?? "llama3.1:latest" },
+            { label: "Agent Card", value: `http://localhost:${a2aStatus?.port ?? 3100}/.well-known/agent.json` },
+            { label: "RPC Endpoint", value: `http://localhost:${a2aStatus?.port ?? 3100}/a2a` }
+          ].map(({ label, value }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(0,0,0,0.2)", borderRadius: "8px", padding: "12px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "10px", color: "#666", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }, children: label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", color: "#ccc", fontFamily: "monospace", wordBreak: "break-all" }, children: String(value) })
+          ] }, label)) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: "0 0 16px 0" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { size: 15, style: { color: "#007acc" } }),
+            "Skill → Model Routing"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { fontSize: "12px", color: "#666", margin: "0 0 14px 0", lineHeight: 1.5 }, children: [
+            "Incoming A2A tasks carry an optional ",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { color: "#4fc3f7" }, children: "skill" }),
+            " tag. The table below maps each skill to the local Ollama model that handles it."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "6px" }, children: Object.entries(a2aStatus?.skillModelMap ?? {
+            "code-generation": "qwen2.5-coder:14b",
+            "code-review": "qwen2.5-coder:14b",
+            "analysis": "qwen2.5:14b",
+            "chat": "llama3.1:latest",
+            "planning": "llama3.1:latest",
+            "default": "llama3.1:latest"
+          }).map(([skill, model]) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "rgba(0,0,0,0.2)", borderRadius: "6px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "12px", color: "#aaa", fontFamily: "monospace" }, children: skill }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "12px", color: "#4fc3f7", fontFamily: "monospace" }, children: String(model) })
+          ] }, skill)) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: 0 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { size: 15, style: { color: "#ce9178" } }),
+              "Remote Agents"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                onClick: () => setA2aShowAddAgent((v3) => !v3),
+                style: { padding: "6px 14px", background: "#007acc", border: "none", borderRadius: "6px", color: "#fff", fontSize: "12px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { size: 12 }),
+                  " Add Agent"
+                ]
+              }
+            )
+          ] }),
+          a2aShowAddAgent && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "8px", padding: "16px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "10px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr 2fr", gap: "10px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "5px" }, children: "Agent Name" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "e.g. design-agent",
+                    value: a2aNewAgentName,
+                    onChange: (e) => setA2aNewAgentName(e.target.value),
+                    style: { width: "100%", padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px", boxSizing: "border-box" }
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "5px" }, children: "Base URL" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "input",
+                  {
+                    type: "text",
+                    placeholder: "e.g. http://192.168.1.5:3100",
+                    value: a2aNewAgentUrl,
+                    onChange: (e) => setA2aNewAgentUrl(e.target.value),
+                    style: { width: "100%", padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px", boxSizing: "border-box" }
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "8px", justifyContent: "flex-end" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: () => setA2aShowAddAgent(false),
+                  style: { padding: "6px 14px", background: "transparent", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", color: "#aaa", fontSize: "12px", cursor: "pointer" },
+                  children: "Cancel"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: async () => {
+                    if (!a2aNewAgentName.trim() || !a2aNewAgentUrl.trim()) return;
+                    if (!a2aConfig) return;
+                    const newConfig = { ...a2aConfig, remoteAgents: [...a2aConfig.remoteAgents || [], { name: a2aNewAgentName.trim(), url: a2aNewAgentUrl.trim() }] };
+                    await window.api.a2aSaveConfig(newConfig);
+                    setA2aConfig(newConfig);
+                    setA2aNewAgentName("");
+                    setA2aNewAgentUrl("");
+                    setA2aShowAddAgent(false);
+                  },
+                  style: { padding: "6px 16px", background: "#007acc", border: "none", borderRadius: "6px", color: "#fff", fontSize: "12px", fontWeight: 600, cursor: "pointer" },
+                  children: "Save Agent"
+                }
+              )
+            ] })
+          ] }),
+          (a2aConfig?.remoteAgents || []).length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: "32px", textAlign: "center", color: "#555", fontSize: "13px" }, children: "No remote agents configured. Add an agent URL to start delegating tasks." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "8px" }, children: (a2aConfig?.remoteAgents || []).map((agent) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "13px", color: "#fff", fontWeight: 500 }, children: agent.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", color: "#666", fontFamily: "monospace", marginTop: "2px" }, children: agent.url })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", gap: "6px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: async () => {
+                    setA2aDiscoverUrl(agent.url);
+                    setA2aDiscovering(true);
+                    setA2aDiscoverResult(null);
+                    try {
+                      const card = await window.api.a2aDiscoverAgent(agent.url);
+                      setA2aDiscoverResult(card);
+                    } catch (e) {
+                      setA2aDiscoverResult({ error: e.message });
+                    } finally {
+                      setA2aDiscovering(false);
+                    }
+                  },
+                  style: { padding: "5px 10px", background: "rgba(0,122,204,0.15)", border: "1px solid rgba(0,122,204,0.3)", borderRadius: "5px", color: "#4fc3f7", fontSize: "11px", cursor: "pointer" },
+                  children: "Discover"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  onClick: async () => {
+                    if (!a2aConfig) return;
+                    const newConfig = { ...a2aConfig, remoteAgents: a2aConfig.remoteAgents.filter((a) => a.name !== agent.name) };
+                    await window.api.a2aSaveConfig(newConfig);
+                    setA2aConfig(newConfig);
+                  },
+                  style: { padding: "5px 10px", background: "rgba(255,80,80,0.1)", border: "1px solid rgba(255,80,80,0.2)", borderRadius: "5px", color: "#f88", fontSize: "11px", cursor: "pointer" },
+                  children: "Remove"
+                }
+              )
+            ] })
+          ] }, agent.name)) }),
+          a2aDiscoverResult && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { marginTop: "14px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "8px", padding: "14px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px" }, children: "Agent Card" }),
+            a2aDiscoverResult.error ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#f88", fontSize: "12px" }, children: a2aDiscoverResult.error }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "13px", color: "#fff", fontWeight: 600 }, children: a2aDiscoverResult.name }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", color: "#999", margin: "4px 0 10px" }, children: a2aDiscoverResult.description }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px" }, children: (a2aDiscoverResult.skills || []).map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { padding: "3px 10px", background: "rgba(0,122,204,0.15)", border: "1px solid rgba(0,122,204,0.25)", borderRadius: "12px", fontSize: "11px", color: "#4fc3f7" }, children: s15.name }, s15.id)) })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: "0 0 16px 0" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { size: 15, style: { color: "#007acc" } }),
+            "Delegate Task to Remote Agent"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "12px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "5px" }, children: "Target Agent" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "select",
+                  {
+                    value: a2aDelegateAgent,
+                    onChange: (e) => setA2aDelegateAgent(e.target.value),
+                    style: { width: "100%", padding: "7px 10px", background: "rgba(30,30,30,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px" },
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "", children: "— select agent —" }),
+                      (a2aConfig?.remoteAgents || []).filter((a) => !a.disabled).map((a) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: a.name, children: a.name }, a.name))
+                    ]
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "5px" }, children: "Skill" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "select",
+                  {
+                    value: a2aDelegateSkill,
+                    onChange: (e) => setA2aDelegateSkill(e.target.value),
+                    style: { width: "100%", padding: "7px 10px", background: "rgba(30,30,30,0.9)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px" },
+                    children: ["default", "code-generation", "code-review", "analysis", "planning", "chat", "design"].map((s15) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: s15, children: s15 }, s15))
+                  }
+                )
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "5px" }, children: "Prompt" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "textarea",
+                {
+                  value: a2aDelegatePrompt,
+                  onChange: (e) => setA2aDelegatePrompt(e.target.value),
+                  rows: 3,
+                  placeholder: "What should the remote agent do?",
+                  style: { width: "100%", padding: "8px 12px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "flex-end" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                disabled: !a2aDelegateAgent || !a2aDelegatePrompt.trim() || a2aDelegating,
+                onClick: async () => {
+                  setA2aDelegating(true);
+                  setA2aDelegateResult(null);
+                  try {
+                    const task = await window.api.a2aDelegateTask(a2aDelegateAgent, a2aDelegatePrompt, a2aDelegateSkill);
+                    setA2aDelegateResult(task);
+                  } catch (e) {
+                    setA2aDelegateResult({ error: e.message });
+                  } finally {
+                    setA2aDelegating(false);
+                  }
+                },
+                style: { padding: "8px 20px", background: a2aDelegating ? "#555" : "#007acc", border: "none", borderRadius: "6px", color: "#fff", fontSize: "12px", fontWeight: 600, cursor: a2aDelegating ? "not-allowed" : "pointer" },
+                children: a2aDelegating ? "Delegating…" : "Delegate Task"
+              }
+            ) }),
+            a2aDelegateResult && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(0,0,0,0.3)", border: `1px solid ${a2aDelegateResult.error ? "rgba(255,80,80,0.3)" : "rgba(78,201,176,0.3)"}`, borderRadius: "8px", padding: "14px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", color: "#888", marginBottom: "6px" }, children: a2aDelegateResult.error ? "Error" : `Result · ${a2aDelegateResult.status?.state}` }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { style: { fontSize: "12px", color: a2aDelegateResult.error ? "#f88" : "#d4d4d4", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }, children: a2aDelegateResult.error ? a2aDelegateResult.error : a2aDelegateResult.artifacts?.[0]?.parts?.[0]?.text || JSON.stringify(a2aDelegateResult.status, null, 2) })
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: "0 0 16px 0" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ChartColumn, { size: 15, style: { color: "#888" } }),
+            "Task Log"
+          ] }),
+          a2aLogs.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { padding: "24px", textAlign: "center", color: "#555", fontSize: "13px" }, children: "No tasks yet. Inbound tasks (from remote agents) and outbound tasks (delegated by this IDE) will appear here." }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "8px", maxHeight: "400px", overflowY: "auto" }, children: a2aLogs.map((log) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: "8px", borderLeft: `3px solid ${log.direction === "inbound" ? "#4ec9b0" : "#007acc"}` }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "10px", fontWeight: 700, textTransform: "uppercase", color: log.direction === "inbound" ? "#4ec9b0" : "#4fc3f7" }, children: log.direction }),
+              log.remoteAgent && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { style: { fontSize: "11px", color: "#888" }, children: [
+                "↔ ",
+                log.remoteAgent
+              ] }),
+              log.skill && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "10px", padding: "1px 7px", background: "rgba(255,255,255,0.05)", borderRadius: "10px", color: "#999" }, children: log.skill }),
+              log.model && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "10px", color: "#666", fontFamily: "monospace" }, children: log.model }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+                marginLeft: "auto",
+                fontSize: "10px",
+                padding: "2px 8px",
+                borderRadius: "10px",
+                fontWeight: 600,
+                background: log.status === "completed" ? "rgba(78,201,176,0.15)" : log.status === "failed" ? "rgba(255,80,80,0.15)" : "rgba(255,200,0,0.1)",
+                color: log.status === "completed" ? "#4ec9b0" : log.status === "failed" ? "#f88" : "#fc0"
+              }, children: log.status })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", color: "#bbb", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }, children: log.prompt }),
+            log.error && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", color: "#f88", marginTop: "3px" }, children: log.error }),
+            log.finishedAt && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "10px", color: "#555", marginTop: "3px" }, children: [
+              new Date(log.startedAt).toLocaleTimeString(),
+              " → ",
+              new Date(log.finishedAt).toLocaleTimeString()
+            ] })
+          ] }, log.id)) })
+        ] })
+      ] }),
+      activeTab === "mcp-host" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", gap: "24px" }, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: 0 }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(HardDrive, { size: 15, style: { color: "#4ec9b0" } }),
+              "MCP Host Server"
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: {
+              padding: "3px 10px",
+              borderRadius: "20px",
+              fontSize: "11px",
+              fontWeight: 600,
+              background: mcpHostStatus?.running ? "rgba(78,201,176,0.15)" : "rgba(255,100,100,0.15)",
+              color: mcpHostStatus?.running ? "#4ec9b0" : "#f88"
+            }, children: mcpHostStatus?.running ? "● Running" : "○ Stopped" })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }, children: [
+            { label: "SSE Endpoint", value: `http://localhost:${mcpHostStatus?.port ?? 3101}/sse` },
+            { label: "Connected Clients", value: mcpHostStatus?.connectedClients ?? 0 },
+            { label: "Tools Available", value: mcpHostStatus?.tools?.length ?? 6 }
+          ].map(({ label, value }) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(0,0,0,0.2)", borderRadius: "8px", padding: "12px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "10px", color: "#666", textTransform: "uppercase", fontWeight: 600, marginBottom: "4px" }, children: label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", color: "#ccc", fontFamily: "monospace", wordBreak: "break-all" }, children: String(value) })
+          ] }, label)) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(0,0,0,0.25)", borderRadius: "8px", padding: "14px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", marginBottom: "8px" }, children: "Connect from Claude Desktop / any MCP client" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("pre", { style: { margin: 0, fontSize: "12px", color: "#d4d4d4", fontFamily: "ui-monospace, monospace" }, children: JSON.stringify({
+              mcpServers: {
+                "agentic-ide": {
+                  url: `http://localhost:${mcpHostStatus?.port ?? 3101}/sse`
+                }
+              }
+            }, null, 2) })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: "0 0 16px 0" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { size: 15, style: { color: "#007acc" } }),
+            "Exposed Tools"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", flexDirection: "column", gap: "8px" }, children: (mcpHostStatus?.tools ?? [
+            { name: "read_file", description: "Read a file from the open project" },
+            { name: "write_file", description: "Create or overwrite a file in the open project" },
+            { name: "list_files", description: "List all tracked files in the open project" },
+            { name: "run_command", description: "Execute a shell command in the project root" },
+            { name: "ask_agent", description: "Send a prompt to the local Ollama agent and return the reply" },
+            { name: "get_project_info", description: "Return workspace root, open file, and active model info" }
+          ]).map((tool) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", alignItems: "flex-start", gap: "12px", padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: "8px" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("code", { style: { fontSize: "12px", color: "#4fc3f7", fontFamily: "ui-monospace, monospace", whiteSpace: "nowrap", marginTop: "1px" }, children: tool.name }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontSize: "12px", color: "#888", lineHeight: 1.5 }, children: tool.description })
+          ] }, tool.name)) })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "20px" }, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { style: { fontSize: "15px", color: "#fff", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", margin: "0 0 16px 0" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { size: 15, style: { color: "#888" } }),
+            "Configuration"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", alignItems: "end" }, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("label", { style: { fontSize: "11px", color: "#888", fontWeight: 600, textTransform: "uppercase", display: "block", marginBottom: "6px" }, children: "Port" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  type: "number",
+                  defaultValue: mcpHostConfig?.port ?? 3101,
+                  onBlur: async (e) => {
+                    const port = parseInt(e.target.value);
+                    if (!port || port < 1024 || port > 65535) return;
+                    const newCfg = { ...mcpHostConfig || {}, port };
+                    await window.api.mcpHostSaveConfig(newCfg);
+                    setMcpHostConfig(newCfg);
+                  },
+                  style: { width: "100%", padding: "7px 10px", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", color: "#fff", fontSize: "12px", boxSizing: "border-box" }
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", alignItems: "center", gap: "10px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { style: { fontSize: "13px", color: "#ccc", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }, children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "input",
+                {
+                  type: "checkbox",
+                  checked: mcpHostConfig?.enabled ?? true,
+                  onChange: async (e) => {
+                    const newCfg = { ...mcpHostConfig || {}, enabled: e.target.checked };
+                    await window.api.mcpHostSaveConfig(newCfg);
+                    setMcpHostConfig(newCfg);
+                  }
+                }
+              ),
+              "Enable MCP Host Server"
+            ] }) })
+          ] })
         ] })
       ] })
     ] }),
